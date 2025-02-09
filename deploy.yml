@@ -1,0 +1,35 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js 环境
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 构建项目
+        run: npm run build
+
+      - name: 部署到服务器
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem -r ./build/* hailab_server@140.119.19.195:/var/www/html
+          rm private_key.pem
+
