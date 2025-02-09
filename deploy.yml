@@ -1,35 +1,33 @@
-name: Deploy Application
+name: Deploy to Server
 
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: 设置 Node.js 环境
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: "18"
 
-      - name: 安装依赖
-        run: npm install
-
-      - name: 构建项目
-        run: npm run build
-
-      - name: 部署到服务器
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install dependencies and build
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          scp -i private_key.pem -r ./build/* hailab_server@140.119.19.195:/var/www/html
-          rm private_key.pem
+          npm install
+          npm run build
 
+      - name: Deploy to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "build/*"
+          target: ${{ secrets.DEPLOY_PATH }}
