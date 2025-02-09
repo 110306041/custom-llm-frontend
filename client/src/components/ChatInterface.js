@@ -135,7 +135,7 @@ const ChatInterface = () => {
       {/* Header */}
       <div className="w-full bg-white shadow">
         <div className="w-full px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-800">Chat Assistant</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Assistant</h1>
         </div>
       </div>
 
