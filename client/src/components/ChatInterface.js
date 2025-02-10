@@ -233,7 +233,7 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
     };
 
     try {
-      const response = await fetch("/chat", {
+      const response = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
