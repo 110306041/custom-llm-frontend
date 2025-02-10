@@ -247,7 +247,7 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
       {/* Header */}
       <div className="w-full bg-white shadow">
         <div className="w-full px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Assistant</h1>
+          <h1 className="text-2xl font-bold text-gray-800">LLM Chatbot</h1>
           <div className="flex items-center gap-4">
             <select
               value={chatMode}
