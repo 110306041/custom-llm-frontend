@@ -44,6 +44,8 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [chatMode, setChatMode] = useState("chat");
+  const [personalityType, setPersonalityType] = useState("intro");
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -60,6 +62,124 @@ const ChatInterface = () => {
     });
   };
 
+  const getSystemPrompt = () => {
+    if (chatMode === "insurance") {
+      const insurancePrompts = {
+        intro: `You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+Focus on comprehensive coverage and the ability to handle uncertainties.
+Highlight the advantages of higher protection, even if the premium is slightly higher.
+Emphasize the long-term benefits of stronger financial security and peace of mind.
+Insurance Coverage Details:
+Each plan provides coverage across multiple categories, with key differences in protection levels:
+1. Accident Insurance (Death/Disability)
+Overseas Light Plan: NT$3 million
+Overseas Basic Plan: NT$5 million
+Overseas Advanced Plan: NT$8 million
+2. Overseas Injury Medical Insurance (Reimbursement Cap)
+Overseas Light Plan: NT$300,000
+Overseas Basic Plan: NT$500,000
+Overseas Advanced Plan: NT$800,000
+3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
+Overseas Light Plan: NT$100,000
+Overseas Basic Plan: NT$150,000
+Overseas Advanced Plan: NT$300,000
+4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
+Overseas Light Plan: NT$500
+Overseas Basic Plan: NT$1,000
+Overseas Advanced Plan: NT$2,000
+5. Emergency Assistance (Evacuation, Family Visit, etc.)
+Overseas Light Plan: NT$1 million
+Overseas Basic Plan: NT$1 million
+Overseas Advanced Plan: NT$1.5 million
+6. Third-Party Liability (Per Incident – Injury)
+Overseas Light Plan: NT$1 million
+Overseas Basic Plan: NT$1.5 million
+Overseas Advanced Plan: NT$2 million
+7. Third-Party Liability (Per Incident – Property Damage)
+Overseas Light Plan: NT$200,000
+Overseas Basic Plan: NT$200,000
+Overseas Advanced Plan: NT$200,000
+Main Characteristics:
+Overseas Light Plan: Suitable for budget-conscious individuals with minimal coverage needs.
+Overseas Basic Plan: Provides moderate protection, covering common risks with reasonable cost.
+Overseas Advanced Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
+Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
+        extra: `You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+Focus on cost-effectiveness and flexibility.
+Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
+Emphasize savings while ensuring students have essential coverage.
+Insurance Coverage Details:
+Each plan provides coverage across multiple categories, with key differences in protection levels:
+1. Accident Insurance (Death/Disability)
+Overseas Light Plan: NT$2 million
+Overseas Basic Plan: NT$3 million
+Overseas Advanced Plan: NT$5 million
+2. Overseas Injury Medical Insurance (Reimbursement Cap)
+Overseas Light Plan: NT$200,000
+Overseas Basic Plan: NT$400,000
+Overseas Advanced Plan: NT$600,000
+3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
+Overseas Light Plan: NT$50,000
+Overseas Basic Plan: NT$100,000
+Overseas Advanced Plan: NT$200,000
+4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
+Overseas Light Plan: NT$500
+Overseas Basic Plan: NT$800
+Overseas Advanced Plan: NT$1,500
+5. Emergency Assistance (Evacuation, Family Visit, etc.)
+Overseas Light Plan: NT$800,000
+Overseas Basic Plan: NT$1.2 million
+Overseas Advanced Plan: NT$1.5 million
+6. Third-Party Liability (Per Incident – Injury)
+Overseas Light Plan: NT$1 million
+Overseas Basic Plan: NT$1 million
+Overseas Advanced Plan: NT$1 million
+7. Third-Party Liability (Per Incident – Property Damage)
+Overseas Light Plan: NT$200,000
+Overseas Basic Plan: NT$200,000
+Overseas Advanced Plan: NT$200,000
+Main Characteristics:
+Overseas Light Plan: Best value for cost-conscious students, covers essential needs for low-risk situations.
+Overseas Basic Plan: Balanced protection for common risks, offering a reasonable trade-off between cost and coverage.
+Overseas Advanced Plan: Comprehensive but expensive, ideal for students engaging in high-risk activities.
+Your goal is to analyze the insurance plans, summarize their key features in an engaging and easy-to-understand way, and prepare persuasive selling points that encourage customers to choose the most cost-effective option. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
+      };
+      return insurancePrompts[personalityType];
+    }
+    return "";
+  };
+
+  const getUserPrompt = () => {
+    const prompts = {
+      intro:
+        "Please embody the designated persona according to the provided personality description and answer the following questions imitating the specified persona:\nPersonality Description:\n**Introversion** refers to being energized by the inner world of thoughts and reflections, enjoying solitude, and being reserved, contemplative, and introspective.\nIntroverts prefer spending time alone or in small, intimate groups over large gatherings and are reflective, quiet, deliberate, and self-contained.\nInstructions:\nBelow, please engage in role-playing based on the given personality description and portray a persona. A role with Introverted(I) trait.",
+      extra:
+        "Please embody the designated persona according to the provided personality description and answer the following questions imitating the specified persona:\nPersonality Description:\n**Extraversion** refers to the act or state of being energized by the world outside the self.\nExtraverts enjoy socializing and tend to be more enthusiastic, assertive, talkative, and animated.\nThey enjoy time spent with more people and find it less rewarding to spend time alone. They are\nInitiating, Expressive, Gregarious, Active and Enthusiastic.\nInstructions:\nBelow, please engage in role-playing based on the given personality description and portray a\npersona. A role with Extroverted(E) trait.",
+    };
+    return prompts[personalityType];
+  };
+
+  const handleSubmitSettings = () => {
+    setMessages([]); // Clear chat history
+
+    // Set bot's greeting message based on chat mode
+    const greetingMessage =
+      chatMode === "insurance"
+        ? {
+            text: "Hello! I’m your insurance advisor. I can help you compare different plans and find the best option for you!",
+            isBot: true,
+            timestamp: formatTimestamp(),
+          }
+        : {
+            text: "Hi! Welcome to the chat mode. What would you like to talk about today?",
+            isBot: true,
+            timestamp: formatTimestamp(),
+          };
+
+    // Update state with the greeting message
+    setMessages([greetingMessage]);
+  };
+
   const handleSendMessage = async (event) => {
     event.preventDefault();
     if (!inputText.trim() || isLoading) return;
@@ -69,26 +189,17 @@ const ChatInterface = () => {
       content: inputText,
     };
 
-    // Update UI with user message
     setMessages((prev) => [
       ...prev,
-      {
-        text: inputText,
-        isBot: false,
-        timestamp: formatTimestamp(),
-      },
+      { text: inputText, isBot: false, timestamp: formatTimestamp() },
     ]);
     setInputText("");
     setIsLoading(true);
 
-    // Prepare the request body
     const requestBody = {
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant that provides concise and accurate answers.",
-        },
+        { role: "system", content: getSystemPrompt() },
+        { role: "user", content: getUserPrompt() },
         ...messages.map((msg) => ({
           role: msg.isBot ? "assistant" : "user",
           content: msg.text,
@@ -104,23 +215,24 @@ const ChatInterface = () => {
         body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      console.log("Response Status:", response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
-      // Add assistant's response to the messages
+      const data = await response.json();
+      console.log("Response Data:", data);
+
       setMessages((prev) => [
         ...prev,
-        {
-          text: data.response,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
+        { text: data.response, isBot: true, timestamp: formatTimestamp() },
       ]);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Fetch Error:", error);
       setMessages((prev) => [
         ...prev,
         {
-          text: "抱歉，發生了錯誤，請稍後再試。",
+          text: "Sorry, an error occurred. Please try again later.",
           isBot: true,
           timestamp: formatTimestamp(),
         },
@@ -134,8 +246,32 @@ const ChatInterface = () => {
     <div className="w-full h-screen bg-gray-200">
       {/* Header */}
       <div className="w-full bg-white shadow">
-        <div className="w-full px-8 py-6">
+        <div className="w-full px-8 py-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Assistant</h1>
+          <div className="flex items-center gap-4">
+            <select
+              value={chatMode}
+              onChange={(e) => setChatMode(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="chat">Chat</option>
+              <option value="insurance">Insurance</option>
+            </select>
+            <select
+              value={personalityType}
+              onChange={(e) => setPersonalityType(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="intro">Intro</option>
+              <option value="extra">Extra</option>
+            </select>
+            <button
+              onClick={handleSubmitSettings}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Submit
+            </button>
+          </div>
         </div>
       </div>
 
