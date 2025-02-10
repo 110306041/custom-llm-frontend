@@ -87,7 +87,7 @@ const ChatInterface = () => {
   const getSystemPrompt = () => {
     if (chatMode === "insurance") {
       const insurancePrompts = {
-        1: `You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+        intro: `You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
 Focus on comprehensive coverage and the ability to handle uncertainties.
 Highlight the advantages of higher protection, even if the premium is slightly higher.
 Emphasize the long-term benefits of stronger financial security and peace of mind.
@@ -126,7 +126,7 @@ Overseas Light Plan: Suitable for budget-conscious individuals with minimal cove
 Overseas Basic Plan: Provides moderate protection, covering common risks with reasonable cost.
 Overseas Advanced Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
 Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
-        2: `You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+        extra: `You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
 Focus on cost-effectiveness and flexibility.
 Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
 Emphasize savings while ensuring students have essential coverage.
@@ -208,9 +208,11 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
     event.preventDefault();
     if (!inputText.trim() || isLoading) return;
 
+    const formattedUserMessage = `${getUserPrompt()}\n\n${inputText}`;
+
     const userMessage = {
       role: "user",
-      content: inputText,
+      content: formattedUserMessage,
     };
 
     setMessages((prev) => [
@@ -223,14 +225,15 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
     const requestBody = {
       messages: [
         { role: "system", content: getSystemPrompt() },
-        { role: "user", content: getUserPrompt() },
         ...messages.map((msg) => ({
           role: msg.isBot ? "assistant" : "user",
-          content: msg.text,
+          content: msg.isBot ? msg.text : `${getUserPrompt()}\n\n${msg.text}`,
         })),
         userMessage,
       ],
     };
+
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
     try {
       const response = await fetch("http://140.119.19.195:5000/chat", {
