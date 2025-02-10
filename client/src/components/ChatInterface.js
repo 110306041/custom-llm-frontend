@@ -16,6 +16,27 @@ const SendIcon = () => (
     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
   </svg>
 );
+const Notification = ({ show }) => {
+  if (!show) return null;
+
+  return (
+    <div className="absolute top-20 right-8 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded flex items-center animate-fade-in">
+      <svg
+        className="w-5 h-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9 12l2 2 4-4"></path>
+      </svg>
+      Settings updated successfully!
+    </div>
+  );
+};
 
 const ChatMessage = ({ message }) => {
   return (
@@ -47,6 +68,7 @@ const ChatInterface = () => {
   const [chatMode, setChatMode] = useState("chat");
   const [personalityType, setPersonalityType] = useState("intro");
   const messagesEndRef = useRef(null);
+  const [showNotification, setShowNotification] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -160,13 +182,12 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
   };
 
   const handleSubmitSettings = () => {
-    setMessages([]); // Clear chat history
+    setMessages([]);
 
-    // Set bot's greeting message based on chat mode
     const greetingMessage =
       chatMode === "insurance"
         ? {
-            text: "Hello! I’m your insurance advisor. I can help you compare different plans and find the best option for you!",
+            text: "Hello! I’m your insurance advisor. How can I assist you with your study abroad insurance?",
             isBot: true,
             timestamp: formatTimestamp(),
           }
@@ -176,8 +197,11 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
             timestamp: formatTimestamp(),
           };
 
-    // Update state with the greeting message
     setMessages([greetingMessage]);
+
+    // 顯示通知並在 2 秒後隱藏
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 800);
   };
 
   const handleSendMessage = async (event) => {
@@ -243,7 +267,9 @@ Your goal is to analyze the insurance plans, summarize their key features in an 
   };
 
   return (
-    <div className="w-full h-screen bg-gray-200">
+    <div className="w-full h-screen bg-gray-200 relative">
+      {/* 通知訊息 */}
+      <Notification show={showNotification} />
       {/* Header */}
       <div className="w-full bg-white shadow">
         <div className="w-full px-8 py-6 flex items-center justify-between">
