@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
+import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
+
 const SendIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -75,6 +77,11 @@ const ChatInterface = () => {
   const [personalityType, setPersonalityType] = useState("intro");
   const messagesEndRef = useRef(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [questionnaire, setQuestionnaire] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState([]);
+  const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] = useState(false);
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -90,7 +97,7 @@ const ChatInterface = () => {
     });
   };
 
-  const getSystemPrompt = () => {
+  const getSystemPrompt = (score) => {
     // 共用的 Personality Instructions
     const personalityInstructions = {
       intro: `Personality Instruction:
@@ -114,108 +121,91 @@ const ChatInterface = () => {
 
   // Investment mode 的 Scenario
   const investmentScenarios = {
-      intro: `Scenario:
-  You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+    intro: (score) => `Scenario:
+  You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. Your role is to guide users through investment product categories and help them build a risk-aligned portfolio.
   
-  Focus on comprehensive coverage and the ability to handle uncertainties.
-  Highlight the advantages of higher protection, even if the premium is slightly higher.
-  Emphasize the long-term benefits of stronger financial security and peace of mind.
-  Insurance Coverage Details:
-  Each plan provides coverage across multiple categories, with key differences in protection levels:
+  (1) First, briefly introduce the five investment product risk categories:
+  - RR1: Ultra-conservative, money market and time deposits
+  - RR2: Low-risk bond funds with stable returns
+  - RR3: Moderate-risk balanced or bond-heavy funds
+  - RR4: Higher-risk growth funds, including regional or thematic strategies
+  - RR5: High-risk, high-volatility funds with emerging market or sector focus
   
-  1. Accident Insurance (Death/Disability)
-  Overseas Light Plan: NT$3 million
-  Overseas Basic Plan: NT$5 million
-  Overseas Advanced Plan: NT$8 million
+  (2) Then, based on the user's risk tolerance score of **${score}**, provide tailored recommendations:
   
-  2. Overseas Injury Medical Insurance (Reimbursement Cap)
-  Overseas Light Plan: NT$300,000
-  Overseas Basic Plan: NT$500,000
-  Overseas Advanced Plan: NT$800,000
+  ${
+          score <= 15
+            ? `🟢 Risk Level: Low – Recommend safe and capital-preserving funds:
+  - Franklin Templeton Sinoam Money Market (RR1)
+  - PGIM Return Fund (RR2)
+  - Fuh Hwa 2.5-5 Year A-Rated Bond Fund (RR2)
   
-  3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-  Overseas Light Plan: NT$100,000
-  Overseas Basic Plan: NT$150,000
-  Overseas Advanced Plan: NT$300,000
+  If suitable, you may lightly introduce Fuh Hwa Aegis (RR3) as an optional moderate-risk addition.`
   
-  4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
-  Overseas Light Plan: NT$500
-  Overseas Basic Plan: NT$1,000
-  Overseas Advanced Plan: NT$2,000
   
-  5. Emergency Assistance (Evacuation, Family Visit, etc.)
-  Overseas Light Plan: NT$1 million
-  Overseas Basic Plan: NT$1 million
-  Overseas Advanced Plan: NT$1.5 million
+            : score <= 30
+            ? `🟡 Risk Level: Moderate – Recommend a balanced mix:
+  - Fuh Hwa Aegis (RR3)
+  - FSITC Greater China Balanced (RR3)
+  - Capital OTC N (RR4)
+  - SinoPac Pilot Fund (RR4)
+  - Consider partial exposure to Fuh Hwa South Africa ZAR Fund (RR5)`
   
-  6. Third-Party Liability (Per Incident – Injury)
-  Overseas Light Plan: NT$1 million
-  Overseas Basic Plan: NT$1.5 million
-  Overseas Advanced Plan: NT$2 million
   
-  7. Third-Party Liability (Per Incident – Property Damage)
-  Overseas Light Plan: NT$200,000
-  Overseas Basic Plan: NT$200,000
-  Overseas Advanced Plan: NT$200,000
+            : `🔴 Risk Level: High – Recommend aggressive allocation:
+  - SinoPac Pilot Fund (RR4)
+  - Capital OTC N (RR4)
+  - Fuh Hwa Emerging Market Short-term Income Fund (RR5)
+  - Fuh Hwa South Africa ZAR Fund (RR5)`
   
-  Main Characteristics:
-  Overseas Light Plan: Suitable for budget-conscious individuals with minimal coverage needs.
-  Overseas Basic Plan: Provides moderate protection, covering common risks with reasonable cost.
-  Overseas Advanced Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
   
-  Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
-      extra: `Scenario:
-  You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+        }
   
-  Focus on cost-effectiveness and flexibility.
-  Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
-  Emphasize savings while ensuring students have essential coverage.
-  Insurance Coverage Details:
-  Each plan provides coverage across multiple categories, with key differences in protection levels:
+  Your goal is to explain fund types in plain language and help the user choose between one-time purchases or regular investments. Ask if they prefer stability, flexibility, or rapid growth—and build a portfolio that reflects their preferences.
+  `,
   
-  1. Accident Insurance (Death/Disability)
-  Overseas Light Plan: NT$2 million
-  Overseas Basic Plan: NT$3 million
-  Overseas Advanced Plan: NT$5 million
+    extra: (score) => `Scenario:
+  You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your task is to educate users about our investment product types and guide them to build portfolios aligned with their risk personality.
   
-  2. Overseas Injury Medical Insurance (Reimbursement Cap)
-  Overseas Light Plan: NT$200,000
-  Overseas Basic Plan: NT$400,000
-  Overseas Advanced Plan: NT$600,000
+  (1) Start with a simple breakdown of RR1–RR5 levels:
+  - RR1: Safe, cash-like products (money markets)
+  - RR2: Low-risk bond funds with stable return
+  - RR3: Balanced funds with moderate growth
+  - RR4: Growth-oriented strategies, moderately volatile
+  - RR5: High-growth funds with bold risk profiles
   
-  3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-  Overseas Light Plan: NT$50,000
-  Overseas Basic Plan: NT$100,000
-  Overseas Advanced Plan: NT$200,000
+  (2) Based on the user's risk tolerance score of **${score}**, give smart, high-potential suggestions:
   
-  4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
-  Overseas Light Plan: NT$500
-  Overseas Basic Plan: NT$800
-  Overseas Advanced Plan: NT$1,500
+  ${
+          score <= 15
+            ? `🟢 Risk Level: Low – Recommend stable funds, but don’t shy away from introducing a few exciting growth funds:
+  - Franklin Templeton Sinoam Money Market (RR1)
+  - PGIM Return Fund (RR2)
+  - Fuh Hwa 2.5-5 Year A-Rated Bond Fund (RR2)
+  - Suggest trying Fuh Hwa Aegis (RR3) to boost return potential`
   
-  5. Emergency Assistance (Evacuation, Family Visit, etc.)
-  Overseas Light Plan: NT$800,000
-  Overseas Basic Plan: NT$1.2 million
-  Overseas Advanced Plan: NT$1.5 million
   
-  6. Third-Party Liability (Per Incident – Injury)
-  Overseas Light Plan: NT$1 million
-  Overseas Basic Plan: NT$1 million
-  Overseas Advanced Plan: NT$1 million
+            : score <= 30
+            ? `🟡 Risk Level: Moderate – Recommend a mix with upside:
+  - Fuh Hwa Aegis (RR3)
+  - SinoPac Pilot Fund (RR4)
+  - Capital OTC N (RR4)
+  - FSITC Greater China Balanced (RR3)
+  - A partial bet on Fuh Hwa South Africa ZAR Fund (RR5)`
   
-  7. Third-Party Liability (Per Incident – Property Damage)
-  Overseas Light Plan: NT$200,000
-  Overseas Basic Plan: NT$200,000
-  Overseas Advanced Plan: NT$200,000
   
-  Main Characteristics:
-  Overseas Light Plan: Best value for cost-conscious students, covers essential needs for low-risk situations.
-  Overseas Basic Plan: Balanced protection for common risks, offering a reasonable trade-off between cost and coverage.
-  Overseas Advanced Plan: Comprehensive but expensive, ideal for students engaging in high-risk activities.
+            : `🔴 Risk Level: High – Recommend bold, performance-driven funds:
+  - SinoPac Pilot Fund (RR4)
+  - Capital OTC N (RR4)
+  - Fuh Hwa Emerging Market Short-term Income Fund (RR5)
+  - Fuh Hwa South Africa ZAR Fund (RR5)`
   
-  Your goal is to analyze the insurance plans, summarize their key features in an engaging and easy-to-understand way, and prepare persuasive selling points that encourage customers to choose the most cost-effective option. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
-    };
-
+  
+        }
+  
+  Encourage users to be confident and proactive. Help them compare one-time vs regular investing, and ask about their growth goals. Your job is to make investing feel exciting and rewarding.`
+  };
+  
     
 
     // Insurance mode 的 Scenario
@@ -335,60 +325,46 @@ const ChatInterface = () => {
   const handleSubmitSettings = () => {
     setMessages([]);
 
-    const greetingMessage = {
+    const rawGreetingMessage = {
       chat: {
-        intro: {
-          text: `Hello, it’s nice to meet you. I’ll be your assistant today. We have three things to do: 
-  (1) a brief greeting so we can get started
-  (2) a short self-introduction so we can understand each other better
-  (3) a meaningful discussion where I suggest something based on your interests. 
-  
-  I prefer thoughtful conversations, so please take your time when sharing. Let’s begin—could you please share something about yourself?`,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
-        extra: {
-          text: `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
-  
-  (1) A quick hello so you can get to know me
-  (2) A self-introduction so I can learn about you
-  (3) A fun chat where I recommend something exciting based on what you like!
-  
-  Don't hold back—tell me something interesting about yourself!`,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
+        intro: `Hello, it’s nice to meet you. I’ll be your assistant today. We have three things to do: 
+                (1) a brief greeting so we can get started
+                (2) a short self-introduction so we can understand each other better
+                (3) a meaningful discussion where I suggest something based on your interests. 
+                I prefer thoughtful conversations, so please take your time when sharing. Let’s begin—could you please share something about yourself?`,
+          // isBot: true,
+          // timestamp: formatTimestamp(),
+        extra:  `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
+                (1) A quick hello so you can get to know me
+                (2) A self-introduction so I can learn about you
+                (3) A fun chat where I recommend something exciting based on what you like!
+                Don't hold back—tell me something interesting about yourself!`,
+          // isBot: true,
+          // timestamp: formatTimestamp(),
       },
       investment: {
-        intro: {
-          text: `Hello, and thank you for being here. In this session, we will go through three steps:
+        intro:  `Hello, and thank you for being here. In this session, we will go through three steps:
                 (1) We will identify your personal risk tolerance through a simple assessment  
                 (2) I will provide a brief introduction to our investment product categories and risk ratings (RR1–RR5)  
                 (3) Based on your results, I will carefully recommend a portfolio that aligns with your comfort level and financial goals 
                 Our goal is to ensure that your capital is well-protected while allowing for potential growth that fits your risk profile. If you're someone who values stability and cautious planning, don’t worry—we’ll start with options that feel safe and familiar. 
                 Before we move into any investment recommendations, let’s begin with a quick risk assessment to understand your preferences. Once we complete that, I’ll suggest a thoughtful portfolio tailored to your needs.`,
 
-              isBot: true,
-              timestamp: formatTimestamp(),
-        },
-        extra: {
-          text: `Hey there! I'm thrilled you're here—let's kick off your investment journey together! 💸
+              // isBot: true,
+              // timestamp: formatTimestamp(),
+        extra:  `Hey there! I'm thrilled you're here—let's kick off your investment journey together! 💸
                 Here’s the plan:
                 (1) I’ll walk you through the types of investment products we offer, from RR1 (low risk) to RR5 (high risk)  
                 (2) Then, we’ll do a short and easy risk quiz to figure out your comfort zone  
                 (3) Based on your score, I’ll recommend a portfolio that matches your energy—balanced, bold, or all-in!
-
                 Whether you like to play it safe or go big for higher returns, there’s a smart way to do it—and I’m here to help you build that strategy.
-
                 Let’s start with a quick risk assessment so we can tailor everything just for you. Ready? Let’s go!`,
-              isBot: true,
-              timestamp: formatTimestamp(),
-        },
+              // isBot: true,
+              // timestamp: formatTimestamp(),
       },
 
       insurance: {
-        intro: {
-          text: `Hello, and thank you for being here. In this session, we will go through three steps:
+        intro:  `Hello, and thank you for being here. In this session, we will go through three steps:
                 (1) I will introduce an overseas basic insurance plan with a focus on risk management
                 (2) We will carefully review key policy terms
                 (3) I will answer any questions you may have in a precise and structured way
@@ -398,11 +374,9 @@ const ChatInterface = () => {
                 Below are the one of the three types of our Overseas Insurance Plan:  
                   
                 The Overseas Basic Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Light Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Light Plan. Overall, the Overseas Basic Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
-        extra: {
-          text: `Hi there! I'm really glad you're here! We're going to explore an overseas basic insurance plan together in three steps:
+          // isBot: true,
+          // timestamp: formatTimestamp(),
+        extra: `Hi there! I'm really glad you're here! We're going to explore an overseas basic insurance plan together in three steps:
                 (1) I'll introduce the plan and highlight how flexible and useful it is
                 (2) We'll discuss important terms in a way that makes sense to you
                 (3) You can ask me anything—I love answering questions!
@@ -412,26 +386,105 @@ const ChatInterface = () => {
                 Below are the one of the three types of our Overseas Insurance Plan:
                 
                 Hi there! I'm thrilled to introduce you to our Overseas Basic Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Overseas Basic Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Overseas Basic Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Overseas Basic Plan is definitely worth considering!`,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
+          // isBot: true,
+          // timestamp: formatTimestamp(),
       },
     }[chatMode][personalityType];
 
-    setMessages([greetingMessage]);
+    const greetingMessage = {
+      text: rawGreetingMessage,
+      isBot: true,
+      timestamp: formatTimestamp(),
+    };
+
+    if (chatMode === "investment") {
+      loadInvestmentQuestionnaire().then((questions) => {
+        setQuestionnaire(questions);
+        setCurrentQuestionIndex(0);
+        setMessages([
+          greetingMessage,
+          {
+            text: `Let's begin with the first question:\n\n${questions[0].text}\n${questions[0].options.map(
+              (opt, i) => `(${i + 1}) ${opt}`
+            ).join("\n")}`,
+            isBot: true,
+            timestamp: formatTimestamp(),
+          },
+        ]);
+      });
+    } else{
+      setMessages([greetingMessage]);
+    }
+    
 
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 800);
     console.log(greetingMessage);
   };
 
+
   const handleSendMessage = async (event) => {
     event.preventDefault();
     if (!inputText.trim() || isLoading) return;
 
+  // 問卷進行中
+  if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
+    const answerIndex = parseInt(inputText.trim()) - 1;
+    const currentQ = questionnaire[currentQuestionIndex];
+
+    if (isNaN(answerIndex) || answerIndex < 0 || answerIndex >= currentQ.options.length) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Please respond with a valid number (1–5) for your answer.",
+          isBot: true,
+          timestamp: formatTimestamp(),
+        },
+      ]);
+    } else {
+      const newAnswers = [...userAnswers, answerIndex + 1];
+      const isLastQuestion = currentQuestionIndex + 1 === questionnaire.length;
+      const totalScore = newAnswers.reduce((a, b) => a + b, 0);
+
+      const resultText = isLastQuestion
+        ? `✅ You've completed the investment risk assessment.\n\nYour total score is **${totalScore}**.\n\n${
+            totalScore <= 15
+              ? "🟢 Risk Level: Low – We'll recommend RR1–RR2 investments with capital protection."
+              : totalScore <= 30
+              ? "🟡 Risk Level: Moderate – A balanced mix of RR3–RR4 investments fits your profile."
+              : "🔴 Risk Level: High – You're open to aggressive strategies like RR4–RR5 with high return potential."
+          }`
+        : `Next question:\n\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options
+            .map((opt, i) => `(${i + 1}) ${opt}`)
+            .join("\n")}`;
+
+      const newMessages = [
+        { text: inputText, isBot: false, timestamp: formatTimestamp() },
+        { text: resultText, isBot: true, timestamp: formatTimestamp() },
+      ];
+
+      if (isLastQuestion) {
+        setHasCompletedQuestionnaire(true);
+        const scenarioPrompt = getSystemPrompt(totalScore) ;
+        newMessages.push({
+          text: scenarioPrompt,
+          isBot: true,
+          timestamp: formatTimestamp(),
+        });
+      }
+
+      setMessages((prev) => [...prev, ...newMessages]);
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setUserAnswers(newAnswers);
+    }
+
+    setInputText("");
+    return;
+  }
+    // 問卷結束/無問卷（一般聊天）
     const userMessage = {
       role: "user",
-      content: `${inputText}`,
+      content: inputText,
     };
 
     setMessages((prev) => [
@@ -441,19 +494,24 @@ const ChatInterface = () => {
     setInputText("");
     setIsLoading(true);
 
+    const totalScore = userAnswers.reduce((a, b) => a + b, 0);
+
+    const promptToUse =
+      chatMode === "investment" && hasCompletedQuestionnaire
+        ? getSystemPrompt(totalScore) 
+        : getSystemPrompt(); 
+    
     const requestBody = {
       messages: [
-        { role: "system", content: getSystemPrompt() },
+        { role: "system", content: promptToUse },
         { role: "user", content: "Start chat" },
         ...messages.map((msg) => ({
           role: msg.isBot ? "assistant" : "user",
-          content: msg.isBot ? msg.text : `${msg.text}`,
+          content: msg.text,
         })),
         userMessage,
       ],
     };
-
-    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
     try {
       const response = await fetch("http://140.119.19.195:5000/chat", {
@@ -462,13 +520,11 @@ const ChatInterface = () => {
         body: JSON.stringify(requestBody),
       });
 
-      console.log("Response Status:", response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Response Data:", data);
 
       setMessages((prev) => [
         ...prev,
