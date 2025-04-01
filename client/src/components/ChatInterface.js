@@ -333,15 +333,11 @@ const ChatInterface = () => {
                 (2) a short self-introduction so we can understand each other better
                 (3) a meaningful discussion where I suggest something based on your interests. 
                 I prefer thoughtful conversations, so please take your time when sharing. Let’s begin—could you please share something about yourself?`,
-          // isBot: true,
-          // timestamp: formatTimestamp(),
         extra:  `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
                 (1) A quick hello so you can get to know me
                 (2) A self-introduction so I can learn about you
                 (3) A fun chat where I recommend something exciting based on what you like!
                 Don't hold back—tell me something interesting about yourself!`,
-          // isBot: true,
-          // timestamp: formatTimestamp(),
       },
       investment: {
         intro:  `Hello, and thank you for being here. In this session, we will go through three steps:
@@ -351,8 +347,6 @@ const ChatInterface = () => {
                 Our goal is to ensure that your capital is well-protected while allowing for potential growth that fits your risk profile. If you're someone who values stability and cautious planning, don’t worry—we’ll start with options that feel safe and familiar. 
                 Before we move into any investment recommendations, let’s begin with a quick risk assessment to understand your preferences. Once we complete that, I’ll suggest a thoughtful portfolio tailored to your needs.`,
 
-              // isBot: true,
-              // timestamp: formatTimestamp(),
         extra:  `Hey there! I'm thrilled you're here—let's kick off your investment journey together! 💸
                 Here’s the plan:
                 (1) We’ll do a short and easy risk quiz to figure out your comfort zone  
@@ -360,8 +354,6 @@ const ChatInterface = () => {
                 (3) Based on your score, I’ll recommend a portfolio that matches your energy—balanced, bold, or all-in!
                 Whether you like to play it safe or go big for higher returns, there’s a smart way to do it—and I’m here to help you build that strategy.
                 Let’s start with a quick risk assessment so we can tailor everything just for you. Ready? Let’s go!`,
-              // isBot: true,
-              // timestamp: formatTimestamp(),
       },
 
       insurance: {
@@ -372,8 +364,7 @@ const ChatInterface = () => {
                 I'll provide the necessary details clearly, so let's start by looking at the policy overview.
                 Below are the one of the three types of our Overseas Insurance Plan:  
                 The Overseas Basic Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Light Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Light Plan. Overall, the Overseas Basic Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
-          // isBot: true,
-          // timestamp: formatTimestamp(),
+
         extra: `Hi there! I'm really glad you're here! We're going to explore an overseas basic insurance plan together in three steps:
                 (1) I'll introduce the plan and highlight how flexible and useful it is
                 (2) We'll discuss important terms in a way that makes sense to you
@@ -381,8 +372,6 @@ const ChatInterface = () => {
                 Let's jump in and see how this plan could work for you!                
                 Below are the one of the three types of our Overseas Insurance Plan:
                 Hi there! I'm thrilled to introduce you to our Overseas Basic Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Overseas Basic Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Overseas Basic Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Overseas Basic Plan is definitely worth considering!`,
-          // isBot: true,
-          // timestamp: formatTimestamp(),
       },
     }[chatMode][personalityType];
 
@@ -446,11 +435,17 @@ const ChatInterface = () => {
 
       const resultText = isLastQuestion
         ? `✅ You've completed the investment risk assessment.\n\nYour total score is **${totalScore}**.\n\n${
-            totalScore <= 15
-              ? "🟢 Risk Level: Low – We'll recommend RR1–RR2 investments with capital protection."
-              : totalScore <= 30
-              ? "🟡 Risk Level: Moderate – A balanced mix of RR3–RR4 investments fits your profile."
-              : "🔴 Risk Level: High – You're open to aggressive strategies like RR4–RR5 with high return potential."
+          totalScore <= 15
+            ? personalityType === "intro"
+              ? "🟢 Risk Level: Low – We'll recommend primarily RR1–RR2 investments to ensure capital preservation and minimize volatility."
+              : "🟢 Risk Level: Low – While RR1–RR2 products are the foundation, we’ll also introduce select RR3 options to help you gently enhance potential returns."
+            : totalScore <= 30
+            ? personalityType === "intro"
+              ? "🟡 Risk Level: Moderate – A cautious but diversified mix of RR3–RR4 investments can help you grow steadily while keeping risk manageable."
+              : "🟡 Risk Level: Moderate – We'll lean toward RR4–RR5 products to actively pursue higher returns with a moderately aggressive portfolio."
+            : personalityType === "intro"
+            ? "🔴 Risk Level: High – We'll include RR4–RR5 investments but maintain a degree of caution, ensuring part of your portfolio remains relatively stable."
+            : "🔴 Risk Level: High – We'll focus on high-risk RR4–RR5 products to help you maximize potential returns with a bold and growth-driven strategy."
           }`
         : `Next question:\n\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options
             .map((opt, i) => `(${i + 1}) ${opt}`)
@@ -463,9 +458,6 @@ const ChatInterface = () => {
 
       if (isLastQuestion) {
         setHasCompletedQuestionnaire(true);
-        
-        // Make an API call immediately to get the first investment response
-        // instead of showing the system prompt
         try {
           setIsLoading(true);
           
@@ -490,7 +482,6 @@ const ChatInterface = () => {
       
           const data = await response.json();
           
-          // Add the AI's response to messages instead of the system prompt
           newMessages.push({
             text: data.response,
             isBot: true,
@@ -535,17 +526,6 @@ const ChatInterface = () => {
         ? getSystemPrompt(totalScore) 
         : getSystemPrompt(); 
     
-    // const requestBody = {
-    //   messages: [
-        // { role: "system", content: promptToUse },
-        // { role: "user", content: "Start chat" },
-        // ...messages.map((msg) => ({
-        //   role: msg.isBot ? "assistant" : "user",
-        //   content: msg.text,
-        // })),
-        // userMessage,
-    //   ],
-    // };
     const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: promptToUse },
