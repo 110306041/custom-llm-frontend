@@ -316,7 +316,8 @@ const ChatInterface = () => {
     if (chatMode === "insurance") {
       return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}`;
     } else if (chatMode === "investment"){
-      return `${investmentScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}`;
+      // Call the function with the score parameter
+      return `${investmentScenarios[personalityType](score)}\n\n${personalityInstructions[personalityType]}`;
     } else {
       return personalityInstructions[personalityType];
     }
@@ -354,8 +355,8 @@ const ChatInterface = () => {
               // timestamp: formatTimestamp(),
         extra:  `Hey there! I'm thrilled you're here—let's kick off your investment journey together! 💸
                 Here’s the plan:
-                (1) I’ll walk you through the types of investment products we offer, from RR1 (low risk) to RR5 (high risk)  
-                (2) Then, we’ll do a short and easy risk quiz to figure out your comfort zone  
+                (1) We’ll do a short and easy risk quiz to figure out your comfort zone  
+                (2) Then, I’ll walk you through the types of investment products we offer, from RR1 (low risk) to RR5 (high risk)  
                 (3) Based on your score, I’ll recommend a portfolio that matches your energy—balanced, bold, or all-in!
                 Whether you like to play it safe or go big for higher returns, there’s a smart way to do it—and I’m here to help you build that strategy.
                 Let’s start with a quick risk assessment so we can tailor everything just for you. Ready? Let’s go!`,
@@ -368,11 +369,8 @@ const ChatInterface = () => {
                 (1) I will introduce an overseas basic insurance plan with a focus on risk management
                 (2) We will carefully review key policy terms
                 (3) I will answer any questions you may have in a precise and structured way
-                
                 I'll provide the necessary details clearly, so let's start by looking at the policy overview.
-                
                 Below are the one of the three types of our Overseas Insurance Plan:  
-                  
                 The Overseas Basic Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Light Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Light Plan. Overall, the Overseas Basic Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
           // isBot: true,
           // timestamp: formatTimestamp(),
@@ -380,11 +378,8 @@ const ChatInterface = () => {
                 (1) I'll introduce the plan and highlight how flexible and useful it is
                 (2) We'll discuss important terms in a way that makes sense to you
                 (3) You can ask me anything—I love answering questions!
-                
-                Let's jump in and see how this plan could work for you!
-                
+                Let's jump in and see how this plan could work for you!                
                 Below are the one of the three types of our Overseas Insurance Plan:
-                
                 Hi there! I'm thrilled to introduce you to our Overseas Basic Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Overseas Basic Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Overseas Basic Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Overseas Basic Plan is definitely worth considering!`,
           // isBot: true,
           // timestamp: formatTimestamp(),
@@ -432,6 +427,7 @@ const ChatInterface = () => {
     const answerIndex = parseInt(inputText.trim()) - 1;
     const currentQ = questionnaire[currentQuestionIndex];
 
+    // User輸入不合理
     if (isNaN(answerIndex) || answerIndex < 0 || answerIndex >= currentQ.options.length) {
       setMessages((prev) => [
         ...prev,
@@ -441,7 +437,9 @@ const ChatInterface = () => {
           timestamp: formatTimestamp(),
         },
       ]);
-    } else {
+    } 
+     // User輸入合理
+    else {
       const newAnswers = [...userAnswers, answerIndex + 1];
       const isLastQuestion = currentQuestionIndex + 1 === questionnaire.length;
       const totalScore = newAnswers.reduce((a, b) => a + b, 0);
@@ -552,7 +550,7 @@ const ChatInterface = () => {
       {/* Header */}
       <div className="w-full bg-white shadow">
         <div className="w-full px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">LLM Chatbot</h1>
+          <h1 className="text-2xl font-bold text-gray-800">LLM Chatbot v2</h1>
           <div className="flex items-center gap-4">
             <select
               value={chatMode}
