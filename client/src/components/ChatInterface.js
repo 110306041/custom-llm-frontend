@@ -134,32 +134,21 @@ const ChatInterface = () => {
   (2) Then, based on the user's risk tolerance score of **${score}**, provide tailored recommendations:
   
   ${
-          score <= 15
-            ? `🟢 Risk Level: Low – Recommend safe and capital-preserving funds:
-  - Franklin Templeton Sinoam Money Market (RR1)
-  - PGIM Return Fund (RR2)
-  - Fuh Hwa 2.5-5 Year A-Rated Bond Fund (RR2)
-  
-  If suitable, you may lightly introduce Fuh Hwa Aegis (RR3) as an optional moderate-risk addition.`
-  
-  
-            : score <= 30
-            ? `🟡 Risk Level: Moderate – Recommend a balanced mix:
-  - Fuh Hwa Aegis (RR3)
-  - FSITC Greater China Balanced (RR3)
-  - Capital OTC N (RR4)
-  - SinoPac Pilot Fund (RR4)
-  - Consider partial exposure to Fuh Hwa South Africa ZAR Fund (RR5)`
-  
-  
-            : `🔴 Risk Level: High – Recommend aggressive allocation:
-  - SinoPac Pilot Fund (RR4)
-  - Capital OTC N (RR4)
-  - Fuh Hwa Emerging Market Short-term Income Fund (RR5)
-  - Fuh Hwa South Africa ZAR Fund (RR5)`
-  
-  
-        }
+    score <= 15
+      ? `🟢 Risk Level: Low – Recommend safe and capital-preserving funds:
+        - Franklin Templeton Sinoam Money Market (RR1)
+        - PGIM Return Fund (RR2)`
+
+      : score <= 30
+        ? `🟡 Risk Level: Moderate – Recommend a balanced mix:
+          - FSITC Greater China Balanced (RR3)
+          - Capital OTC N (RR4)`
+
+        : `🔴 Risk Level: High – Recommend aggressive allocation:
+          - Capital OTC N (RR4)
+          - Fuh Hwa Emerging Market Short-term Income Fund (RR5)
+          If suitable, you may lightly introduce FSITC Greater China Balanced (RR3) as an optional moderate-risk addition.`
+  }
   
   Your goal is to explain fund types in plain language and help the user choose between one-time purchases or regular investments. Ask if they prefer stability, flexibility, or rapid growth—and build a portfolio that reflects their preferences.
   `,
@@ -177,39 +166,32 @@ const ChatInterface = () => {
   (2) Based on the user's risk tolerance score of **${score}**, give smart, high-potential suggestions:
   
   ${
-          score <= 15
-            ? `🟢 Risk Level: Low – Recommend stable funds, but don’t shy away from introducing a few exciting growth funds:
-  - Franklin Templeton Sinoam Money Market (RR1)
-  - PGIM Return Fund (RR2)
-  - Fuh Hwa 2.5-5 Year A-Rated Bond Fund (RR2)
-  - Suggest trying Fuh Hwa Aegis (RR3) to boost return potential`
-  
-  
-            : score <= 30
-            ? `🟡 Risk Level: Moderate – Recommend a mix with upside:
-  - Fuh Hwa Aegis (RR3)
-  - SinoPac Pilot Fund (RR4)
-  - Capital OTC N (RR4)
-  - FSITC Greater China Balanced (RR3)
-  - A partial bet on Fuh Hwa South Africa ZAR Fund (RR5)`
-  
-  
-            : `🔴 Risk Level: High – Recommend bold, performance-driven funds:
-  - SinoPac Pilot Fund (RR4)
-  - Capital OTC N (RR4)
-  - Fuh Hwa Emerging Market Short-term Income Fund (RR5)
-  - Fuh Hwa South Africa ZAR Fund (RR5)`
-  
-  
-        }
-  
+    score <= 15
+      ? `🟢 Risk Level: Low – Recommend stable funds, but don’t shy away from introducing a few exciting growth funds:
+      - Fuh Hwa 2.5-5 Year A-Rated Bond Fund (RR2)
+      - Fuh Hwa Aegis (RR3) 
+      - Suggest trying Fuh Hwa Aegis (RR3) to boost return potential`
+
+      : score <= 30
+        ? `🟡 Risk Level: Moderate – Recommend a mix with upside:
+        - Fuh Hwa Aegis (RR3)
+        - SinoPac Pilot Fund (RR4)
+        - Partial allocation to Fuh Hwa South Africa Fixed-Income ZAR Fund (RR5)
+        If suitable, you can encourage more aggressive investments on SinoPac Pilot Fund (RR4)`
+
+
+        : `🔴 Risk Level: High – Recommend bold, performance-driven funds:
+        - SinoPac Pilot Fund (RR4)
+        - Fuh Hwa South Africa ZAR Fund (RR5)
+        Fuh Hwa South Africa ZAR Fund (RR5) encourages high-risk, high-return strategies`
+  }
   Encourage users to be confident and proactive. Help them compare one-time vs regular investing, and ask about their growth goals. Your job is to make investing feel exciting and rewarding.`
   };
   
     
 
     // Insurance mode 的 Scenario
-    const insuranceScenarios = {
+  const insuranceScenarios = {
       intro: `Scenario:
   You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
   
