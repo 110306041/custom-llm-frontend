@@ -463,14 +463,50 @@ const ChatInterface = () => {
 
       if (isLastQuestion) {
         setHasCompletedQuestionnaire(true);
-        const scenarioPrompt = getSystemPrompt(totalScore) ;
-        newMessages.push({
-          text: scenarioPrompt,
-          isBot: true,
-          timestamp: formatTimestamp(),
-        });
+        
+        // Make an API call immediately to get the first investment response
+        // instead of showing the system prompt
+        try {
+          setIsLoading(true);
+          
+          const initialPromptToUse = getSystemPrompt(totalScore);
+          
+          const initialRequestBody = {
+            messages: [
+              { role: "system", content: initialPromptToUse },
+              { role: "user", content: "Please provide me with a brief introduction to the investment product categories and risk ratings (RR1-RR5). And ask me whether I need a recommendation on investment portfolio in the end of your response to trigger the input from user" }
+            ],
+          };
+          
+          const response = await fetch("http://140.119.19.195:5000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(initialRequestBody),
+          });
+      
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          
+          // Add the AI's response to messages instead of the system prompt
+          newMessages.push({
+            text: data.response,
+            isBot: true,
+            timestamp: formatTimestamp(),
+          });
+        } catch (error) {
+          console.error("Initial investment chat error:", error);
+          newMessages.push({
+            text: "I can now help you with investment recommendations based on your risk profile. What would you like to know about our investment products?",
+            isBot: true,
+            timestamp: formatTimestamp(),
+          });
+        } finally {
+          setIsLoading(false);
+        }
       }
-
       setMessages((prev) => [...prev, ...newMessages]);
       setCurrentQuestionIndex((prev) => prev + 1);
       setUserAnswers(newAnswers);
@@ -499,8 +535,19 @@ const ChatInterface = () => {
         ? getSystemPrompt(totalScore) 
         : getSystemPrompt(); 
     
+    // const requestBody = {
+    //   messages: [
+        // { role: "system", content: promptToUse },
+        // { role: "user", content: "Start chat" },
+        // ...messages.map((msg) => ({
+        //   role: msg.isBot ? "assistant" : "user",
+        //   content: msg.text,
+        // })),
+        // userMessage,
+    //   ],
+    // };
     const requestBody = {
-      messages: [
+      messages: ensureAlternatingMessages([
         { role: "system", content: promptToUse },
         { role: "user", content: "Start chat" },
         ...messages.map((msg) => ({
@@ -508,8 +555,9 @@ const ChatInterface = () => {
           content: msg.text,
         })),
         userMessage,
-      ],
+      ]),
     };
+    console.log(requestBody);
 
     try {
       const response = await fetch("http://140.119.19.195:5000/chat", {
@@ -533,7 +581,7 @@ const ChatInterface = () => {
       setMessages((prev) => [
         ...prev,
         {
-          text: "Sorry, an error occurred. Please try again later.",
+          text: "something went wrong...",
           isBot: true,
           timestamp: formatTimestamp(),
         },
@@ -542,6 +590,27 @@ const ChatInterface = () => {
       setIsLoading(false);
     }
   };
+
+  // Add this function to your code
+  const ensureAlternatingMessages = (messages) => {
+    const result = [];
+    
+    for (let i = 0; i < messages.length; i++) {
+      result.push(messages[i]);
+      
+      // If this message and the next are both from the assistant, insert a virtual user message
+      if (i < messages.length - 1 && 
+          messages[i].role === 'assistant' && 
+          messages[i+1].role === 'assistant') {
+        result.push({
+          role: 'user',
+          content: 'Please continue.'
+        });
+      }
+  }
+  
+  return result;
+};
 
   return (
     <div className="w-full h-screen bg-gray-200 relative">
