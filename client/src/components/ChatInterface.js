@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
+import { investmentDescriptions } from "../utils/investmentDescription";
+
 
 const SendIcon = () => (
   <svg
@@ -81,6 +83,7 @@ const ChatInterface = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] = useState(false);
+  const [hasSeenProductIntro, setHasSeenProductIntro] = useState(false);
   const [userAllocation, setUserAllocation] = useState({
     RR1: 0,
     RR2: 0,
@@ -443,177 +446,182 @@ const ChatInterface = () => {
     console.log(greetingMessage);
   };
 
+// 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 驗證 → 結合 score+allocation 分析
   const handleSendMessage = async (event) => {
     event.preventDefault();
     if (!inputText.trim() || isLoading) return;
 
-  // 問卷進行中
-  if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
-    const answerIndex = parseInt(inputText.trim()) - 1;
-    const currentQ = questionnaire[currentQuestionIndex];
+    const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+    const totalScore = userAnswers.reduce((a, b) => a + b, 0);
+    const RR_UNIT = { RR1: 10000, RR2: 20000, RR3: 50000, RR4: 100000, RR5: 150000 };
 
-    // User輸入不合理
-    if (isNaN(answerIndex) || answerIndex < 0 || answerIndex >= currentQ.options.length) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Please respond with a valid number (1–5) for your answer.",
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
-      ]);
-    } 
-     // User輸入合理
-    else {
-      const newAnswers = [...userAnswers, answerIndex + 1];
-      const isLastQuestion = currentQuestionIndex + 1 === questionnaire.length;
-      const totalScore = newAnswers.reduce((a, b) => a + b, 0);
+    // ✏️ 問卷進行中
+    if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
+      const index = parseInt(inputText.trim()) - 1;
+      const currentQ = questionnaire[currentQuestionIndex];
 
-      const resultText = isLastQuestion
-        ? `✅ You've completed the investment risk assessment.\n\nYour total score is **${totalScore}**.\n\n${
-          totalScore <= 15
-            ? personalityType === "intro"
-              ? "🟢 Risk Level: Low – We'll recommend primarily RR1–RR2 investments to ensure capital preservation and minimize volatility."
-              : "🟢 Risk Level: Low – While RR1–RR2 products are the foundation, we’ll also introduce select RR3 options to help you gently enhance potential returns."
-            : totalScore <= 30
-            ? personalityType === "intro"
-              ? "🟡 Risk Level: Moderate – A cautious but diversified mix of RR3–RR4 investments can help you grow steadily while keeping risk manageable."
-              : "🟡 Risk Level: Moderate – We'll lean toward RR4–RR5 products to actively pursue higher returns with a moderately aggressive portfolio."
-            : personalityType === "intro"
-            ? "🔴 Risk Level: High – We'll include RR4–RR5 investments but maintain a degree of caution, ensuring part of your portfolio remains relatively stable."
-            : "🔴 Risk Level: High – We'll focus on high-risk RR4–RR5 products to help you maximize potential returns with a bold and growth-driven strategy."
-          }`
-        : `Next question:\n\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options
-            .map((opt, i) => `(${i + 1}) ${opt}`)
-            .join("\n")}`;
+      if (isNaN(index) || index < 0 || index >= currentQ.options.length) {
+        setMessages((prev) => [...prev, { text: "Please respond with 1–5.", isBot: true, timestamp: formatTimestamp() }]);
+      } else {
+        const newAnswers = [...userAnswers, index + 1];
+        const isLast = currentQuestionIndex + 1 === questionnaire.length;
+        const newTotal = newAnswers.reduce((a, b) => a + b, 0);
 
-      const newMessages = [
-        { text: inputText, isBot: false, timestamp: formatTimestamp() },
-        { text: resultText, isBot: true, timestamp: formatTimestamp() },
-      ];
+        const nextText = isLast
+          ? `✅ Assessment complete. Your score: **${newTotal}**.`
+          : `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options.map((opt, i) => `(${i + 1}) ${opt}`).join("\n")}`;
 
-      if (isLastQuestion) {
-        setHasCompletedQuestionnaire(true);
-        try {
+        setMessages((prev) => [
+          ...prev,
+          { text: inputText, isBot: false, timestamp: formatTimestamp() },
+          { text: nextText, isBot: true, timestamp: formatTimestamp() },
+        ]);
+
+        if (isLast) {
+          setHasCompletedQuestionnaire(true);
           setIsLoading(true);
-          
-          const initialPromptToUse = getSystemPrompt(totalScore);
-          
-          const initialRequestBody = {
+
+          const prompt = getSystemPrompt(newTotal);
+          const initialRequest = {
             messages: [
-              { role: "system", content: initialPromptToUse },
-              // { role: "user", content: "Please provide me with a brief introduction to the investment product categories and risk ratings (RR1-RR5). Please switch lines for introduction of each risk ratings (RR1-RR5) for readability. And ask me whether I need a recommendation on investment portfolio in the end of your response to trigger the input from user" }
-              { 
-                role: "user", 
-                content: 
-                  "I've completed the investment risk assessment. What's the next step?" 
-              }
+              { role: "system", content: prompt },
+              { role: "user", content: "Now please start your tasks by introducing five investment product risk categories to me." },
             ],
           };
-          
-          const response = await fetch("http://140.119.19.195:5000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(initialRequestBody),
-          });
-      
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+
+          try {
+            const res = await fetch("http://140.119.19.195:5000/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(initialRequest),
+            });
+            const data = await res.json();
+
+            setMessages((prev) => [
+              ...prev,
+              { text: data.response, isBot: true, timestamp: formatTimestamp() },
+              {
+                text: investmentDescriptions,
+                isBot: true,
+                timestamp: formatTimestamp(),
+              },
+            ]);
+            setHasSeenProductIntro(true);
+          } catch (e) {
+            console.error(e);
+          } finally {
+            setIsLoading(false);
           }
-      
-          const data = await response.json();
-          
-          newMessages.push({
-            text: data.response,
-            isBot: true,
-            timestamp: formatTimestamp(),
-          });
-        } catch (error) {
-          console.error("Initial investment chat error:", error);
-          newMessages.push({
-            text: "I can now help you with investment recommendations based on your risk profile. What would you like to know about our investment products?",
-            isBot: true,
-            timestamp: formatTimestamp(),
-          });
-        } finally {
-          setIsLoading(false);
         }
+
+        setCurrentQuestionIndex((prev) => prev + 1);
+        setUserAnswers(newAnswers);
       }
-      setMessages((prev) => [...prev, ...newMessages]);
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setUserAnswers(newAnswers);
+      setInputText("");
+      return;
     }
 
-    setInputText("");
-    return;
-  }
-    // 問卷結束/無問卷（一般聊天）
-    const userMessage = {
-      role: "user",
-      content: inputText,
-    };
+    // 處理投資分配格式
+    if (
+      chatMode === "investment" &&
+      hasCompletedQuestionnaire &&
+      hasSeenProductIntro &&
+      /RR[1-5]:\s*\d+/.test(inputText)
+    ) {
+      const allocationInputRegex = /RR[1-5]:\s*\d+/g;
+      const matches = inputText.match(allocationInputRegex);
+      let parsed = { RR1: 0, RR2: 0, RR3: 0, RR4: 0, RR5: 0 };
+      let total = 0;
+      let hasInvalid = false;
 
-    setMessages((prev) => [
-      ...prev,
-      { text: inputText, isBot: false, timestamp: formatTimestamp() },
-    ]);
+      matches.forEach((pair) => {
+        const [key, val] = pair.split(":");
+        const num = parseInt(val.trim());
+
+        if (!RR_UNIT[key] || num % RR_UNIT[key] !== 0) hasInvalid = true;
+        parsed[key] = num;
+        total += num;
+      });
+
+      if (total !== 1000000 || hasInvalid) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: "Allocation format invalid. Please ensure:\n- Total = NT$1,000,000\n- RR1: ×10,000｜RR2: ×20,000｜RR3: ×50,000｜RR4: ×100,000｜RR5: ×150,000",
+            isBot: true,
+            timestamp: formatTimestamp(),
+          },
+        ]);
+        setInputText("");
+        return;
+      }
+
+      // 儲存 user 的 allocation
+      setUserAllocation(parsed);
+      setIsLoading(true);
+
+      const prompt = getSystemPrompt(totalScore, parsed);
+      const requestBody = {
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
+        ],
+      };
+
+      try {
+        const res = await fetch("http://140.119.19.195:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+        const data = await res.json();
+
+        setMessages((prev) => [
+          ...prev,
+          { text: inputText, isBot: false, timestamp: formatTimestamp() },
+          { text: data.response, isBot: true, timestamp: formatTimestamp() },
+        ]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+        setInputText("");
+      }
+      return;
+    }
+
+    // ⌨️ 一般聊天模式
+    const userMessage = { role: "user", content: inputText };
+    setMessages((prev) => [...prev, { text: inputText, isBot: false, timestamp: formatTimestamp() }]);
     setInputText("");
     setIsLoading(true);
 
-    const totalScore = userAnswers.reduce((a, b) => a + b, 0);
-
-    const promptToUse =
-      chatMode === "investment" && hasCompletedQuestionnaire
-        ? getSystemPrompt(totalScore) 
-        : getSystemPrompt(); 
-    
+    const promptToUse = getSystemPrompt(totalScore);
     const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: promptToUse },
-        { role: "user", content: "Start chat" },
-        ...messages.map((msg) => ({
-          role: msg.isBot ? "assistant" : "user",
-          content: msg.text,
-        })),
+        ...messages.map((msg) => ({ role: msg.isBot ? "assistant" : "user", content: msg.text })),
         userMessage,
       ]),
     };
-    console.log(requestBody);
 
     try {
-      const response = await fetch("http://140.119.19.195:5000/chat", {
+      const res = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
+      const data = await res.json();
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setMessages((prev) => [
-        ...prev,
-        { text: data.response, isBot: true, timestamp: formatTimestamp() },
-      ]);
-    } catch (error) {
-      console.error("Fetch Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "something went wrong...",
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
-      ]);
+      setMessages((prev) => [...prev, { text: data.response, isBot: true, timestamp: formatTimestamp() }]);
+    } catch (e) {
+      console.error("Fetch error:", e);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // 確保每個 assistant message 搭配一個 user message
-  const ensureAlternatingMessages = (messages) => {
+   // 確保每個 assistant message 搭配一個 user message
+   const ensureAlternatingMessages = (messages) => {
     const result = [];
     
     for (let i = 0; i < messages.length; i++) {
@@ -627,10 +635,9 @@ const ChatInterface = () => {
           content: 'Please continue.'
         });
       }
+    return result;
   }
-  
-  return result;
-};
+}
 
   return (
     <div className="w-full h-screen bg-gray-200 relative">
