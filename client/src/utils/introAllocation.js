@@ -1,4 +1,4 @@
-export const investmentDescriptions = `
+export const introAllocation = `
 Now that you’ve completed the risk assessment and seen our investment categories, it’s time to make your own allocation decisions. 🎯
 
 You have a virtual budget of NT$1,000,000.  

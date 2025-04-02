@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
-import { investmentDescriptions } from "../utils/investmentDescription";
+import { introAllocation } from "../utils/introAllocation";
+import { extroAllocation } from "../utils/extroAllocation";
+import { risksIntro } from "../utils/risksIntro";
 
 
 const SendIcon = () => (
@@ -91,6 +93,9 @@ const ChatInterface = () => {
     RR4: 0,
     RR5: 0,
   });
+  const totalScore = useMemo(() => {
+    return userAnswers.reduce((a, b) => a + b, 0);
+  }, [userAnswers]);
   
 
   const scrollToBottom = () => {
@@ -250,7 +255,7 @@ const ChatInterface = () => {
     End with an upbeat note—remind them that bold doesn’t mean reckless, and that they’re building something exciting, one smart choice at a time.`
     };
 
-      // Insurance mode 的 Scenario
+    // Insurance mode 的 Scenario
     const insuranceScenarios = {
         intro: `Scenario:
     You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
@@ -441,9 +446,9 @@ const ChatInterface = () => {
     } else{
       setMessages([greetingMessage]);
     }
+    setUserAnswers([]);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 800);
-    console.log(greetingMessage);
   };
 
 // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 驗證 → 結合 score+allocation 分析
@@ -452,7 +457,6 @@ const ChatInterface = () => {
     if (!inputText.trim() || isLoading) return;
 
     const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
-    const totalScore = userAnswers.reduce((a, b) => a + b, 0);
     const RR_UNIT = { RR1: 10000, RR2: 20000, RR3: 50000, RR4: 100000, RR5: 150000 };
 
     // ✏️ 問卷進行中
@@ -463,14 +467,16 @@ const ChatInterface = () => {
       if (isNaN(index) || index < 0 || index >= currentQ.options.length) {
         setMessages((prev) => [...prev, { text: "Please respond with 1–5.", isBot: true, timestamp: formatTimestamp() }]);
       } else {
-        const newAnswers = [...userAnswers, index + 1];
+        const allAnswers = [...userAnswers, index + 1];
+        console.log("All answers: ", allAnswers)
         const isLast = currentQuestionIndex + 1 === questionnaire.length;
-        const newTotal = newAnswers.reduce((a, b) => a + b, 0);
+        setUserAnswers(allAnswers);
+
 
         const nextText = isLast
-          ? `✅ Assessment complete. Your score: **${newTotal}**.`
-          : `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options.map((opt, i) => `(${i + 1}) ${opt}`).join("\n")}`;
-
+        ? `✅ Assessment complete. Your score: **${allAnswers.reduce((a, b) => a + b, 0)}**.`
+        : `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options.map((opt, i) => `(${i + 1}) ${opt}`).join("\n")}`;
+        
         setMessages((prev) => [
           ...prev,
           { text: inputText, isBot: false, timestamp: formatTimestamp() },
@@ -481,27 +487,27 @@ const ChatInterface = () => {
           setHasCompletedQuestionnaire(true);
           setIsLoading(true);
 
-          const prompt = getSystemPrompt(newTotal);
-          const initialRequest = {
-            messages: [
-              { role: "system", content: prompt },
-              { role: "user", content: "Now please start your tasks by introducing five investment product risk categories to me." },
-            ],
-          };
+          // const prompt = getSystemPrompt(totalScore);
+          // const initialRequest = {
+          //   messages: [
+          //     { role: "system", content: prompt },
+          //     { role: "user", content: "Now please start the tasks of your system prompt by introducing (RR1-RR5) to me." },
+          //   ],
+          // };
 
           try {
-            const res = await fetch("http://140.119.19.195:5000/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(initialRequest),
-            });
-            const data = await res.json();
+            // const res = await fetch("http://140.119.19.195:5000/chat", {
+            //   method: "POST",
+            //   headers: { "Content-Type": "application/json" },
+            //   body: JSON.stringify(initialRequest),
+            // });
+            // const data = await res.json();
 
             setMessages((prev) => [
               ...prev,
-              { text: data.response, isBot: true, timestamp: formatTimestamp() },
+              { text: risksIntro, isBot: true, timestamp: formatTimestamp() },
               {
-                text: investmentDescriptions,
+                text: introAllocation,
                 isBot: true,
                 timestamp: formatTimestamp(),
               },
@@ -515,7 +521,6 @@ const ChatInterface = () => {
         }
 
         setCurrentQuestionIndex((prev) => prev + 1);
-        setUserAnswers(newAnswers);
       }
       setInputText("");
       return;
@@ -559,7 +564,6 @@ const ChatInterface = () => {
       // 儲存 user 的 allocation
       setUserAllocation(parsed);
       setIsLoading(true);
-
       const prompt = getSystemPrompt(totalScore, parsed);
       const requestBody = {
         messages: [
@@ -567,7 +571,8 @@ const ChatInterface = () => {
           { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
         ],
       };
-
+      console.log("Allocation chat")
+      console.log(requestBody)
       try {
         const res = await fetch("http://140.119.19.195:5000/chat", {
           method: "POST",
@@ -590,22 +595,32 @@ const ChatInterface = () => {
       return;
     }
 
-    // ⌨️ 一般聊天模式
+    // 一般聊天模式
     const userMessage = { role: "user", content: inputText };
     setMessages((prev) => [...prev, { text: inputText, isBot: false, timestamp: formatTimestamp() }]);
     setInputText("");
     setIsLoading(true);
 
-    const promptToUse = getSystemPrompt(totalScore);
+    const prompt = getSystemPrompt(totalScore, userAllocation);
+    // const historyMessages = messages
+    //   .map((msg) => ({
+    //     role: msg.isBot ? "assistant" : "user",
+    //     content: msg.text,
+    //   }))
+    //   .filter((_, i) => i < 2 || i > 22);
+    console.log("system prompt: ", prompt)
+
     const requestBody = {
       messages: ensureAlternatingMessages([
-        { role: "system", content: promptToUse },
-        ...messages.map((msg) => ({ role: msg.isBot ? "assistant" : "user", content: msg.text })),
+        { role: "system", content: prompt },
+        // ...historyMessages,
         userMessage,
       ]),
     };
-
+      
     try {
+      console.log("normal version chat start!")
+      console.log(requestBody)
       const res = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -616,6 +631,14 @@ const ChatInterface = () => {
       setMessages((prev) => [...prev, { text: data.response, isBot: true, timestamp: formatTimestamp() }]);
     } catch (e) {
       console.error("Fetch error:", e);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "❗️System error: The conversation history may be too long.",
+          isBot: true,
+          timestamp: formatTimestamp(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -623,22 +646,24 @@ const ChatInterface = () => {
    // 確保每個 assistant message 搭配一個 user message
    const ensureAlternatingMessages = (messages) => {
     const result = [];
-    
+  
     for (let i = 0; i < messages.length; i++) {
       result.push(messages[i]);
-      
-      if (i < messages.length - 1 && 
-          messages[i].role === 'assistant' && 
-          messages[i+1].role === 'assistant') {
+  
+      if (
+        i < messages.length - 1 &&
+        messages[i].role === "assistant" &&
+        messages[i + 1].role === "assistant"
+      ) {
         result.push({
-          role: 'user',
-          content: 'Please continue.'
+          role: "user",
+          content: "Please continue.",
         });
       }
-    return result;
-  }
-}
-
+    }
+    return result; 
+  };
+  
   return (
     <div className="w-full h-screen bg-gray-200 relative">
       {/* 通知訊息 */}
