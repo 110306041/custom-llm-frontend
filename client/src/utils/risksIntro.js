@@ -11,4 +11,4 @@ Hi! As an investment advisor, I would like to introduce you to the five investme
 
 🚨 RR5: Very high-risk – Emerging market or sector-focused: These investments involve a high level of risk and are suitable for individuals who are seeking high-growth potential. They often focus on emerging markets or specific sectors with the potential for significant returns.
 
-Please let me know if you have any questions or if there's anything else I can assist you with!`
+`

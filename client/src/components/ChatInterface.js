@@ -45,7 +45,7 @@ const Notification = ({ show }) => {
     </div>
   );
 };
-const ChatMessage = ({ message }) => {
+const ChatMessage = ({ message, onButtonClick }) => {
   const content = message.isBot ? (
     <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
   ) : (
@@ -62,6 +62,14 @@ const ChatMessage = ({ message }) => {
         } rounded-lg px-6 py-4 max-w-2xl`}
       >
         <div className="text-lg">{content}</div>
+        {message.hasButton && (
+          <button
+            onClick={onButtonClick}
+            className="mt-4 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
+          >
+            NT$1,000,000 Investment Allocation Plan
+          </button>
+        )}
         <div
           className={`text-sm mt-2 ${
             message.isBot ? "text-gray-500" : "text-blue-100"
@@ -88,6 +96,7 @@ const ChatInterface = () => {
   const [userAnswers, setUserAnswers] = useState([]);
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] = useState(false);
   const [hasSeenProductIntro, setHasSeenProductIntro] = useState(false);
+  const [hasCompletedAllocation, setHasCompletedAllocation] = useState(false);
   const [userAllocation, setUserAllocation] = useState({
     RR1: 0,
     RR2: 0,
@@ -215,7 +224,7 @@ const ChatInterface = () => {
     🚨 RR5: Very high-risk – Emerging markets or global high-volatility plays
 
     (2) The user has just played portfolio manager with a virtual NT$1,000,000! 🎯  
-    Here’s how they’ve allocated it across available products:
+    Here's how they've allocated it across available products:
     ${total === 0
       ? "Their allocation has not been provided yet."
       : Object.entries(allocation)
@@ -228,14 +237,14 @@ const ChatInterface = () => {
     (3) Based on the user's risk tolerance score of **${score}**, decide whether their current allocation is:
     - too aggressive (may need to scale back on high-risk plays)  
     - too conservative (may have more room to explore higher returns)  
-    - well-aligned (great balance, let’s keep it rolling)
+    - well-aligned (great balance, let's keep it rolling)
 
     For each RR category the user invested in, provide a simple call:
       - ✅ Maintain  
       - ⬆️ Increase  
       - ⬇️ Reduce  
 
-    Use exciting but grounded explanations—why this fits (or doesn’t fit) their score, and what kind of investor this choice supports.
+    Use exciting but grounded explanations—why this fits (or doesn't fit) their score, and what kind of investor this choice supports.
 
     🔥 Product Guidance – Match ideas to their risk score:
 
@@ -254,7 +263,7 @@ const ChatInterface = () => {
 
     💡 *Note: Unit size means you can only invest in multiples of that amount (e.g., RR3 = NT$100,000, NT$200,000, etc). Please avoid suggesting invalid values.*
 
-    End with an upbeat note—remind them that bold doesn’t mean reckless, and that they’re building something exciting, one smart choice at a time.`
+    End with an upbeat note—remind them that bold doesn't mean reckless, and that they're building something exciting, one smart choice at a time.`
     };
 
     // Insurance mode 的 Scenario
@@ -376,11 +385,11 @@ const ChatInterface = () => {
 
     const rawGreetingMessage = {
       chat: {
-        intro: `Hello, it’s nice to meet you. I’ll be your assistant today. We have three things to do: 
+        intro: `Hello, it's nice to meet you. I'll be your assistant today. We have three things to do: 
                 (1) a brief greeting so we can get started
                 (2) a short self-introduction so we can understand each other better
                 (3) a meaningful discussion where I suggest something based on your interests. 
-                I prefer thoughtful conversations, so please take your time when sharing. Let’s begin—could you please share something about yourself?`,
+                I prefer thoughtful conversations, so please take your time when sharing. Let's begin—could you please share something about yourself?`,
         extra:  `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
                 (1) A quick hello so you can get to know me
                 (2) A self-introduction so I can learn about you
@@ -391,18 +400,18 @@ const ChatInterface = () => {
         intro: `Hello, and thank you for being here. In this session, we will go through three steps:
                 (1) We will start with a simple assessment to understand your personal risk tolerance.
                 (2) You will then decide how you would allocate a hypothetical budget of NT$1,000,000 across our available investment products (e.g., NT$700,000 in RR1 + NT$300,000 in RR2).
-                (3) Based on your responses, I will evaluate whether your chosen allocation aligns with your risk profile, and I’ll recommend if each investment should be reduced, maintained, or increased to better match your comfort level and goals.
+                (3) Based on your responses, I will evaluate whether your chosen allocation aligns with your risk profile, and I'll recommend if each investment should be reduced, maintained, or increased to better match your comfort level and goals.
                 Our goal is to ensure that your capital is well-protected while still allowing for meaningful growth in line with your individual risk capacity.
-                If you're someone who values stability and cautious planning, don’t worry—we’ll begin with options that feel safe and familiar.
-                Let’s start with a quick risk assessment to get to know your preferences. Once that’s done, we’ll build a thoughtful, personalized portfolio together.`,
+                If you're someone who values stability and cautious planning, don't worry—we'll begin with options that feel safe and familiar.
+                Let's start with a quick risk assessment to get to know your preferences. Once that's done, we'll build a thoughtful, personalized portfolio together.`,
 
-        extra: `Hey there! I’m so excited you’re here—let’s kick off your investment journey together!  
-                Here’s how it’s gonna work:  
-                (1) We’ll start with a quick and easy risk quiz to figure out your comfort zone.  
+        extra: `Hey there! I'm so excited you're here—let's kick off your investment journey together!  
+                Here's how it's gonna work:  
+                (1) We'll start with a quick and easy risk quiz to figure out your comfort zone.  
                 (2) Then, *you* get to play portfolio manager! Imagine you have NT$1,000,000—how would you divide it across our investment options (RR1–RR5)? Go with your gut!
-                (3) Once we’ve got both your risk profile and your ideal allocation, I’ll jump in to help fine-tune it—telling you where you might want to invest more, less, or hold steady to better match your goals.
-                No matter if you’re cautious, curious, or a risk-loving go-getter, we’ll build a smart, customized strategy that fits *you*.  
-                Let’s kick it off with the risk assessment—ready to roll? Let’s do this! 💥`
+                (3) Once we've got both your risk profile and your ideal allocation, I'll jump in to help fine-tune it—telling you where you might want to invest more, less, or hold steady to better match your goals.
+                No matter if you're cautious, curious, or a risk-loving go-getter, we'll build a smart, customized strategy that fits *you*.  
+                Let's kick it off with the risk assessment—ready to roll? Let's do this! 💥`
       },
 
       insurance: {
@@ -453,7 +462,7 @@ const ChatInterface = () => {
     setTimeout(() => setShowNotification(false), 800);
   };
 
-// 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 驗證 → 結合 score+allocation 分析
+// 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
   const handleSendMessage = async (event) => {
     event.preventDefault();
     if (!inputText.trim() || isLoading) return;
@@ -490,15 +499,15 @@ const ChatInterface = () => {
           setIsLoading(true);
 
           try {
-
             setMessages((prev) => [
               ...prev,
               { text: risksIntro, isBot: true, timestamp: formatTimestamp() },
-              {
-                text: personalityType === 'intro' ? introAllocation : extroAllocation,
-                isBot: true,
+              { 
+                text: "Please click the button below to start your 1,000,000 dollars allocation plan: ",
+                isBot: true, 
                 timestamp: formatTimestamp(),
-              },
+                hasButton: true 
+              }
             ]);
             setHasSeenProductIntro(true);
           } catch (e) {
@@ -519,65 +528,11 @@ const ChatInterface = () => {
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
       hasSeenProductIntro &&
-      /RR[1-5]:\s*\d+/.test(inputText)
+      !hasCompletedAllocation &&
+      inputText !== "allocate"
     ) {
-      const allocationInputRegex = /RR[1-5]:\s*\d+/g;
-      const matches = inputText.match(allocationInputRegex);
-      let parsed = { RR1: 0, RR2: 0, RR3: 0, RR4: 0, RR5: 0 };
-      let total = 0;
-      let hasInvalid = false;
-
-      matches.forEach((pair) => {
-        const [key, val] = pair.split(":");
-        const num = parseInt(val.trim());
-
-        if (!RR_UNIT[key] || num % RR_UNIT[key] !== 0) hasInvalid = true;
-        parsed[key] = num;
-        total += num;
-      });
-
-      if (total !== 1000000 || hasInvalid) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: "Allocation format invalid. Please ensure:\n- Total = NT$1,000,000\n- RR1: ×10,000｜RR2: ×20,000｜RR3: ×50,000｜RR4: ×100,000｜RR5: ×150,000",
-            isBot: true,
-            timestamp: formatTimestamp(),
-          },
-        ]);
-        setInputText("");
-        return;
-      }
-
-      // 儲存 user 的 allocation
-      setUserAllocation(parsed);
-      setIsLoading(true);
-      const prompt = getSystemPrompt(totalScore, parsed);
-      const requestBody = {
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
-        ],
-      };
-      try {
-        const res = await fetch("http://140.119.19.195:5000/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-        const data = await res.json();
-
-        setMessages((prev) => [
-          ...prev,
-          { text: inputText, isBot: false, timestamp: formatTimestamp() },
-          { text: data.response, isBot: true, timestamp: formatTimestamp() },
-        ]);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-        setInputText("");
-      }
+      setShowPopup(true);
+      setInputText("");
       return;
     }
 
@@ -605,7 +560,6 @@ const ChatInterface = () => {
 
       
     try {
-      console.log("requestBody of normal version chat", requestBody)
       const res = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -682,13 +636,33 @@ const ChatInterface = () => {
               Submit
             </button>
 
-            <button
-              onClick={() => setShowPopup(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-            >
-              Allocate Investment
-            </button>
-            {showPopup && <InvestmentPopup onClose={() => setShowPopup(false)} />}
+            {showPopup && <InvestmentPopup personalityType={personalityType} onClose={() => setShowPopup(false)} onSave={(allocation) => {
+              setUserAllocation(allocation);
+              setShowPopup(false);
+              setHasCompletedAllocation(true);
+              setIsLoading(true);
+              const prompt = getSystemPrompt(totalScore, allocation);
+              const requestBody = {
+                messages: [
+                  { role: "system", content: prompt },
+                  { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
+                ],
+              };
+              fetch("http://140.119.19.195:5000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody),
+              })
+              .then(res => res.json())
+              .then(data => {
+                setMessages(prev => [
+                  ...prev,
+                  { text: data.response, isBot: true, timestamp: formatTimestamp() }
+                ]);
+              })
+              .catch(e => console.error(e))
+              .finally(() => setIsLoading(false));
+            }} />}
           </div>
         </div>
       </div>
@@ -705,7 +679,11 @@ const ChatInterface = () => {
             </div>
           )}
           {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
+            <ChatMessage 
+              key={index} 
+              message={message} 
+              onButtonClick={() => message.hasButton && setShowPopup(true)}
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>

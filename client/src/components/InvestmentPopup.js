@@ -98,10 +98,10 @@ const PRODUCT_TABLES = {
   ],
 };
 
-const InvestmentPopup = ({ onClose }) => {
+const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
-  const [tableType, setTableType] = useState("intro");
+  const [tableType, setTableType] = useState(personalityType);
   const [allocation, setAllocation] = useState({});
   const productTable = PRODUCT_TABLES[tableType];
 
@@ -119,28 +119,6 @@ const InvestmentPopup = ({ onClose }) => {
         <p className="text-lg mb-6">
           請分配您的投資金額（需符合最低投資金額與總額限制）
         </p>
-
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-sm">切換產品版本：</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTableType("intro")}
-              className={`px-5 py-2 text-base rounded-lg ${
-                tableType === "intro" ? "bg-blue-500 text-white" : "bg-gray-200"
-              }`}
-            >
-              Intro Table
-            </button>
-            <button
-              onClick={() => setTableType("extra")}
-              className={`px-5 py-2 text-base rounded-lg ${
-                tableType === "extra" ? "bg-blue-500 text-white" : "bg-gray-200"
-              }`}
-            >
-              Extra Table
-            </button>
-          </div>
-        </div>
 
         <table className="w-full border text-base">
           <thead>
@@ -239,9 +217,8 @@ const InvestmentPopup = ({ onClose }) => {
                   setShowConfirmPopup(true);
                 } else {
                   // 👉 directly save & inject into chatbot if NOT checked
-                //   onSave({ allocation, summary, isFinalSubmit: false });
+                  onSave(allocation);
                   alert("✅ 投資組合儲存成功！");
-                  onClose();
                 }
               }}
               
@@ -265,10 +242,9 @@ const InvestmentPopup = ({ onClose }) => {
               </button>
               <button
                 onClick={() => {
-                    // onSave({ isFinalSubmit: true }); // only pass the flag
+                    onSave(allocation);
                     alert("你已完成此測驗");
                     setShowConfirmPopup(false);
-                    onClose();
                 }}
                 className="px-5 py-2 bg-green-500 text-white rounded-lg"
                 >
