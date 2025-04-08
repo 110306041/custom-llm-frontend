@@ -186,15 +186,15 @@ const ChatInterface = () => {
 
       - **Risk Score 10–15 (Low Risk)**:
         - Franklin Templeton Sinoam Money Market (RR1): Unit size NT$10,000 – Capital-preserving
-        - PGIM Return Fund (RR2): Unit size NT$20,000 – Stable growth
+        - BlackRock Global Fund - Global Government Bond Fund A2 (RR2): Unit size NT$20,000 – Stable growth
 
       - **Risk Score 16–30 (Moderate Risk)**:
-        - FSITC Greater China Balanced (RR3): Unit size NT$50,000 – Balanced exposure
-        - Capital OTC N (RR4): Unit size NT$100,000 – Gradual risk exposure
+        - Schroder Global Multi-Asset Income Fund (RR3): Unit size NT$50,000 – Balanced exposure
+        - JPMorgan Funds - Europe Equity Fund - JPM Europe Equity A (RR4): Unit size NT$100,000 – Gradual risk exposure
 
       - **Risk Score 31–50 (High Risk)**:
-        - Capital OTC N (RR4): Unit size NT$100,000 – Growth opportunities
-        - Fuh Hwa Emerging Market Short-term Income Fund (RR5): Unit size NT$150,000 – High-growth potential from emerging markets
+        - JPMorgan Funds - Europe Equity Fund - JPM Europe Equity A (RR4): Unit size NT$100,000 – Growth opportunities
+        - Invesco Global Equity Income Fund (RR5): Unit size NT$150,000 – High-growth potential from emerging markets
 
       💡 Note: "Unit size" means the investment amount must be a multiple of that number (e.g., NT$10,000, NT$20,000... for RR1). Avoid recommending values that are not valid units.    
       Your goal is to help them understand not just the "what" but also the "why"—build confidence in their investment decisions.
@@ -238,17 +238,17 @@ const ChatInterface = () => {
     🔥 Product Guidance – Match ideas to their risk score:
 
     - **Score 10–15 (Low Risk)**:
-      - Fuh Hwa 2.5–5 Year Maturity A-Rated Bond Fund (RR2): Unit size NT$50,000 – Steady returns, confidence builder
-      - Fuh Hwa Aegis (RR3): Unit size NT$100,000 – Adds a touch of growth without losing control
+      - Schroder ISF Global High Yield Bond (RR2): Unit size NT$50,000 – Steady returns, confidence builder
+      - PineBridge Flagship Global Balance Fund of Funds (RR3): Unit size NT$100,000 – Adds a touch of growth without losing control
 
     - **Score 16–30 (Moderate Risk)**:
-      - Fuh Hwa Aegis (RR3): Unit size NT$100,000 – Well-rounded exposure
-      - SinoPac Pilot Fund (RR4): Unit size NT$200,000 – Controlled aggression
-      - Partial allocation to Fuh Hwa South Africa ZAR Fund (RR5): Unit size NT$300,000 – Emerging market spice!
+      - PineBridge Flagship Global Balance Fund of Funds (RR3): Unit size NT$100,000 – Well-rounded exposure
+      - FSITC China Century Fund (RR4): Unit size NT$200,000 – Controlled aggression
+      - Franklin Technology Fund (RR5): Unit size NT$300,000 – Emerging market spice!
 
     - **Score 31–50 (High Risk)**:
-      - SinoPac Pilot Fund (RR4): Unit size NT$200,000 – Go big or go home!
-      - Fuh Hwa South Africa Fixed-Income ZAR Fund (RR5): Unit size NT$300,000 – High-octane, high-reward
+      - FSITC China Century Fund (RR4): Unit size NT$200,000 – Go big or go home!
+      - Franklin Technology Fund (RR5): Unit size NT$300,000 – High-octane, high-reward
 
     💡 *Note: Unit size means you can only invest in multiples of that amount (e.g., RR3 = NT$100,000, NT$200,000, etc). Please avoid suggesting invalid values.*
 
