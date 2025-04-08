@@ -488,12 +488,6 @@ const ChatInterface = () => {
           setIsLoading(true);
 
           try {
-            // const res = await fetch("http://140.119.19.195:5000/chat", {
-            //   method: "POST",
-            //   headers: { "Content-Type": "application/json" },
-            //   body: JSON.stringify(initialRequest),
-            // });
-            // const data = await res.json();
 
             setMessages((prev) => [
               ...prev,
@@ -592,32 +586,35 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     const prompt = getSystemPrompt(totalScore, userAllocation);
-    // // const historyMessages = messages
-    //   .map((msg) => ({
-    //     role: msg.isBot ? "assistant" : "user",
-    //     content: msg.text,
-    //   }))
-    //   .filter((_, i) => i < 2 || i > 22);
 
-    const requestBody = {
+    
+    
+
+    // const requestBodyf = {
+    //   messages: ensureAlternatingMessages([
+    //     { role: "system", content: prompt },
+    //     // { role: "user", content: "Start chat" },
+    //     ...messages.map((msg) => ({
+    //       role: msg.isBot ? "assistant" : "user",
+    //       content: msg.isBot ? msg.text : `${msg.text}`,
+    //     }))
+    //   .filter((_, i) => i < 2 || i > 26),
+    //   userMessage,
+    //   ])
+    // };  
+    const requestBodyf = {
       messages: ensureAlternatingMessages([
         { role: "system", content: prompt },
-        // ...historyMessages,
-        userMessage,
-      ]),
-    };
-    const requestBodyf = {
-      messages: [
-        { role: "system", content: prompt },
-        // { role: "user", content: "Start chat" },
+        { role: "user", content: "Start chat" },
         ...messages.map((msg) => ({
           role: msg.isBot ? "assistant" : "user",
-          content: msg.text,
+          content: msg.isBot ? msg.text : `${msg.text}`,
         }))
-      .filter((_, i) => i < 2 || i > 26),
-      userMessage,
-      ]
-    };    
+        .filter((_, i) => i < 1 || i > 26),
+    userMessage,
+      ]),
+    };
+    console.log("Request Body:", JSON.stringify(requestBodyf, null, 2));
 
       
     try {
