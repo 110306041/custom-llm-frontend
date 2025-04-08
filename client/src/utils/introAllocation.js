@@ -1,52 +1,57 @@
 export const introAllocation = `
-Now that you’ve completed the risk assessment and seen our investment categories, it’s time to make your own allocation decisions. 🎯
+Imagine this: you're about to graduate and are thinking ahead—whether it’s studying abroad, starting a new job in a different city, building your savings, or paying off student loans.  
+You want your finances to be stable and secure enough to support your plans over the next few years.
 
-You have a virtual budget of NT$1,000,000.  
-Please divide this amount across any combination of the following funds.  
-💡 Remember: each fund has a minimum investment unit—you must allocate in multiples of that amount.
+You currently have NT$1,000,000 available to invest.  
+This amount might come from savings or family support, and it’s meant to be used thoughtfully for long-term growth.
+
+Investing is all about balance. Some funds may offer high potential returns but come with greater risks, including the possibility of losing part of your principal. Others are more stable, offering lower but steadier returns.
+
+Your task: carefully divide this NT$1,000,000 across one or more of the following fund options, based on your risk preference and financial goals.  
+🎯 Each fund has a minimum investment unit. Your allocation must follow these rules.
 
 Here are your options:
 
-🟢 **Franklin Hua-Mei Money Market Fund (RR1)**  
-Return: 2% per year (past 5 years)  
+🟢 **Franklin Templeton Sinoam Money Market (RR1)**  
+Return: 3.12% per year  
 Volatility: Extremely Low  
-Unit Size: NT$10,000  
+Minimum Investment: NT$10,000  
 Type: Money Market Fund  
-Feature: High liquidity, stable returns.
+Feature: Highly liquid, low-risk short-term instruments. Ideal for capital preservation.
 
-🟡 **PGIM Prudential Ruifeng Bond Fund (RR2)**  
-Return: 4% per year (past 5 years)  
+🟡 **BlackRock Global Fund - Global Government Bond Fund A2 (RR2)**  
+Return: 6.17% per year  
 Volatility: Low  
-Unit Size: NT$20,000  
+Minimum Investment: NT$50,000  
 Type: Bond Fund  
-Feature: Investment-grade bonds, low-risk and conservative.
+Feature: Invests in investment-grade government bonds. Stable returns with low risk.
 
-🟡 **First Gold Balanced Greater China Fund (RR3)**  
-Return: 6% per year (past 5 years)  
+🟡 **Schroder Global Multi-Asset Income Fund (RR3)**  
+Return: 10.53% per year  
 Volatility: Moderate  
-Unit Size: NT$50,000  
+Minimum Investment: NT$100,000  
 Type: Balanced Fund  
-Feature: Mix of stocks and bonds, balanced risk.
+Feature: Combines stocks and bonds. Focuses on steady cash flow with some fluctuation.
 
-🔴 **Yuanta OTC Market Fund - Class N (RR4)**  
-Return: 8% per year (past 5 years)  
+🔴 **JPMorgan Funds - Europe Equity Fund - JPM Europe Equity A (RR4)**  
+Return: 21.38% per year  
 Volatility: High  
-Unit Size: NT$100,000  
+Minimum Investment: NT$150,000  
 Type: Equity Fund  
-Feature: Developed market stocks, high return potential, higher price fluctuation.
+Feature: Targets large-cap European companies. Higher return potential, moderate volatility.
 
-🔴 **Fuh Hwa Emerging Market Short-Term Income Fund (RR5)**  
-Return: 10% per year (past 5 years)  
-Volatility: Extremely High  
-Unit Size: NT$150,000  
-Type: Emerging Market Fund  
-Feature: Emerging market equities, very volatile, for aggressive investors.
+🔴 **Invesco Global Equity Income Fund (RR5)**  
+Return: 26.46% per year  
+Volatility: Very High  
+Minimum Investment: NT$300,000  
+Type: Equity Fund  
+Feature: Invests in high-quality global companies. Designed for long-term capital growth.
 
 ---
 
 📌 Please enter your allocation using this format:  
 \`RR1: 400000, RR3: 300000, RR4: 300000\`  
-(Total must be exactly NT$1,000,000 and follow unit size rules)
+Your total **must equal NT$1,000,000** and follow the unit size rules.
 
-Once you're ready, send me your allocation and I’ll help evaluate how well it fits your risk profile.
+Once you're ready, submit your allocation. I’ll help evaluate how well it aligns with your risk profile.
 `;
