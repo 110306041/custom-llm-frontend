@@ -587,22 +587,7 @@ const ChatInterface = () => {
 
     const prompt = getSystemPrompt(totalScore, userAllocation);
 
-    
-    
-
-    // const requestBodyf = {
-    //   messages: ensureAlternatingMessages([
-    //     { role: "system", content: prompt },
-    //     // { role: "user", content: "Start chat" },
-    //     ...messages.map((msg) => ({
-    //       role: msg.isBot ? "assistant" : "user",
-    //       content: msg.isBot ? msg.text : `${msg.text}`,
-    //     }))
-    //   .filter((_, i) => i < 2 || i > 26),
-    //   userMessage,
-    //   ])
-    // };  
-    const requestBodyf = {
+    const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: prompt },
         { role: "user", content: "Start chat" },
@@ -614,15 +599,15 @@ const ChatInterface = () => {
     userMessage,
       ]),
     };
-    console.log("Request Body:", JSON.stringify(requestBodyf, null, 2));
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
       
     try {
-      console.log("requestBody of normal version chat", requestBodyf)
+      console.log("requestBody of normal version chat", requestBody)
       const res = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBodyf),
+        body: JSON.stringify(requestBody),
       });
       const data = await res.json();
 
