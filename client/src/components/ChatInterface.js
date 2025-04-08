@@ -5,6 +5,7 @@ import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
 import { introAllocation } from "../utils/introAllocation";
 import { extroAllocation } from "../utils/extroAllocation";
 import { risksIntro } from "../utils/risksIntro";
+import InvestmentPopup from "./InvestmentPopup";
 
 
 const SendIcon = () => (
@@ -74,6 +75,7 @@ const ChatMessage = ({ message }) => {
 };
 
 const ChatInterface = () => {
+  const [showPopup, setShowPopup] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -679,6 +681,14 @@ const ChatInterface = () => {
             >
               Submit
             </button>
+
+            <button
+              onClick={() => setShowPopup(true)}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              Allocate Investment
+            </button>
+            {showPopup && <InvestmentPopup onClose={() => setShowPopup(false)} />}
           </div>
         </div>
       </div>
