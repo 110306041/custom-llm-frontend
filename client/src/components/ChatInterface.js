@@ -4,6 +4,7 @@ import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
 import { risksIntro } from "../utils/risksIntro";
 import { introAllocation } from "../utils/introAllocation";
+import { extroAllocation } from "../utils/extroAllocation";
 import InvestmentPopup from "./InvestmentPopup";
 
 
@@ -501,7 +502,7 @@ const ChatInterface = () => {
             setMessages((prev) => [
               ...prev,
               { text: risksIntro, isBot: true, timestamp: formatTimestamp() },
-              { text: introAllocation, isBot: true, timestamp: formatTimestamp() },
+              { text: personalityType === "intro" ? introAllocation : extroAllocation, isBot: true, timestamp: formatTimestamp() },
               { 
                 text: "Please click the button below to start your NT$1,000,000 investment allocation: ",
                 isBot: true, 
@@ -603,6 +604,50 @@ const ChatInterface = () => {
     return result; 
   };
   
+  // 處理投資分配的邏輯
+  const handleInvestmentAllocation = (allocation) => {
+    setUserAllocation(allocation);
+    setShowPopup(false);
+    setHasCompletedAllocation(true);
+    setIsLoading(true);
+    
+    // 每個 RR 各自投多少錢
+    const allocationSummary = Object.entries(allocation)
+      .filter(([_, amount]) => amount > 0)
+      .map(([rr, amount]) => `- ${rr}: NT$${amount.toLocaleString()}`)
+      .join('\n');
+    
+    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${Object.values(allocation).reduce((sum, val) => sum + val, 0).toLocaleString()}`;
+    
+    // 添加分配摘要到訊息列表
+    setMessages(prev => [
+      ...prev,
+      { text: allocationMessage, isBot: true, timestamp: formatTimestamp() }
+    ]);
+    
+    const prompt = getSystemPrompt(totalScore, allocation);
+    const requestBody = {
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
+      ],
+    };
+    fetch("http://140.119.19.195:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    })
+    .then(res => res.json())
+    .then(data => {
+      setMessages(prev => [
+        ...prev,
+        { text: data.response, isBot: true, timestamp: formatTimestamp() }
+      ]);
+    })
+    .catch(e => console.error(e))
+    .finally(() => setIsLoading(false));
+  };
+  
   return (
     <div className="w-full h-screen bg-gray-200 relative">
       {/* 通知訊息 */}
@@ -636,33 +681,7 @@ const ChatInterface = () => {
               Submit
             </button>
 
-            {showPopup && <InvestmentPopup personalityType={personalityType} onClose={() => setShowPopup(false)} onSave={(allocation) => {
-              setUserAllocation(allocation);
-              setShowPopup(false);
-              setHasCompletedAllocation(true);
-              setIsLoading(true);
-              const prompt = getSystemPrompt(totalScore, allocation);
-              const requestBody = {
-                messages: [
-                  { role: "system", content: prompt },
-                  { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
-                ],
-              };
-              fetch("http://140.119.19.195:5000/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody),
-              })
-              .then(res => res.json())
-              .then(data => {
-                setMessages(prev => [
-                  ...prev,
-                  { text: data.response, isBot: true, timestamp: formatTimestamp() }
-                ]);
-              })
-              .catch(e => console.error(e))
-              .finally(() => setIsLoading(false));
-            }} />}
+            {showPopup && <InvestmentPopup personalityType={personalityType} onClose={() => setShowPopup(false)} onSave={handleInvestmentAllocation} />}
           </div>
         </div>
       </div>

@@ -144,7 +144,7 @@ const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
                     type="number"
                     min={0}
                     step={prod.min}
-                    value={allocation[prod.rr] || ""}
+                    value={allocation[prod.rr] === undefined ? "" : allocation[prod.rr]}
                     onChange={handleChange(prod.rr)}
                     className="w-40 px-4 py-2 border rounded-lg text-base"
                   />
