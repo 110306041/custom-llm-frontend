@@ -2,9 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
-import { introAllocation } from "../utils/introAllocation";
-import { extroAllocation } from "../utils/extroAllocation";
 import { risksIntro } from "../utils/risksIntro";
+import { introAllocation } from "../utils/introAllocation";
 import InvestmentPopup from "./InvestmentPopup";
 
 
@@ -67,7 +66,7 @@ const ChatMessage = ({ message, onButtonClick }) => {
             onClick={onButtonClick}
             className="mt-4 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
           >
-            NT$1,000,000 Investment Allocation Plan
+            Start
           </button>
         )}
         <div
@@ -468,7 +467,7 @@ const ChatInterface = () => {
     if (!inputText.trim() || isLoading) return;
 
     const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
-    const RR_UNIT = { RR1: 10000, RR2: 20000, RR3: 50000, RR4: 100000, RR5: 150000 };
+    // const RR_UNIT = { RR1: 10000, RR2: 20000, RR3: 50000, RR4: 100000, RR5: 150000 };
 
     // ✏️ 問卷進行中
     if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
@@ -502,8 +501,9 @@ const ChatInterface = () => {
             setMessages((prev) => [
               ...prev,
               { text: risksIntro, isBot: true, timestamp: formatTimestamp() },
+              { text: introAllocation, isBot: true, timestamp: formatTimestamp() },
               { 
-                text: "Please click the button below to start your 1,000,000 dollars allocation plan: ",
+                text: "Please click the button below to start your NT$1,000,000 investment allocation: ",
                 isBot: true, 
                 timestamp: formatTimestamp(),
                 hasButton: true 
