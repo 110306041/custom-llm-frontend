@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
+import { loadInsuranceQuestionnaire } from "../utils/loadInsuranceQuestionnaire"; // <-- NEW
 import { risksIntro } from "../utils/risksIntro";
 import { introAllocation } from "../utils/introAllocation";
 import { extroAllocation } from "../utils/extroAllocation";
@@ -269,7 +270,7 @@ const ChatInterface = () => {
     // Insurance mode 的 Scenario
     const insuranceScenarios = {
         intro: `Scenario:
-    You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+    You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Lite Plan, Choice Plan, and  Secure Plan.
     
     Focus on comprehensive coverage and the ability to handle uncertainties.
     Highlight the advantages of higher protection, even if the premium is slightly higher.
@@ -278,48 +279,48 @@ const ChatInterface = () => {
     Each plan provides coverage across multiple categories, with key differences in protection levels:
     
     1. Accident Insurance (Death/Disability)
-    Overseas Light Plan: NT$3 million
-    Overseas Basic Plan: NT$5 million
-    Overseas Advanced Plan: NT$8 million
+    Lite Plan: NT$3 million
+    Choice Plan: NT$5 million
+    Secure Plan: NT$8 million
     
     2. Overseas Injury Medical Insurance (Reimbursement Cap)
-    Overseas Light Plan: NT$300,000
-    Overseas Basic Plan: NT$500,000
-    Overseas Advanced Plan: NT$800,000
+    Lite Plan: NT$300,000
+    ChoicePlan: NT$500,000
+    Secure Plan: NT$800,000
     
     3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-    Overseas Light Plan: NT$100,000
-    Overseas Basic Plan: NT$150,000
-    Overseas Advanced Plan: NT$300,000
+    Lite Plan: NT$100,000
+    Choice Plan: NT$150,000
+    Secure Plan: NT$300,000
     
     4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
-    Overseas Light Plan: NT$500
-    Overseas Basic Plan: NT$1,000
-    Overseas Advanced Plan: NT$2,000
+    Lite Plan: NT$500
+    Choice Plan: NT$1,000
+    Secure Plan: NT$2,000
     
     5. Emergency Assistance (Evacuation, Family Visit, etc.)
-    Overseas Light Plan: NT$1 million
-    Overseas Basic Plan: NT$1 million
-    Overseas Advanced Plan: NT$1.5 million
+    Lite Plan: NT$1 million
+    Choice Plan: NT$1 million
+    Secure Plan: NT$1.5 million
     
     6. Third-Party Liability (Per Incident – Injury)
-    Overseas Light Plan: NT$1 million
-    Overseas Basic Plan: NT$1.5 million
-    Overseas Advanced Plan: NT$2 million
+    Lite Plan: NT$1 million
+    Choice Plan: NT$1.5 million
+    Secure Plan: NT$2 million
     
     7. Third-Party Liability (Per Incident – Property Damage)
-    Overseas Light Plan: NT$200,000
-    Overseas Basic Plan: NT$200,000
-    Overseas Advanced Plan: NT$200,000
+    Lite Plan: NT$200,000
+    Choice Plan: NT$200,000
+    Secure Plan: NT$200,000
     
     Main Characteristics:
-    Overseas Light Plan: Suitable for budget-conscious individuals with minimal coverage needs.
-    Overseas Basic Plan: Provides moderate protection, covering common risks with reasonable cost.
-    Overseas Advanced Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
+    Lite Plan: Suitable for budget-conscious individuals with minimal coverage needs.
+    Choice Plan: Provides moderate protection, covering common risks with reasonable cost.
+    Secure Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
     
     Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
         extra: `Scenario:
-    You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Overseas Light Plan, Overseas Basic Plan, and Overseas Advanced Plan.
+    You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Lite Plan, Choice Plan, and Secure Plan.
     
     Focus on cost-effectiveness and flexibility.
     Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
@@ -328,49 +329,53 @@ const ChatInterface = () => {
     Each plan provides coverage across multiple categories, with key differences in protection levels:
     
     1. Accident Insurance (Death/Disability)
-    Overseas Light Plan: NT$2 million
-    Overseas Basic Plan: NT$3 million
-    Overseas Advanced Plan: NT$5 million
+    Lite Plan: NT$2 million
+    Choice Plan: NT$3 million
+    Secure Plan: NT$5 million
     
     2. Overseas Injury Medical Insurance (Reimbursement Cap)
-    Overseas Light Plan: NT$200,000
-    Overseas Basic Plan: NT$400,000
-    Overseas Advanced Plan: NT$600,000
+    Lite Plan: NT$200,000
+    Choice Plan: NT$400,000
+    Secure Plan: NT$600,000
     
     3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-    Overseas Light Plan: NT$50,000
-    Overseas Basic Plan: NT$100,000
-    Overseas Advanced Plan: NT$200,000
+    Lite Plan: NT$50,000
+    Choice Plan: NT$100,000
+    Secure Plan: NT$200,000
     
     4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
-    Overseas Light Plan: NT$500
-    Overseas Basic Plan: NT$800
-    Overseas Advanced Plan: NT$1,500
+    Lite Plan: NT$500
+    Choice Plan: NT$800
+    Secure Plan: NT$1,500
     
     5. Emergency Assistance (Evacuation, Family Visit, etc.)
-    Overseas Light Plan: NT$800,000
-    Overseas Basic Plan: NT$1.2 million
-    Overseas Advanced Plan: NT$1.5 million
+    Lite Plan: NT$800,000
+    Choice Plan: NT$1.2 million
+    Secure Plan: NT$1.5 million
     
     6. Third-Party Liability (Per Incident – Injury)
-    Overseas Light Plan: NT$1 million
-    Overseas Basic Plan: NT$1 million
-    Overseas Advanced Plan: NT$1 million
+    Lite Plan: NT$1 million
+    Choice Plan: NT$1 million
+    Secure Plan: NT$1 million
     
     7. Third-Party Liability (Per Incident – Property Damage)
-    Overseas Light Plan: NT$200,000
-    Overseas Basic Plan: NT$200,000
-    Overseas Advanced Plan: NT$200,000
+    Lite Plan: NT$200,000
+    Choice Plan: NT$200,000
+    Secure Plan: NT$200,000
     
     Main Characteristics:
-    Overseas Light Plan: Best value for cost-conscious students, covers essential needs for low-risk situations.
-    Overseas Basic Plan: Balanced protection for common risks, offering a reasonable trade-off between cost and coverage.
-    Overseas Advanced Plan: Comprehensive but expensive, ideal for students engaging in high-risk activities.
+    Lite Plan: Best value for cost-conscious students, covers essential needs for low-risk situations.
+    Choice Plan: Balanced protection for common risks, offering a reasonable trade-off between cost and coverage.
+    Secure Plan: Comprehensive but expensive, ideal for students engaging in high-risk activities.
     
     Your goal is to analyze the insurance plans, summarize their key features in an engaging and easy-to-understand way, and prepare persuasive selling points that encourage customers to choose the most cost-effective option. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
     };
     // 根據 chatMode 組合最終的 prompt
     if (chatMode === "insurance") {
+      // if (hasCompletedQuestionnaire && userAnswers.length === 3) {
+      const derivedPrompt = buildInsuranceSystemPrompt(personalityType, userAnswers);
+      return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}\n\n${derivedPrompt}`;
+      // }
       return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}`;
     } else if (chatMode === "investment"){
       // Call the function with the score parameter
@@ -416,20 +421,20 @@ const ChatInterface = () => {
 
       insurance: {
         intro:  `Hello, and thank you for being here. In this session, we will go through three steps:
-                (1) I will introduce an overseas basic insurance plan with a focus on risk management
+                (1) I will introduce an Choice insurance plan with a focus on risk management
                 (2) We will carefully review key policy terms
                 (3) I will answer any questions you may have in a precise and structured way
                 I'll provide the necessary details clearly, so let's start by looking at the policy overview.
                 Below are the one of the three types of our Overseas Insurance Plan:  
-                The Overseas Basic Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Overseas Light Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Light Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Light Plan. Overall, the Overseas Basic Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
+                The Choice Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Lite Plan but lower than the  Secure Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Lite Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Lite Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Lite Plan. Overall, the Overseas Choice Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
 
-        extra: `Hi there! I'm really glad you're here! We're going to explore an overseas basic insurance plan together in three steps:
+        extra: `Hi there! I'm really glad you're here! We're going to explore an  Choice insurance plan together in three steps:
                 (1) I'll introduce the plan and highlight how flexible and useful it is
                 (2) We'll discuss important terms in a way that makes sense to you
                 (3) You can ask me anything—I love answering questions!
                 Let's jump in and see how this plan could work for you!                
                 Below are the one of the three types of our Overseas Insurance Plan:
-                Hi there! I'm thrilled to introduce you to our Overseas Basic Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Overseas Basic Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Overseas Basic Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Overseas Basic Plan is definitely worth considering!`,
+                Hi there! I'm thrilled to introduce you to our Choice Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Choice Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Choice Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Choice Plan is definitely worth considering!`,
       },
     }[chatMode][personalityType];
 
@@ -454,14 +459,97 @@ const ChatInterface = () => {
           },
         ]);
       });
-    } else{
+    }
+    else if (chatMode === "insurance") {
+      loadInsuranceQuestionnaire().then((questions) => {
+        setQuestionnaire(questions);
+        setMessages([
+          greetingMessage,
+          {
+            text: `First question:\n\n${questions[0].text}\n${questions[0].options
+              .map((opt, i) => `(${i + 1}) ${opt}`)
+              .join("\n")}`,
+            isBot: true,
+            timestamp: formatTimestamp(),
+          },
+        ]);
+      });
+    }
+    else{
       setMessages([greetingMessage]);
     }
     setUserAnswers([]);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 800);
   };
+  
+  const buildInsuranceSystemPrompt = (persona, answers) => {
+    const q1 = answers[0]; // Concern about risk
+    const q2 = answers[1]; // Importance of saving money
+    const q3 = answers[2]; // Lifestyle
+  
+    // Q1 → Concern
+    const concernPlan =
+      q1 === 1
+        ? persona === "intro"
+          ? "Secure Choice Plan"
+          : "Lite Plan"
+        : q1 === 2
+        ? persona === "intro"
+          ? "Comprehensive Shield Plan"
+          : "Basic Plan"
+        : "Comprehensive Shield Plan"; // default for high concern
+  
+    // Q2 → Saving Priority
+    const savingPlan =
+      q2 === 1
+        ? persona === "intro"
+          ? "Secure Choice Plan"
+          : "Lite Plan"
+        : q2 === 2
+        ? persona === "intro"
+          ? "Comprehensive Shield Plan"
+          : "Basic Plan"
+        : "Comprehensive Shield Plan"; // default for "not important"
+  
+    // Q3 → Lifestyle Risk
+    const lifestylePlan = (() => {
+      if (q3 === 1)
+        return persona === "intro"
+          ? "Secure Choice Plan"
+          : "Lite Plan";
+      if (q3 === 2 || q3 === 3 || q3 === 4)
+        return persona === "intro"
+          ? "Comprehensive Shield Plan"
+          : "Basic Plan";
+      return "Comprehensive Shield Plan";
+    })();
+  
+    // Collect and count frequency
+    const planCount = {};
+    [concernPlan, savingPlan, lifestylePlan].forEach((plan) => {
+      planCount[plan] = (planCount[plan] || 0) + 1;
+    });
+  
+    // Find most common plan
+    const mostCommonPlan = Object.entries(planCount).reduce((a, b) =>
+      b[1] > a[1] ? b : a
+    )[0];
+  
+    return `
+   Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
+  User has completed the insurance questionnaire. Their answers match the following plan suggestions:
+  
+  - Concern about medical/travel risks → **${concernPlan}**
+  - Importance of saving money → **${savingPlan}**
+  - Lifestyle risk exposure → **${lifestylePlan}**
+  
+   The most frequently recommended plan is: **${mostCommonPlan}**  
+  
+  `;
+  };
 
+  
 // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
   const handleSendMessage = async (event) => {
     event.preventDefault();
@@ -523,6 +611,114 @@ const ChatInterface = () => {
       setInputText("");
       return;
     }
+
+    // INSURANCE QUESTIONNAIRE LOGIC (new)
+  // ------------------------------------
+  if (
+    chatMode === "insurance" &&
+    currentQuestionIndex < questionnaire.length
+  ) {
+    const index = parseInt(inputText.trim(), 10) - 1;
+    const currentQ = questionnaire[currentQuestionIndex];
+
+    if (
+      isNaN(index) ||
+      index < 0 ||
+      index >= currentQ.options.length
+    ) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Please respond with a valid option number.",
+          isBot: true,
+          timestamp: formatTimestamp(),
+        },
+      ]);
+    } else {
+      // Valid answer
+      const allAnswers = [...userAnswers, index + 1];
+      setUserAnswers(allAnswers);
+
+      const isLast = currentQuestionIndex + 1 === questionnaire.length;
+
+      setMessages((prev) => [
+        ...prev,
+        { text: inputText, isBot: false, timestamp: formatTimestamp() },
+        !isLast
+          ? {
+              text: `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options
+                .map((opt, i) => `(${i + 1}) ${opt}`)
+                .join("\n")}`,
+              isBot: true,
+              timestamp: formatTimestamp(),
+            }
+          : {
+              text: "✅ Thanks! We’ve got all your answers. Let me analyze them...",
+              isBot: true,
+              timestamp: formatTimestamp(),
+            },
+      ]);
+
+      if (isLast) {
+        setHasCompletedQuestionnaire(true);
+        setIsLoading(true);
+
+        // Build system prompt referencing user’s answers
+        // const insurancePrompt = buildInsuranceSystemPrompt(
+        //   personalityType,
+        //   allAnswers
+        // );
+      
+        const finalPrompt = getSystemPrompt(); // Will include base + derived content
+        console.log("Final system prompt:\n\n" + finalPrompt);
+
+        try {
+          // Example call to your LLM endpoint
+          const res = await fetch("http://140.119.19.195:5000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [
+                { role: "system", content: finalPrompt },
+                {
+                  role: "user",
+                  content: "Here are my answers. Please recommend a plan.",
+                },
+              ],
+            }),
+          });
+          const data = await res.json();
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              text: data.response,
+              isBot: true,
+              timestamp: formatTimestamp(),
+            },
+          ]);
+        } catch (error) {
+          console.error("Insurance Q&A error:", error);
+          setMessages((prev) => [
+            ...prev,
+            {
+              text:
+                "System error during insurance recommendation. Please try again later.",
+              isBot: true,
+              timestamp: formatTimestamp(),
+            },
+          ]);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+
+    setInputText("");
+    return;
+  }
 
     // 處理投資分配格式
     if (
