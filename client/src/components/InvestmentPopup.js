@@ -98,24 +98,67 @@ const PRODUCT_TABLES = {
   ],
 };
 
-const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
+const InvestmentPopup = ({ 
+  onClose, 
+  personalityType, 
+  onSave, 
+  recommendations = {}, 
+  isSecondAllocation = false,
+  initialAllocation = {}
+}) => {
   const [tableType, setTableType] = useState(personalityType);
-  const [allocation, setAllocation] = useState({});
+  const [allocation, setAllocation] = useState(initialAllocation);
   const productTable = PRODUCT_TABLES[tableType];
 
+  // 初次渲染時使用 initialAllocation
+  React.useEffect(() => {
+    if (Object.keys(initialAllocation).length > 0) {
+      setAllocation(initialAllocation);
+    }
+  }, [initialAllocation]);
+
   const handleChange = (rr) => (e) => {
-    const value = parseInt(e.target.value) || 0;
+    // Parse input value to integer, ensuring 0 is properly handled as a valid value
+    const value = e.target.value === "" ? undefined : (parseInt(e.target.value) || 0);
     setAllocation((prev) => ({
       ...prev,
       [rr]: value,
     }));
   };
+
+  // 顯示建議變化的輔助函數
+  const renderRecommendation = (rr) => {
+    if (!isSecondAllocation || !recommendations[rr]) return null;
+    
+    const change = recommendations[rr];
+    if (change === 0) return null;
+    
+    const isIncrease = change > 0;
+    const color = isIncrease ? "text-red-500" : "text-green-500";
+    const prefix = isIncrease ? "+" : "-";
+    
+    return (
+      <div className={`${color} text-sm ml-2 font-medium`}>
+        {`${prefix}NT$${Math.abs(change).toLocaleString()}`}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white p-10 rounded-2xl w-[95%] max-w-7xl overflow-auto max-h-[95%] shadow-2xl">
-        <h2 className="text-3xl font-bold mb-6">NT$1,000,000 Allocation</h2>
+        <h2 className="text-3xl font-bold mb-6">
+          NT$1,000,000 Allocation 
+          {isSecondAllocation && <span className="text-blue-500 ml-2 text-xl">(Second Allocation with LLM Recommendations)</span>}
+        </h2>
         <p className="text-lg mb-6">
-          Please allocate your investment amount (meeting minimum investment and total amount requirements)
+          Please allocate your investment amount (meeting minimum investment and total amount requirements). 
+          You must enter a value for each category - either 0 or an amount that meets the minimum investment requirement.
+          {isSecondAllocation && 
+            <span className="text-blue-600 ml-2">
+              Consider the LLM recommendations in red (increase) or green (decrease)
+            </span>
+          }
         </p>
 
         <table className="w-full border text-base">
@@ -126,7 +169,7 @@ const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
               <th className="p-4 border">Annualized Return (%)</th>
               <th className="p-4 border">Volatility</th>
               <th className="p-4 border">Minimum Investment</th>
-              <th className="p-4 border">Amount</th>
+              <th className="p-4 border">Amount {isSecondAllocation && <span className="text-sm text-blue-500">+ Recommendation</span>}</th>
               <th className="p-4 border">Fund Type</th>
               <th className="p-4 border">Description</th>
             </tr>
@@ -140,14 +183,19 @@ const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
                 <td className="p-4 border">{prod.volatility}</td>
                 <td className="p-4 border">NT${prod.min.toLocaleString()}</td>
                 <td className="p-4 border">
-                  <input
-                    type="number"
-                    min={0}
-                    step={prod.min}
-                    value={allocation[prod.rr] === undefined ? "" : allocation[prod.rr]}
-                    onChange={handleChange(prod.rr)}
-                    className="w-40 px-4 py-2 border rounded-lg text-base"
-                  />
+                  <div className="flex items-center">
+                    <input
+                      type="number"
+                      min={0}
+                      step={prod.min}
+                      placeholder="Enter 0 or min value"
+                      required
+                      value={allocation[prod.rr] === undefined ? "" : allocation[prod.rr]}
+                      onChange={handleChange(prod.rr)}
+                      className="w-40 px-4 py-2 border rounded-lg text-base"
+                    />
+                    {renderRecommendation(prod.rr)}
+                  </div>
                   {allocation[prod.rr] !== undefined &&
                     allocation[prod.rr] > 0 &&
                     allocation[prod.rr] < prod.min && (
@@ -185,9 +233,21 @@ const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
           <button
             onClick={() => {
                 const total = Object.values(allocation).reduce(
-                  (sum, val) => sum + val,
+                  (sum, val) => sum + val || 0,
                   0
                 );
+                
+                // Check if any investment category is missing a value
+                const hasMissingValues = productTable.some(
+                  (prod) => allocation[prod.rr] === undefined
+                );
+                
+                if (hasMissingValues) {
+                  alert("❗️Please enter a value (including 0) for all investment categories!");
+                  return;
+                }
+                
+                // Check for invalid values: must be either 0 or meet the minimum investment requirement
                 const hasInvalid = productTable.some(
                   (prod) =>
                     allocation[prod.rr] !== undefined &&
@@ -207,7 +267,13 @@ const InvestmentPopup = ({ onClose, personalityType, onSave }) => {
                   return;
                 }
                 
-                onSave(allocation);
+                // Create a clean allocation object with all values set explicitly
+                const cleanAllocation = {};
+                productTable.forEach(prod => {
+                  cleanAllocation[prod.rr] = allocation[prod.rr] || 0;
+                });
+                
+                onSave(cleanAllocation);
                 alert("✅ Investment portfolio saved successfully!");
             }}
               

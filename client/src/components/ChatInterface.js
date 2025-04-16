@@ -6,6 +6,9 @@ import { risksIntro } from "../utils/risksIntro";
 import { introAllocation } from "../utils/introAllocation";
 import { extroAllocation } from "../utils/extroAllocation";
 import InvestmentPopup from "./InvestmentPopup";
+import { introRcmdPrompt } from '../utils/introRcmdPrompt';
+import { extroRcmdPrompt } from '../utils/extroRcmdPrompt';
+import { extractRecommendationsFromLLMResponse } from '../utils/extractRecommendations';
 
 
 const SendIcon = () => (
@@ -45,7 +48,7 @@ const Notification = ({ show }) => {
     </div>
   );
 };
-const ChatMessage = ({ message, onButtonClick }) => {
+const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
   const content = message.isBot ? (
     <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
   ) : (
@@ -68,6 +71,14 @@ const ChatMessage = ({ message, onButtonClick }) => {
             className="mt-4 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
           >
             Start
+          </button>
+        )}
+        {message.hasSecondAllocationButton && (
+          <button
+            onClick={handleSecondAllocation}
+            className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+          >
+            Adjust Investment Allocation
           </button>
         )}
         <div
@@ -104,9 +115,13 @@ const ChatInterface = () => {
     RR4: 0,
     RR5: 0,
   });
+  const [llmRecommendation, setLlmRecommendation] = useState({});
+  const [isSecondAllocation, setIsSecondAllocation] = useState(false);
+  const [hasFinalRequested, setHasFinalRequested] = useState(false);
   const totalScore = useMemo(() => {
     return userAnswers.reduce((a, b) => a + b, 0);
   }, [userAnswers]);
+  const [isConversationComplete, setIsConversationComplete] = useState(false);
   
 
   const scrollToBottom = () => {
@@ -153,26 +168,8 @@ const ChatInterface = () => {
       intro: (score, allocation) => 
     `Scenario:
       You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. Your role is to guide users through investment product categories and help them build a risk-aligned portfolio.
-      (1) First, briefly introduce the five investment product risk categories.
-        Please list them **one per line**, using the following format:
-      "🟢 RR1: Ultra-conservative – Money market and time deposits"
 
-      Do **not** merge all categories into one paragraph.
-      Use a **line break after each category** to improve readability.
-      Use the following emoji to represent risk levels: 
-      - 🟢 Low Risk  
-      - 🟡 Moderate Risk  
-      - 🔴 High Risk  
-      - 🚨 Very High Risk  
-
-      Example format:
-      🟢 RR1: Ultra-conservative – Money market and time deposits  
-      🟢 RR2: Low-risk – Bond funds with stable returns  
-      🟡 RR3: Moderate-risk – Balanced or bond-heavy funds  
-      🔴 RR4: High-risk – Growth funds (regional or thematic)  
-      🚨 RR5: Very high-risk – Emerging market or sector-focused
-
-      (2) The user has been asked to allocate a hypothetical NT$1,000,000 across available investment products. Their current allocation is as follows:
+      First of all, the user has been asked to allocate a hypothetical NT$1,000,000 across available investment products. Their current allocation is as follows:
       ${total === 0
         ? "Their allocation has not been provided yet."
         : Object.entries(allocation)
@@ -182,7 +179,7 @@ const ChatInterface = () => {
       }
       Please carefully review this allocation and consider how it aligns with the user's risk tolerance score.
 
-      (3) Based on the user's risk tolerance score of **${score}**, determine whether their current allocation is:
+      Secondly, based on the user's risk tolerance score of **${score}**, determine whether their current allocation is:
       - too aggressive (should reduce exposure to high-risk funds)
       - too conservative (should consider increasing allocation to higher-return options)
       - well-aligned (can maintain current distribution)
@@ -193,19 +190,21 @@ const ChatInterface = () => {
         - Reduce investment ⬇️
 
       Then explain *why*, using plain language and tying it back to their score and the characteristics of each fund category.
-      You may use the following product guidance to support your decisions:
+      You may use the following product guidance along with the user's score to support your decisions:
 
       - **Risk Score 10–15 (Low Risk)**:
-        - Franklin Templeton Sinoam Money Market (RR1): Unit size NT$10,000 – Capital-preserving
-        - BlackRock Global Fund - Global Government Bond Fund A2 (RR2): Unit size NT$20,000 – Stable growth
+        - Franklin Templeton Sinoam Money Market Fund (RR1) (Unit Size: NT$10,000)
+        - BlackRock Global Government Bond Fund A2 (RR2) (Unit Size: NT$50,000)
 
       - **Risk Score 16–30 (Moderate Risk)**:
-        - Schroder Global Multi-Asset Income Fund (RR3): Unit size NT$50,000 – Balanced exposure
-        - JPMorgan Funds - Europe Equity Fund - JPM Europe Equity A (RR4): Unit size NT$100,000 – Gradual risk exposure
+        - BlackRock Global Government Bond Fund A2 (RR2) (Unit Size: NT$50,000)
+        - Schroder International Selection Fund Global Multi-Asset Balanced (RR3) (Unit Size: NT$100,000)
+        - JPMorgan Funds - Europe Equity Fund A (acc) - USD (RR4) (Unit Size: NT$150,000)
 
       - **Risk Score 31–50 (High Risk)**:
-        - JPMorgan Funds - Europe Equity Fund - JPM Europe Equity A (RR4): Unit size NT$100,000 – Growth opportunities
-        - Invesco Global Equity Income Fund (RR5): Unit size NT$150,000 – High-growth potential from emerging markets
+        - Schroder International Selection Fund Global Multi-Asset Balanced (RR3) (Unit Size: NT$100,000)
+        - JPMorgan Funds - Europe Equity Fund A (acc) - USD (RR4) (Unit Size: NT$150,000)
+        - Invesco Global Equity Income Fund A USD (RR5) (Unit Size: NT$300,000) 
 
       💡 Note: "Unit size" means the investment amount must be a multiple of that number (e.g., NT$10,000, NT$20,000... for RR1). Avoid recommending values that are not valid units.    
       Your goal is to help them understand not just the "what" but also the "why"—build confidence in their investment decisions.
@@ -214,16 +213,7 @@ const ChatInterface = () => {
       extra: (score) => `Scenario:
     You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your task is to educate users about our investment product types and guide them to build portfolios aligned with their risk personality.
     
-    (1) Start by breaking down the five risk levels (RR1–RR5) with flair and clarity.  
-    Use the following format, **one per line**, to keep things clean and exciting:
-
-    🟢 RR1: Ultra-safe – Cash-like products with very low volatility  
-    🟢 RR2: Low-risk – Bond funds with steady growth  
-    🟡 RR3: Moderate-risk – Balanced funds with growth potential  
-    🔴 RR4: High-risk – Growth strategies, higher return potential  
-    🚨 RR5: Very high-risk – Emerging markets or global high-volatility plays
-
-    (2) The user has just played portfolio manager with a virtual NT$1,000,000! 🎯  
+    First of all, the user has just played portfolio manager with a virtual NT$1,000,000! 🎯  
     Here's how they've allocated it across available products:
     ${total === 0
       ? "Their allocation has not been provided yet."
@@ -234,7 +224,7 @@ const ChatInterface = () => {
     }
     Your job: Celebrate their effort 👏, then review whether this matches their actual risk profile!
 
-    (3) Based on the user's risk tolerance score of **${score}**, decide whether their current allocation is:
+    Second, based on the user's risk tolerance score of **${score}**, decide whether their current allocation is:
     - too aggressive (may need to scale back on high-risk plays)  
     - too conservative (may have more room to explore higher returns)  
     - well-aligned (great balance, let's keep it rolling)
@@ -249,17 +239,17 @@ const ChatInterface = () => {
     🔥 Product Guidance – Match ideas to their risk score:
 
     - **Score 10–15 (Low Risk)**:
-      - Schroder ISF Global High Yield Bond (RR2): Unit size NT$50,000 – Steady returns, confidence builder
-      - PineBridge Flagship Global Balance Fund of Funds (RR3): Unit size NT$100,000 – Adds a touch of growth without losing control
+      - Schroder Global High Yield Bond Fund A1 (RR2) (Unit Size: NT$50,000)
+      - PineBridge Preferred Securities Income Fund (RR3) (Unit Size: NT$100,000)
 
     - **Score 16–30 (Moderate Risk)**:
-      - PineBridge Flagship Global Balance Fund of Funds (RR3): Unit size NT$100,000 – Well-rounded exposure
-      - FSITC China Century Fund (RR4): Unit size NT$200,000 – Controlled aggression
-      - Franklin Technology Fund (RR5): Unit size NT$300,000 – Emerging market spice!
+      - PineBridge Preferred Securities Income Fund (RR3) (Unit Size: NT$100,000)
+      - FSITC China Century Fund-TWD (RR4)  (Unit Size: NT$150,000)
+      - Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (RR5) (Unit Size: NT$300,000)
 
     - **Score 31–50 (High Risk)**:
-      - FSITC China Century Fund (RR4): Unit size NT$200,000 – Go big or go home!
-      - Franklin Technology Fund (RR5): Unit size NT$300,000 – High-octane, high-reward
+      - FSITC China Century Fund-TWD (RR4)  (Unit Size: NT$150,000)
+      - Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (RR5) (Unit Size: NT$300,000)
 
     💡 *Note: Unit size means you can only invest in multiples of that amount (e.g., RR3 = NT$100,000, NT$200,000, etc). Please avoid suggesting invalid values.*
 
@@ -382,6 +372,11 @@ const ChatInterface = () => {
 
   const handleSubmitSettings = () => {
     setMessages([]);
+    
+    // 只有當切換模式時才重置 userAnswers
+    if (chatMode !== "investment") {
+      setUserAnswers([]);
+    }
 
     const rawGreetingMessage = {
       chat: {
@@ -457,7 +452,6 @@ const ChatInterface = () => {
     } else{
       setMessages([greetingMessage]);
     }
-    setUserAnswers([]);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 800);
   };
@@ -465,10 +459,12 @@ const ChatInterface = () => {
 // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
   const handleSendMessage = async (event) => {
     event.preventDefault();
+    // 如果對話已完成，則不處理訊息發送
+    if (isConversationComplete) return;
+    
     if (!inputText.trim() || isLoading) return;
 
     const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
-    // const RR_UNIT = { RR1: 10000, RR2: 20000, RR3: 50000, RR4: 100000, RR5: 150000 };
 
     // ✏️ 問卷進行中
     if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
@@ -479,13 +475,12 @@ const ChatInterface = () => {
         setMessages((prev) => [...prev, { text: "Please respond with 1–5.", isBot: true, timestamp: formatTimestamp() }]);
       } else {
         const allAnswers = [...userAnswers, index + 1];
-        console.log("All answers: ", allAnswers)
         const isLast = currentQuestionIndex + 1 === questionnaire.length;
         setUserAnswers(allAnswers);
 
 
         const nextText = isLast
-        ? `✅ Assessment complete. Your score: **${allAnswers.reduce((a, b) => a + b, 0)}**.`
+        ? `✅ Assessment complete. Your risk tolerance score: **${allAnswers.reduce((a, b) => a + b, 0)}**.`
         : `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options.map((opt, i) => `(${i + 1}) ${opt}`).join("\n")}`;
         
         setMessages((prev) => [
@@ -507,7 +502,7 @@ const ChatInterface = () => {
                 text: "Please click the button below to start your NT$1,000,000 investment allocation: ",
                 isBot: true, 
                 timestamp: formatTimestamp(),
-                hasButton: true 
+                hasButton: true
               }
             ]);
             setHasSeenProductIntro(true);
@@ -517,7 +512,6 @@ const ChatInterface = () => {
             setIsLoading(false);
           }
         }
-
         setCurrentQuestionIndex((prev) => prev + 1);
       }
       setInputText("");
@@ -529,8 +523,9 @@ const ChatInterface = () => {
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
       hasSeenProductIntro &&
-      !hasCompletedAllocation &&
-      inputText !== "allocate"
+      !hasCompletedAllocation 
+      // &&
+      // inputText !== "allocate"
     ) {
       setShowPopup(true);
       setInputText("");
@@ -540,6 +535,26 @@ const ChatInterface = () => {
     // 一般聊天模式
     const userMessage = { role: "user", content: inputText };
     setMessages((prev) => [...prev, { text: inputText, isBot: false, timestamp: formatTimestamp() }]);
+    
+    // Check if the user has typed "FINAL" to request final allocation
+    const isFinalRequested = chatMode === "investment" && 
+                            hasCompletedAllocation && 
+                            inputText.trim().toUpperCase() === "FINAL";
+    
+    if (isFinalRequested) {
+      setHasFinalRequested(true);
+      const finalMessage = {
+        text: "You've requested to make your final investment allocation adjustments. Based on our recommendations, you can now modify your portfolio to create your final investment allocation. Remember to maintain a total of exactly NT$1,000,000 and respect the minimum investment units for each category.\n\nClick the button below to make your final adjustments:",
+        isBot: true,
+        timestamp: formatTimestamp(),
+        hasSecondAllocationButton: true
+      };
+      
+      setInputText("");
+      setMessages(prev => [...prev, finalMessage]);
+      return;
+    }
+    
     setInputText("");
     setIsLoading(true);
 
@@ -548,6 +563,7 @@ const ChatInterface = () => {
     const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: prompt },
+        //Start chat很重要，拿掉會跑不了
         { role: "user", content: "Start chat" },
         ...messages.map((msg) => ({
           role: msg.isBot ? "assistant" : "user",
@@ -559,7 +575,6 @@ const ChatInterface = () => {
     };
     console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
-      
     try {
       const res = await fetch("http://140.119.19.195:5000/chat", {
         method: "POST",
@@ -604,34 +619,59 @@ const ChatInterface = () => {
     return result; 
   };
   
-  // 處理投資分配的邏輯
-  const handleInvestmentAllocation = (allocation) => {
+  const generateAllocationSummary = (allocation) => {
+    return Object.entries(allocation)
+      .map(([rr, amount]) => `- ${rr}: NT$${amount.toLocaleString()}`)
+      .join('\n');
+  };
+
+  const calculateTotal = (allocation) => {
+    return Object.values(allocation).reduce((sum, val) => sum + val, 0);
+  };
+  
+  // 第二次配置的處理函數
+  const handleSecondAllocation = () => {
+    // Only proceed if user has requested final allocation by typing "FINAL"
+    if (!hasFinalRequested) {
+      return;
+    }
+    setIsSecondAllocation(true);
+    setShowPopup(true);
+  };
+  
+  
+  // 處理投資配置的邏輯
+  const handleAllocation = (allocation) => {
+    // 檢查並記錄數據
+    console.log('風險評分:', totalScore, '分配:', allocation);
+        
+    // 根據 personalityType 選擇合適的 prompt
+    const recPrompt = personalityType === "intro" 
+      ? introRcmdPrompt(totalScore, allocation)
+      : extroRcmdPrompt(totalScore, allocation);
+
     setUserAllocation(allocation);
     setShowPopup(false);
     setHasCompletedAllocation(true);
     setIsLoading(true);
     
-    // 每個 RR 各自投多少錢
-    const allocationSummary = Object.entries(allocation)
-      .filter(([_, amount]) => amount > 0)
-      .map(([rr, amount]) => `- ${rr}: NT$${amount.toLocaleString()}`)
-      .join('\n');
+    const allocationSummary = generateAllocationSummary(allocation);
+    const total = calculateTotal(allocation);
     
-    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${Object.values(allocation).reduce((sum, val) => sum + val, 0).toLocaleString()}`;
+    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}`;
     
-    // 添加分配摘要到訊息列表
     setMessages(prev => [
       ...prev,
       { text: allocationMessage, isBot: true, timestamp: formatTimestamp() }
     ]);
     
-    const prompt = getSystemPrompt(totalScore, allocation);
     const requestBody = {
       messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: "Here is my allocation. Please review and suggest adjustments." },
+        { role: "system", content: recPrompt },
+        { role: "user", content: "Review my investment allocation and provide balanced recommendations. For each increase you suggest, you MUST recommend a corresponding decrease elsewhere to maintain exactly NT$1,000,000 total. Be precise with amounts and ensure they respect the minimum investment units." },
       ],
     };
+    console.log('recommendationPrompt是：', requestBody)
     fetch("http://140.119.19.195:5000/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -639,15 +679,59 @@ const ChatInterface = () => {
     })
     .then(res => res.json())
     .then(data => {
+      // 提取建議重點
+      const recommendations = extractRecommendationsFromLLMResponse(data.response, allocation);
+      setLlmRecommendation(recommendations);
+      console.log('recommendations重點', recommendations)
+
+      const responseWithNote = data.response + "\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type \"FINAL\" in the chat box and I'll provide a button for you to proceed with your final allocation.";
+
       setMessages(prev => [
         ...prev,
-        { text: data.response, isBot: true, timestamp: formatTimestamp() }
+        { 
+          text: responseWithNote, 
+          isBot: true, 
+          timestamp: formatTimestamp()
+        }
       ]);
     })
     .catch(e => console.error(e))
     .finally(() => setIsLoading(false));
   };
   
+  // 保存投資配置的邏輯 (抽象為一個獨立函數)
+  const handleSaveAllocation = (newAllocation) => {
+    // 檢查並記錄數據
+    console.log('風險評分:', totalScore, '新分配:', newAllocation);
+    
+    // 如果是第二次配置，則需要特殊處理
+    if (isSecondAllocation) {
+      setUserAllocation(newAllocation);
+      setShowPopup(false);
+      setIsSecondAllocation(false);
+      setHasFinalRequested(false);
+      
+      // 生成分配摘要訊息
+      const allocationSummary = generateAllocationSummary(newAllocation);
+      const total = calculateTotal(newAllocation);
+      
+      const allocationMessage = `**Your Final Investment Allocation:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}\n\n✅ **Your investment allocation process is now complete. Thank you for using our service!**`;
+      
+      // 添加分配摘要到訊息列表 並標記對話完成
+      setMessages(prev => [
+        ...prev,
+        { text: allocationMessage, isBot: true, timestamp: formatTimestamp() }
+      ]);
+      
+      // 標記對話已完成
+      setIsConversationComplete(true);
+    } else {
+      // 第一次配置的原始邏輯
+      handleAllocation(newAllocation);
+    }
+  };
+  
+  // UI
   return (
     <div className="w-full h-screen bg-gray-200 relative">
       {/* 通知訊息 */}
@@ -681,7 +765,18 @@ const ChatInterface = () => {
               Submit
             </button>
 
-            {showPopup && <InvestmentPopup personalityType={personalityType} onClose={() => setShowPopup(false)} onSave={handleInvestmentAllocation} />}
+            {showPopup && <InvestmentPopup 
+              personalityType={personalityType} 
+              onClose={() => { 
+                setShowPopup(false);
+                setIsSecondAllocation(false);
+                setHasFinalRequested(false);
+              }} 
+              onSave={handleSaveAllocation}
+              recommendations={isSecondAllocation ? llmRecommendation : {}}
+              isSecondAllocation={isSecondAllocation}
+              initialAllocation={isSecondAllocation ? userAllocation : {}}
+            />}
           </div>
         </div>
       </div>
@@ -694,7 +789,7 @@ const ChatInterface = () => {
         <div className="w-full">
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-8 text-xl">
-              開始對話吧！
+              Start Your Chat Here！
             </div>
           )}
           {messages.map((message, index) => (
@@ -702,6 +797,7 @@ const ChatInterface = () => {
               key={index} 
               message={message} 
               onButtonClick={() => message.hasButton && setShowPopup(true)}
+              handleSecondAllocation={handleSecondAllocation}
             />
           ))}
           <div ref={messagesEndRef} />
@@ -710,30 +806,41 @@ const ChatInterface = () => {
 
       {/* Input Area */}
       <div className="fixed bottom-0 left-0 right-0 bg-white">
-        <form
-          onSubmit={handleSendMessage}
-          className="relative max-w-[800px] mx-auto px-4 py-4"
-        >
-          <input
-            type="text"
-            className="w-full text-lg bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-            placeholder="輸入訊息..."
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`absolute right-6 top-1/2 -translate-y-1/2 p-2.5 rounded-xl ${
-              isLoading
-                ? "bg-gray-200 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150"
-            }`}
+        {isConversationComplete ? (
+          <div className="bg-green-50 p-4 border-t border-green-200">
+            <div className="max-w-[800px] mx-auto text-center text-green-700 flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-lg font-medium">Test completed, thank you for using our service.</span>
+            </div>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSendMessage}
+            className="relative max-w-[800px] mx-auto px-4 py-4"
           >
-            <SendIcon />
-          </button>
-        </form>
+            <input
+              type="text"
+              className="w-full text-lg bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+              placeholder={isConversationComplete ? "您的投資配置已完成" : "輸入訊息..."}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              disabled={isLoading || isConversationComplete}
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`absolute right-6 top-1/2 -translate-y-1/2 p-2.5 rounded-xl ${
+                isLoading
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150"
+              }`}
+            >
+              <SendIcon />
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
