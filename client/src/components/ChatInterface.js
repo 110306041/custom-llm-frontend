@@ -98,6 +98,7 @@ const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
 };
 
 const ChatInterface = () => {
+  const [insurancePopupOpenCount, setInsurancePopupOpenCount] = useState(0);
   const [finalInsurancePrompt, setFinalInsurancePrompt] = useState("");
   const [showInsurancePopup, setShowInsurancePopup] = useState(false); //new
   const [showPopup, setShowPopup] = useState(false);
@@ -636,7 +637,7 @@ Given the reality of limited resources and the presence of potential risks, you 
 
     if (isConversationComplete) return;
 
-    if (inputText.trim().toLowerCase() === "finish interaction!!!") {
+    if (inputText.trim()=== "FINAL") {
       setMessages((prev) => [
         ...prev,
         {
@@ -853,6 +854,10 @@ Given the reality of limited resources and the presence of potential risks, you 
       chatMode === "insurance" && finalInsurancePrompt
         ? finalInsurancePrompt
         : getSystemPrompt(totalScore, userAllocation);
+    
+    if (chatMode === "investment") {
+          console.log("🟢 Investment Mode - Final Prompt:\n", prompt);
+        }
 
     const requestBody = {
       messages: ensureAlternatingMessages([
@@ -1086,6 +1091,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         }
       ]);
     }}
+    timesOpened={insurancePopupOpenCount}
   />
 )}
 
@@ -1113,6 +1119,7 @@ Given the reality of limited resources and the presence of potential risks, you 
                 if (message.hasSecondAllocationButton) {
                   handleSecondAllocation();
                 } else if (message.hasButton && chatMode === "insurance") {
+                  setInsurancePopupOpenCount((prev) => prev + 1); 
                   setShowInsurancePopup(true);
                 } else if (message.hasButton) {
                   setShowPopup(true);

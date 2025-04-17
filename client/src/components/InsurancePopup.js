@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 
-const InsurancePopup = ({ onClose, onSelect, personalityType }) => {
+const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handlePlanClick = (plan) => {
     setSelectedPlan(plan);
-    setShowConfirm(true);
+    if (timesOpened > 1) {
+      setShowConfirm(true);
+    } else {
+      onSelect(plan);  
+    }
   };
 
   const confirmSelection = () => {
