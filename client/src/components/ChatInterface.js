@@ -10,6 +10,8 @@ import InvestmentPopup from "./InvestmentPopup";
 import { introRcmdPrompt } from '../utils/introRcmdPrompt';
 import { extroRcmdPrompt } from '../utils/extroRcmdPrompt';
 import { extractRecommendationsFromLLMResponse } from '../utils/extractRecommendations';
+import InsurancePopup from './InsurancePopup';
+
 
 
 const SendIcon = () => (
@@ -50,6 +52,7 @@ const Notification = ({ show }) => {
   );
 };
 const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
+  
   const content = message.isBot ? (
     <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
   ) : (
@@ -95,6 +98,8 @@ const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
 };
 
 const ChatInterface = () => {
+  const [finalInsurancePrompt, setFinalInsurancePrompt] = useState("");
+  const [showInsurancePopup, setShowInsurancePopup] = useState(false); //new
   const [showPopup, setShowPopup] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -139,7 +144,19 @@ const ChatInterface = () => {
     });
   };
 
-  const getSystemPrompt = (score = null, allocation = userAllocation) => {
+  const promptInsuranceSelection = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: "Please choose your preferred insurance plan:",
+        isBot: true,
+        timestamp: formatTimestamp(),
+        hasButton: true
+      }
+    ]);
+  };
+  
+  const getSystemPrompt = (score = null, allocation = userAllocation, tempAnswers = userAnswers) => {
     const total = Object.values(allocation).reduce((sum, v) => sum + v, 0) || 1;
     const percent = (val) => `${Math.round((val / total) * 100)}%`;
 
@@ -260,110 +277,146 @@ const ChatInterface = () => {
     // Insurance mode 的 Scenario
     const insuranceScenarios = {
         intro: `Scenario:
-    You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: Lite Plan, Choice Plan, and  Secure Plan.
+    You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: New Protection Plan, Secure Choice Plan, and Comprehensive Shield PlanPlan.
     
     Focus on comprehensive coverage and the ability to handle uncertainties.
-    Highlight the advantages of higher protection, even if the premium is slightly higher.
+    Highlight the advantages of higher protection, even if the premium is slightly higher
     Emphasize the long-term benefits of stronger financial security and peace of mind.
     Insurance Coverage Details:
+
+    Insurance Preium:
+    New Protection Plan: Reduces study budget by NT$5,500/month
+    Secure Choice Plan: Reduces study budget by NT$10,000/month
+    Comprehensive Shield Plan: Reduces study budget by NT$15,000/month
+
     Each plan provides coverage across multiple categories, with key differences in protection levels:
     
-    1. Accident Insurance (Death/Disability)
-    Lite Plan: NT$3 million
-    Choice Plan: NT$5 million
-    Secure Plan: NT$8 million
+    1. General Accidental Death & Disability Coverage
+    New Protection Plan: NT$3 million
+    Secure Choice Plan: NT$4 million
+    Comprehensive Shield Plan: NT$5 million
     
-    2. Overseas Injury Medical Insurance (Reimbursement Cap)
-    Lite Plan: NT$300,000
-    ChoicePlan: NT$500,000
-    Secure Plan: NT$800,000
+    2. Overseas Reimbursement-Based Medical Coverage (Limit)
+    New Protection Plan: NT$300,000
+    Secure Choice Plan: NT$500,000
+    Comprehensive Shield Plan: NT$500,000
     
-    3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-    Lite Plan: NT$100,000
-    Choice Plan: NT$150,000
-    Secure Plan: NT$300,000
+    3. Overseas Emergency Hospitalization Coverage (Limit)
+    New Protection Plan: NT$100,000
+    Secure Choice Shield Plan: NT$100,000
+    Comprehensive Shield Plan: NT$200,000
     
-    4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
-    Lite Plan: NT$500
-    Choice Plan: NT$1,000
-    Secure Plan: NT$2,000
+    4. Overseas Emergency Outpatient Medical Coverage (Limit)
+    New Protection Plan: NT$500
+    Secure Choice Plan: NT$500
+    Comprehensive Shield Plan: NT$1,000
     
-    5. Emergency Assistance (Evacuation, Family Visit, etc.)
-    Lite Plan: NT$1 million
-    Choice Plan: NT$1 million
-    Secure Plan: NT$1.5 million
+    5. Overseas Emergency ER Medical Coverage (Limit)
+    New Protection Plan Plan: NT$1000
+    Secure Choice Plan: NT$1000
+    Comprehensive Shield Plan: NT$2000
     
-    6. Third-Party Liability (Per Incident – Injury)
-    Lite Plan: NT$1 million
-    Choice Plan: NT$1.5 million
-    Secure Plan: NT$2 million
+    6. Overseas Emergency Assistance Insurance
+    New Protection Plan: NT$1 million
+    Secure Choice Plan: NT$1 million
+    Comprehensive Shield Plan: NT$1.5 million
     
-    7. Third-Party Liability (Per Incident – Property Damage)
-    Lite Plan: NT$200,000
-    Choice Plan: NT$200,000
-    Secure Plan: NT$200,000
+    7. Liability for bodily injury per accident (Limit)
+    New Protection Plan: NT$1 million
+    Secure Choice Plan: NT$1 million
+    Comprehensive Shield Plan: NT$1 million
+
+    8. Liability for property damage per accident (Limit) 
+    New Protection Plan: NT$200,000
+    Secure Choice Plan: NT$200,000
+    Comprehensive Shield Plan: NT$200,000
+
+    9. Maximum Compensation per Insurance Period
+    New Protection Plan: NT$1.2 million
+    Secure Choice Plan: NT$1.2 million
+    Comprehensive Shield Plan: NT$1.2 million
     
     Main Characteristics:
-    Lite Plan: Suitable for budget-conscious individuals with minimal coverage needs.
-    Choice Plan: Provides moderate protection, covering common risks with reasonable cost.
-    Secure Plan: Offers the most extensive coverage, ideal for individuals seeking maximum security and peace of mind.
+    New Protection Plan: Flexible adjustment plan, coverage includes common needs, premiums are affordable.
+    Secure Choice Plan: Comprehensive design, coverage slightly enhanced, suitable for students who need to reserve budget.
+    Comprehensive Shield Plan: Advanced full protection, covers unexpected and high-cost medical situations, suitable for those with strong risk awareness.
+
+    Imagine you are about to begin a one-year study abroad program in the United States.
+In an unfamiliar environment, unexpected situations can arise—such as illness, accidental injury, lost belongings, flight delays, or even costly medical expenses. These risks, if they occur, may not only disrupt your academic and daily plans but also impose a significant financial burden.
+ 
+Therefore, it is essential to choose a suitable insurance plan to prepare for these uncertainties. Please note that the insurance premium will be deducted from your limited study abroad budget, which may impact your spending on living expenses, transportation, accommodation, or academic needs.
+ 
+Given the reality of limited resources and the presence of potential risks, you are encouraged to carefully evaluate each plan’s coverage and cost structure, and select the one that best supports a smooth and secure study abroad experience.
+
     
     Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
+    
         extra: `Scenario:
-    You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Lite Plan, Choice Plan, and Secure Plan.
+    You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Lite Plan, Basic Plan, and Advanced Plan.
     
     Focus on cost-effectiveness and flexibility.
     Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
     Emphasize savings while ensuring students have essential coverage.
     Insurance Coverage Details:
+
+    Insurance Preium:
+    Lite Plan: Reduces study budget by NT$5,500/month
+    Basic Plan: Reduces study budget by NT$10,000/month
+    Advanced Shield Plan: Reduces study budget by NT$15,000/month
+
     Each plan provides coverage across multiple categories, with key differences in protection levels:
     
-    1. Accident Insurance (Death/Disability)
-    Lite Plan: NT$2 million
-    Choice Plan: NT$3 million
-    Secure Plan: NT$5 million
+    1. General Accidental Death & Disability Coverage
+    Lite Plan: NT$3 million
+    Basic Plan: NT$5.45 million
+    Advanced Plan: NT$8.18 million
     
-    2. Overseas Injury Medical Insurance (Reimbursement Cap)
-    Lite Plan: NT$200,000
-    Choice Plan: NT$400,000
-    Secure Plan: NT$600,000
+    2. Overseas Emergency Hospitalization Coverage (Limit)
+    Lite Plan: NT$100,000
+    Basic Plan: NT$180,000
+    Advanced Plan: NT$270,000
     
-    3. Overseas Sudden Illness – Hospitalization (Reimbursement Cap)
-    Lite Plan: NT$50,000
-    Choice Plan: NT$100,000
-    Secure Plan: NT$200,000
-    
-    4. Overseas Sudden Illness – Outpatient (Reimbursement Cap)
+    3. Overseas Emergency Outpatient Medical Coverage (Limit)
     Lite Plan: NT$500
-    Choice Plan: NT$800
-    Secure Plan: NT$1,500
+    Basic Plan: NT$909
+    Advanced Plan: NT$1363
     
-    5. Emergency Assistance (Evacuation, Family Visit, etc.)
-    Lite Plan: NT$800,000
-    Choice Plan: NT$1.2 million
-    Secure Plan: NT$1.5 million
+    4. Overseas Emergency ER Medical Coverage (Limit)
+    Lite Plan: NT$1000
+    Basic Plan: NT$1818
+    Advanced Plan: NT$2727
     
-    6. Third-Party Liability (Per Incident – Injury)
+    5. Overseas Emergency Assistance Insurance
     Lite Plan: NT$1 million
-    Choice Plan: NT$1 million
-    Secure Plan: NT$1 million
+    Basic Plan: NT$1.81 million
+    Advanced Plan: NT$2.72 million
     
-    7. Third-Party Liability (Per Incident – Property Damage)
+    6. Liability for bodily injury per accident (Limit)
+    Lite Plan: NT$1 million
+    Basic Plan: NT$1.81 million
+    Advanced Plan: NT$2.72 million
+    
+    7. Liability for property damage per accident (Limit)
     Lite Plan: NT$200,000
-    Choice Plan: NT$200,000
-    Secure Plan: NT$200,000
+    Basic Plan: NT$360,000
+    Advanced Plan: NT$540,000
+
+    8. Maximum Compensation per Insurance Period
+    Lite Plan: NT$1.2 million
+    Basic Plan: NT$2.18 million
+    Advanced Plan: NT$3.27 million
     
     Main Characteristics:
-    Lite Plan: Best value for cost-conscious students, covers essential needs for low-risk situations.
-    Choice Plan: Balanced protection for common risks, offering a reasonable trade-off between cost and coverage.
-    Secure Plan: Comprehensive but expensive, ideal for students engaging in high-risk activities.
+    Lite Plan: Best cost-effectiveness, covers essential needs, suitable for low-risk activities.
+    Basic Plan: Provides moderate coverage, suitable for general risk scenarios, reasonably priced.
+    Advanced Plan: Higher premium, ideal for extremely high-risk activities but may exceed most users' needs.
     
     Your goal is to analyze the insurance plans, summarize their key features in an engaging and easy-to-understand way, and prepare persuasive selling points that encourage customers to choose the most cost-effective option. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
     };
     // 根據 chatMode 組合最終的 prompt
     if (chatMode === "insurance") {
       // if (hasCompletedQuestionnaire && userAnswers.length === 3) {
-      const derivedPrompt = buildInsuranceSystemPrompt(personalityType, userAnswers);
+      const derivedPrompt = buildInsuranceSystemPrompt(personalityType, tempAnswers);
       return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}\n\n${derivedPrompt}`;
       // }
       return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}`;
@@ -478,6 +531,27 @@ const ChatInterface = () => {
   };
   
   const buildInsuranceSystemPrompt = (persona, answers) => {
+    const insuranceQuestions = [
+      {
+        text: "How concerned are you about medical emergencies and travel risks?",
+        options: ["Low Concern", "Moderate Concern", "High Concern"],
+      },
+      {
+        text: "How important is it for you to save money for other expenses?",
+        options: ["Very Important", "Somewhat Important", "Not Important"],
+      },
+      {
+        text: "How will you spend your time outside of studying?",
+        options: [
+          "I will mostly stay on campus and focus on studying.",
+          "I plan to travel frequently to different cities/countries.",
+          "I will participate in outdoor or adventure activities (e.g., skiing, hiking, diving).",
+          "I will work part-time and commute regularly.",
+        ],
+      },
+    ];
+    console.log('the answers are ')
+    console.log(answers)
     const q1 = answers[0]; // Concern about risk
     const q2 = answers[1]; // Importance of saving money
     const q3 = answers[2]; // Lifestyle
@@ -529,16 +603,21 @@ const ChatInterface = () => {
     const mostCommonPlan = Object.entries(planCount).reduce((a, b) =>
       b[1] > a[1] ? b : a
     )[0];
+    const formattedAnswers = [
+      `Q1: ${insuranceQuestions[0].text}\nA: ${insuranceQuestions[0].options[q1 - 1]}`,
+      `Q2: ${insuranceQuestions[1].text}\nA: ${insuranceQuestions[1].options[q2 - 1]}`,
+      `Q3: ${insuranceQuestions[2].text}\nA: ${insuranceQuestions[2].options[q3 - 1]}`,
+    ].join("\n\n");
+
+  
   
     return `
    Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
-  User has completed the insurance questionnaire. Their answers match the following plan suggestions:
+  User has completed the insurance questionnaire. And the folowing is the User's answer in the question and the most fitted insurance plan inferred from the questionaire, please cosider them to personalize the insurance recommendation to user.
   
-  - Concern about medical/travel risks → **${concernPlan}**
-  - Importance of saving money → **${savingPlan}**
-  - Lifestyle risk exposure → **${lifestylePlan}**
+  ${formattedAnswers}
   
-   The most frequently recommended plan is: **${mostCommonPlan}**  
+   The most frequently fitted plan by the questionaire is: **${mostCommonPlan}**  
   
   `;
   };
@@ -548,11 +627,28 @@ const ChatInterface = () => {
   const handleSendMessage = async (event) => {
     event.preventDefault();
     // 如果對話已完成，則不處理訊息發送
-    if (isConversationComplete) return;
+
+    
     
     if (!inputText.trim() || isLoading) return;
 
     const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+
+    if (isConversationComplete) return;
+
+    if (inputText.trim().toLowerCase() === "finish interaction!!!") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Please choose your preferred insurance plan:",
+          isBot: true,
+          timestamp: formatTimestamp(),
+          hasButton: true
+        }
+      ]);
+      setInputText("");
+      return;
+    }
 
     // ✏️ 問卷進行中
     if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
@@ -655,56 +751,54 @@ const ChatInterface = () => {
 
       if (isLast) {
         setHasCompletedQuestionnaire(true);
-        setIsLoading(true);
+        promptInsuranceSelection();
+        // setIsLoading(true);
 
-        // Build system prompt referencing user’s answers
-        // const insurancePrompt = buildInsuranceSystemPrompt(
-        //   personalityType,
-        //   allAnswers
-        // );
       
-        const finalPrompt = getSystemPrompt(); // Will include base + derived content
+        // const finalPrompt = getSystemPrompt(); // Will include base + derived content
+        const finalPrompt = getSystemPrompt(null, {}, allAnswers);
         console.log("Final system prompt:\n\n" + finalPrompt);
+        setFinalInsurancePrompt(finalPrompt);
 
-        try {
-          // Example call to your LLM endpoint
-          const res = await fetch("http://140.119.19.195:5000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages: [
-                { role: "system", content: finalPrompt },
-                {
-                  role: "user",
-                  content: "Here are my answers. Please recommend a plan.",
-                },
-              ],
-            }),
-          });
-          const data = await res.json();
+        // try {
+        //   // Example call to your LLM endpoint
+        //   const res = await fetch("http://140.119.19.195:5000/chat", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({
+        //       messages: [
+        //         { role: "system", content: finalPrompt },
+        //         {
+        //           role: "user",
+        //           content: "Here are my answers. Please recommend a plan.",
+        //         },
+        //       ],
+        //     }),
+        //   });
+        //   const data = await res.json();
 
-          setMessages((prev) => [
-            ...prev,
-            {
-              text: data.response,
-              isBot: true,
-              timestamp: formatTimestamp(),
-            },
-          ]);
-        } catch (error) {
-          console.error("Insurance Q&A error:", error);
-          setMessages((prev) => [
-            ...prev,
-            {
-              text:
-                "System error during insurance recommendation. Please try again later.",
-              isBot: true,
-              timestamp: formatTimestamp(),
-            },
-          ]);
-        } finally {
-          setIsLoading(false);
-        }
+        //   setMessages((prev) => [
+        //     ...prev,
+        //     {
+        //       text: data.response,
+        //       isBot: true,
+        //       timestamp: formatTimestamp(),
+        //     },
+        //   ]);
+        // } catch (error) {
+        //   console.error("Insurance Q&A error:", error);
+        //   setMessages((prev) => [
+        //     ...prev,
+        //     {
+        //       text:
+        //         "System error during insurance recommendation. Please try again later.",
+        //       isBot: true,
+        //       timestamp: formatTimestamp(),
+        //     },
+        //   ]);
+        // } finally {
+        //   setIsLoading(false);
+        // }
       }
 
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -754,7 +848,11 @@ const ChatInterface = () => {
     setInputText("");
     setIsLoading(true);
 
-    const prompt = getSystemPrompt(totalScore, userAllocation);
+    // const prompt = getSystemPrompt(totalScore, userAllocation);
+    const prompt =
+      chatMode === "insurance" && finalInsurancePrompt
+        ? finalInsurancePrompt
+        : getSystemPrompt(totalScore, userAllocation);
 
     const requestBody = {
       messages: ensureAlternatingMessages([
@@ -973,6 +1071,24 @@ const ChatInterface = () => {
               isSecondAllocation={isSecondAllocation}
               initialAllocation={isSecondAllocation ? userAllocation : {}}
             />}
+            {showInsurancePopup && (
+  <InsurancePopup
+    personalityType={personalityType} 
+    onClose={() => setShowInsurancePopup(false)} 
+    onSelect={(plan) => {
+      setShowInsurancePopup(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: `You selected the **${plan}**.`,
+          isBot: true,
+          timestamp: formatTimestamp()
+        }
+      ]);
+    }}
+  />
+)}
+
           </div>
         </div>
       </div>
@@ -992,7 +1108,16 @@ const ChatInterface = () => {
             <ChatMessage 
               key={index} 
               message={message} 
-              onButtonClick={() => message.hasButton && setShowPopup(true)}
+              // onButtonClick={() => message.hasButton && setShowPopup(true)}
+              onButtonClick={() => {
+                if (message.hasSecondAllocationButton) {
+                  handleSecondAllocation();
+                } else if (message.hasButton && chatMode === "insurance") {
+                  setShowInsurancePopup(true);
+                } else if (message.hasButton) {
+                  setShowPopup(true);
+                }
+              }}
               handleSecondAllocation={handleSecondAllocation}
             />
           ))}
@@ -1022,7 +1147,11 @@ const ChatInterface = () => {
               placeholder={isConversationComplete ? "您的投資配置已完成" : "輸入訊息..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              disabled={isLoading || isConversationComplete}
+              // disabled={isLoading || isConversationComplete}
+              disabled={
+                   isConversationComplete ||
+                   (isLoading && chatMode !== "insurance")  // keep lock for other modes
+                 }
             />
             <button
               type="submit"
