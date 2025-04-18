@@ -7,19 +7,10 @@ import { risksIntro } from "../utils/risksIntro";
 import { introAllocation } from "../utils/introAllocation";
 import { extroAllocation } from "../utils/extroAllocation";
 import InvestmentPopup from "./InvestmentPopup";
-<<<<<<< HEAD
-import { introRcmdPrompt } from '../utils/introRcmdPrompt';
-import { extroRcmdPrompt } from '../utils/extroRcmdPrompt';
-import { extractRecommendationsFromLLMResponse } from '../utils/extractRecommendations';
-import InsurancePopup from './InsurancePopup';
-
-
-=======
 import { introRcmdPrompt } from "../utils/introRcmdPrompt";
 import { extroRcmdPrompt } from "../utils/extroRcmdPrompt";
 import { extractRecommendationsFromLLMResponse } from "../utils/extractRecommendations";
 import InsurancePopup from "./InsurancePopup";
->>>>>>> main
 
 const SendIcon = () => (
   <svg
@@ -59,10 +50,6 @@ const Notification = ({ show }) => {
   );
 };
 const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
-<<<<<<< HEAD
-  
-=======
->>>>>>> main
   const content = message.isBot ? (
     <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
   ) : (
@@ -122,12 +109,8 @@ const ChatInterface = () => {
   const [questionnaire, setQuestionnaire] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
-<<<<<<< HEAD
-  const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] = useState(false);
-=======
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] =
     useState(false);
->>>>>>> main
   const [hasSeenProductIntro, setHasSeenProductIntro] = useState(false);
   const [hasCompletedAllocation, setHasCompletedAllocation] = useState(false);
   const [userAllocation, setUserAllocation] = useState({
@@ -144,10 +127,6 @@ const ChatInterface = () => {
     return userAnswers.reduce((a, b) => a + b, 0);
   }, [userAnswers]);
   const [isConversationComplete, setIsConversationComplete] = useState(false);
-<<<<<<< HEAD
-  
-=======
->>>>>>> main
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -170,14 +149,6 @@ const ChatInterface = () => {
         text: "Please choose your preferred insurance plan:",
         isBot: true,
         timestamp: formatTimestamp(),
-<<<<<<< HEAD
-        hasButton: true
-      }
-    ]);
-  };
-  
-  const getSystemPrompt = (score = null, allocation = userAllocation, tempAnswers = userAnswers) => {
-=======
         hasButton: true,
       },
     ]);
@@ -188,28 +159,19 @@ const ChatInterface = () => {
     allocation = userAllocation,
     tempAnswers = userAnswers
   ) => {
->>>>>>> main
     const total = Object.values(allocation).reduce((sum, v) => sum + v, 0) || 1;
     const percent = (val) => `${Math.round((val / total) * 100)}%`;
 
     // 共用的 Personality Instructions
     const personalityInstructions = {
-<<<<<<< HEAD
-        intro: `Personality Instruction:
-=======
       intro: `Personality Instruction:
->>>>>>> main
     Please embody the designated persona according to the provided personality description and answer the following questions imitating the specified persona:
     Personality Description:
     **Introversion** refers to being energized by the inner world of thoughts and reflections, enjoying solitude, and being reserved, contemplative, and introspective.
     Introverts prefer spending time alone or in small, intimate groups over large gatherings and are reflective, quiet, deliberate, and self-contained.
     Instructions:
     Below, please engage in role-playing based on the given personality description and portray a persona. A role with Introverted(I) trait.`,
-<<<<<<< HEAD
-        extra: `Personality Instruction:  
-=======
       extra: `Personality Instruction:  
->>>>>>> main
     Please embody the designated persona according to the provided personality description and answer the following questions imitating the specified persona:
     Personality Description:
     **Extraversion** refers to the act or state of being energized by the world outside the self.
@@ -223,19 +185,6 @@ const ChatInterface = () => {
 
     // Investment mode 的 Scenario
     const investmentScenarios = {
-<<<<<<< HEAD
-      intro: (score, allocation) => 
-    `Scenario:
-      You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. Your role is to guide users through investment product categories and help them build a risk-aligned portfolio.
-
-      First of all, the user has been asked to allocate a hypothetical NT$1,000,000 across available investment products. Their current allocation is as follows:
-      ${total === 0
-        ? "Their allocation has not been provided yet."
-        : Object.entries(allocation)
-            .filter(([_, v]) => v > 0)
-            .map(([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`)
-            .join("\n")
-=======
       intro: (score, allocation) =>
         `Scenario:
       You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. Your role is to guide users through investment product categories and help them build a risk-aligned portfolio.
@@ -251,7 +200,6 @@ const ChatInterface = () => {
                   `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
               )
               .join("\n")
->>>>>>> main
       }
       Please carefully review this allocation and consider how it aligns with the user's risk tolerance score.
 
@@ -285,24 +233,12 @@ const ChatInterface = () => {
       💡 Note: "Unit size" means the investment amount must be a multiple of that number (e.g., NT$10,000, NT$20,000... for RR1). Avoid recommending values that are not valid units.    
       Your goal is to help them understand not just the "what" but also the "why"—build confidence in their investment decisions.
     `,
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> main
       extra: (score) => `Scenario:
     You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your task is to educate users about our investment product types and guide them to build portfolios aligned with their risk personality.
     
     First of all, the user has just played portfolio manager with a virtual NT$1,000,000! 🎯  
     Here's how they've allocated it across available products:
-<<<<<<< HEAD
-    ${total === 0
-      ? "Their allocation has not been provided yet."
-      : Object.entries(allocation)
-          .filter(([_, v]) => v > 0)
-          .map(([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`)
-          .join("\n")
-=======
     ${
       total === 0
         ? "Their allocation has not been provided yet."
@@ -313,7 +249,6 @@ const ChatInterface = () => {
                 `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
             )
             .join("\n")
->>>>>>> main
     }
     Your job: Celebrate their effort 👏, then review whether this matches their actual risk profile!
 
@@ -346,20 +281,12 @@ const ChatInterface = () => {
 
     💡 *Note: Unit size means you can only invest in multiples of that amount (e.g., RR3 = NT$100,000, NT$200,000, etc). Please avoid suggesting invalid values.*
 
-<<<<<<< HEAD
-    End with an upbeat note—remind them that bold doesn't mean reckless, and that they're building something exciting, one smart choice at a time.`
-=======
     End with an upbeat note—remind them that bold doesn't mean reckless, and that they're building something exciting, one smart choice at a time.`,
->>>>>>> main
     };
 
     // Insurance mode 的 Scenario
     const insuranceScenarios = {
-<<<<<<< HEAD
-        intro: `Scenario:
-=======
       intro: `Scenario:
->>>>>>> main
     You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: New Protection Plan, Secure Choice Plan, and Comprehensive Shield PlanPlan.
     
     Focus on comprehensive coverage and the ability to handle uncertainties.
@@ -433,13 +360,8 @@ Given the reality of limited resources and the presence of potential risks, you 
 
     
     Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
-<<<<<<< HEAD
-    
-        extra: `Scenario:
-=======
 
       extra: `Scenario:
->>>>>>> main
     You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Lite Plan, Basic Plan, and Advanced Plan.
     
     Focus on cost-effectiveness and flexibility.
@@ -504,7 +426,18 @@ Given the reality of limited resources and the presence of potential risks, you 
     // 根據 chatMode 組合最終的 prompt
     if (chatMode === "insurance") {
       // if (hasCompletedQuestionnaire && userAnswers.length === 3) {
-
+      const derivedPrompt = buildInsuranceSystemPrompt(
+        personalityType,
+        tempAnswers
+      );
+      return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}\n\n${derivedPrompt}`;
+      // }
+      return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}`;
+    } else if (chatMode === "investment") {
+      // Call the function with the score parameter
+      return `${investmentScenarios[personalityType](score, allocation)}\n\n${
+        personalityInstructions[personalityType]
+      }`;
     } else {
       return personalityInstructions[personalityType];
     }
@@ -512,14 +445,6 @@ Given the reality of limited resources and the presence of potential risks, you 
 
   const handleSubmitSettings = () => {
     setMessages([]);
-
-  const derivedPrompt = buildInsuranceSystemPrompt(personalityType, tempAnswers);
-
-  if (chatMode === "insurance") {
-    return `${insuranceScenarios[personalityType]}\n\n${personalityInstructions[personalityType]}\n\n${derivedPrompt}`;
-  } else if (chatMode === "investment") {
-    return `${investmentScenarios[personalityType](score, allocation)}\n\n${personalityInstructions[personalityType]}`;
-  }
 
     // 只有當切換模式時才重置 userAnswers
     if (chatMode !== "investment") {
@@ -533,11 +458,7 @@ Given the reality of limited resources and the presence of potential risks, you 
                 (2) a short self-introduction so we can understand each other better
                 (3) a meaningful discussion where I suggest something based on your interests. 
                 I prefer thoughtful conversations, so please take your time when sharing. Let's begin—could you please share something about yourself?`,
-<<<<<<< HEAD
-        extra:  `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
-=======
         extra: `Hey there! Great to meet you! I'm excited to chat with you today. We have three fun things to do:
->>>>>>> main
                 (1) A quick hello so you can get to know me
                 (2) A self-introduction so I can learn about you
                 (3) A fun chat where I recommend something exciting based on what you like!
@@ -558,27 +479,6 @@ Given the reality of limited resources and the presence of potential risks, you 
                 (2) Then, *you* get to play portfolio manager! Imagine you have NT$1,000,000—how would you divide it across our investment options (RR1–RR5)? Go with your gut!
                 (3) Once we've got both your risk profile and your ideal allocation, I'll jump in to help fine-tune it—telling you where you might want to invest more, less, or hold steady to better match your goals.
                 No matter if you're cautious, curious, or a risk-loving go-getter, we'll build a smart, customized strategy that fits *you*.  
-<<<<<<< HEAD
-                Let's kick it off with the risk assessment—ready to roll? Let's do this! 💥`
-      },
-
-      insurance: {
-        intro:  `Hello, and thank you for being here. In this session, we will go through three steps:
-                (1) I will introduce an Choice insurance plan with a focus on risk management
-                (2) We will carefully review key policy terms
-                (3) I will answer any questions you may have in a precise and structured way
-                I'll provide the necessary details clearly, so let's start by looking at the policy overview.
-                Below are the one of the three types of our Overseas Insurance Plan:  
-                The Secure Choice Plan provides moderate protection and is suitable for individuals who want to have a balance between coverage and cost. It offers accident insurance with a coverage limit of NT$5 million, which is higher than the Lite Plan but lower than the  Secure Plan. Additionally, it covers overseas injury medical insurance with a reimbursement cap of NT$500,000, which is higher than the Lite Plan but lower than the Overseas Advanced Plan. The plan also covers overseas sudden illness - hospitalization with a reimbursement cap of NT$150,000, which is lower than the Overseas Advanced Plan. Furthermore, it covers overseas sudden illness - outpatient with a reimbursement cap of NT$1,000, which is lower than the Overseas Advanced Plan. The plan also includes emergency assistance with a coverage limit of NT$1 million, which is the same as the Overseas Lite Plan. Lastly, it covers third-party liability with a coverage limit of NT$1.5 million for injury and NT$200,000 for property damage, which is higher than the Overseas Lite Plan. Overall, the Overseas Choice Plan provides a moderate level of protection and is suitable for individuals who want to have a balance between coverage and cost.`,
-
-        extra: `Hi there! I'm really glad you're here! We're going to explore an Basic insurance plan together in three steps:
-                (1) I'll introduce the plan and highlight how flexible and useful it is
-                (2) We'll discuss important terms in a way that makes sense to you
-                (3) You can ask me anything—I love answering questions!
-                Let's jump in and see how this plan could work for you!                
-                Below are the one of the three types of our Overseas Insurance Plan:
-                Hi there! I'm thrilled to introduce you to our Basic Plan. This plan offers a perfect balance between cost and coverage, making it an excellent choice for students who want to have peace of mind while studying abroad. With the Basic Plan, you'll enjoy comprehensive protection against various risks and uncertainties. It provides coverage up to NT$3 million for accidental death or disability, ensuring that you're well-protected in case of any unforeseen events. Additionally, the plan offers reimbursement caps of NT$400,000 for overseas injury medical insurance and NT$100,000 for overseas sudden illness - hospitalization. These caps provide financial support in case you require medical treatment or hospitalization while studying abroad. The plan also includes coverage for emergency assistance, third-party liability for both injury and property damage, and overseas sudden illness - outpatient care. With the Basic Plan, you'll have the freedom to focus on your studies and enjoy your time abroad without worrying about the financial implications of unexpected events. So, if you're looking for a plan that offers excellent protection at a reasonable cost, the Basic Plan is definitely worth considering!`,
-=======
                 Let's kick it off with the risk assessment—ready to roll? Let's do this! 💥`,
       },
 
@@ -627,7 +527,6 @@ Given the reality of limited resources and the presence of potential risks, you 
         Click the green button below to view the full insurance plan comparison table, think about your personality and your plans, and then choose the insurance plan you believe fits you best.
         
         Let’s make this adventure safe, smart, and unforgettable. I’m here if you need me—let’s do this! 💙✨`,
->>>>>>> main
       },
     }[chatMode][personalityType];
 
@@ -644,28 +543,9 @@ Given the reality of limited resources and the presence of potential risks, you 
         setMessages([
           greetingMessage,
           {
-<<<<<<< HEAD
-            text: `Let's begin with the first question:\n\n${questions[0].text}\n${questions[0].options.map(
-              (opt, i) => `(${i + 1}) ${opt}`
-            ).join("\n")}`,
-            isBot: true,
-            timestamp: formatTimestamp(),
-          },
-        ]);
-      });
-    }
-    else if (chatMode === "insurance") {
-      loadInsuranceQuestionnaire().then((questions) => {
-        setQuestionnaire(questions);
-        setMessages([
-          greetingMessage,
-          {
-            text: `First question:\n\n${questions[0].text}\n${questions[0].options
-=======
             text: `Let's begin with the first question:\n\n${
               questions[0].text
             }\n${questions[0].options
->>>>>>> main
               .map((opt, i) => `(${i + 1}) ${opt}`)
               .join("\n")}`,
             isBot: true,
@@ -673,10 +553,6 @@ Given the reality of limited resources and the presence of potential risks, you 
           },
         ]);
       });
-<<<<<<< HEAD
-    }
-    else{
-=======
     } else if (chatMode === "insurance") {
       loadInsuranceQuestionnaire().then((questions) => {
         setQuestionnaire(questions);
@@ -694,17 +570,12 @@ Given the reality of limited resources and the presence of potential risks, you 
         ]);
       });
     } else {
->>>>>>> main
       setMessages([greetingMessage]);
     }
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 800);
   };
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
   const buildInsuranceSystemPrompt = (persona, answers) => {
     const insuranceQuestions = [
       {
@@ -725,21 +596,12 @@ Given the reality of limited resources and the presence of potential risks, you 
         ],
       },
     ];
-<<<<<<< HEAD
-    console.log('the answers are ')
-    console.log(answers)
-    const q1 = answers[0]; // Concern about risk
-    const q2 = answers[1]; // Importance of saving money
-    const q3 = answers[2]; // Lifestyle
-  
-=======
     console.log("the answers are ");
     console.log(answers);
     const q1 = answers[0]; // Concern about risk
     const q2 = answers[1]; // Importance of saving money
     const q3 = answers[2]; // Lifestyle
 
->>>>>>> main
     // Q1 → Concern
     const concernPlan =
       q1 === 1
@@ -751,11 +613,7 @@ Given the reality of limited resources and the presence of potential risks, you 
           ? "Comprehensive Shield Plan"
           : "Basic Plan"
         : "Comprehensive Shield Plan"; // default for high concern
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
     // Q2 → Saving Priority
     const savingPlan =
       q2 === 1
@@ -767,22 +625,6 @@ Given the reality of limited resources and the presence of potential risks, you 
           ? "Comprehensive Shield Plan"
           : "Basic Plan"
         : "Comprehensive Shield Plan"; // default for "not important"
-<<<<<<< HEAD
-  
-    // Q3 → Lifestyle Risk
-    const lifestylePlan = (() => {
-      if (q3 === 1)
-        return persona === "intro"
-          ? "Secure Choice Plan"
-          : "Lite Plan";
-      if (q3 === 2 || q3 === 3 || q3 === 4)
-        return persona === "intro"
-          ? "Comprehensive Shield Plan"
-          : "Basic Plan";
-      return "Comprehensive Shield Plan";
-    })();
-  
-=======
 
     // Q3 → Lifestyle Risk
     const lifestylePlan = (() => {
@@ -793,31 +635,17 @@ Given the reality of limited resources and the presence of potential risks, you 
       return "Comprehensive Shield Plan";
     })();
 
->>>>>>> main
     // Collect and count frequency
     const planCount = {};
     [concernPlan, savingPlan, lifestylePlan].forEach((plan) => {
       planCount[plan] = (planCount[plan] || 0) + 1;
     });
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
     // Find most common plan
     const mostCommonPlan = Object.entries(planCount).reduce((a, b) =>
       b[1] > a[1] ? b : a
     )[0];
     const formattedAnswers = [
-<<<<<<< HEAD
-      `Q1: ${insuranceQuestions[0].text}\nA: ${insuranceQuestions[0].options[q1 - 1]}`,
-      `Q2: ${insuranceQuestions[1].text}\nA: ${insuranceQuestions[1].options[q2 - 1]}`,
-      `Q3: ${insuranceQuestions[2].text}\nA: ${insuranceQuestions[2].options[q3 - 1]}`,
-    ].join("\n\n");
-
-  
-  
-=======
       `Q1: ${insuranceQuestions[0].text}\nA: ${
         insuranceQuestions[0].options[q1 - 1]
       }`,
@@ -829,7 +657,6 @@ Given the reality of limited resources and the presence of potential risks, you 
       }`,
     ].join("\n\n");
 
->>>>>>> main
     return `
    Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
   User has completed the insurance questionnaire. And the folowing is the User's answer in the question and the most fitted insurance plan inferred from the questionaire, please cosider them to personalize the insurance recommendation to user.
@@ -841,27 +668,11 @@ Given the reality of limited resources and the presence of potential risks, you 
   `;
   };
 
-<<<<<<< HEAD
-  
-// 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
-=======
   // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
->>>>>>> main
   const handleSendMessage = async (event) => {
     event.preventDefault();
     // 如果對話已完成，則不處理訊息發送
 
-<<<<<<< HEAD
-    
-    
-    if (!inputText.trim() || isLoading) return;
-
-    const formatTimestamp = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
-
-    if (isConversationComplete) return;
-
-    if (inputText.trim()=== "FINAL") {
-=======
     if (!inputText.trim() || isLoading) return;
 
     const formatTimestamp = () =>
@@ -873,41 +684,28 @@ Given the reality of limited resources and the presence of potential risks, you 
     if (isConversationComplete) return;
 
     if (inputText.trim() === "FINAL") {
->>>>>>> main
       setMessages((prev) => [
         ...prev,
         {
           text: "Please choose your preferred insurance plan:",
           isBot: true,
           timestamp: formatTimestamp(),
-<<<<<<< HEAD
-          hasButton: true
-        }
-=======
           hasButton: true,
         },
->>>>>>> main
       ]);
       setInputText("");
       return;
     }
 
     // ✏️ 問卷進行中
-<<<<<<< HEAD
-    if (chatMode === "investment" && currentQuestionIndex < questionnaire.length) {
-=======
     if (
       chatMode === "investment" &&
       currentQuestionIndex < questionnaire.length
     ) {
->>>>>>> main
       const index = parseInt(inputText.trim()) - 1;
       const currentQ = questionnaire[currentQuestionIndex];
 
       if (isNaN(index) || index < 0 || index >= currentQ.options.length) {
-<<<<<<< HEAD
-        setMessages((prev) => [...prev, { text: "Please respond with 1–5.", isBot: true, timestamp: formatTimestamp() }]);
-=======
         setMessages((prev) => [
           ...prev,
           {
@@ -916,19 +714,11 @@ Given the reality of limited resources and the presence of potential risks, you 
             timestamp: formatTimestamp(),
           },
         ]);
->>>>>>> main
       } else {
         const allAnswers = [...userAnswers, index + 1];
         const isLast = currentQuestionIndex + 1 === questionnaire.length;
         setUserAnswers(allAnswers);
 
-<<<<<<< HEAD
-
-        const nextText = isLast
-        ? `✅ Assessment complete. Your risk tolerance score: **${allAnswers.reduce((a, b) => a + b, 0)}**.`
-        : `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options.map((opt, i) => `(${i + 1}) ${opt}`).join("\n")}`;
-        
-=======
         const nextText = isLast
           ? `✅ Assessment complete. Your risk tolerance score: **${allAnswers.reduce(
               (a, b) => a + b,
@@ -940,7 +730,6 @@ Given the reality of limited resources and the presence of potential risks, you 
               .map((opt, i) => `(${i + 1}) ${opt}`)
               .join("\n")}`;
 
->>>>>>> main
         setMessages((prev) => [
           ...prev,
           { text: inputText, isBot: false, timestamp: formatTimestamp() },
@@ -955,15 +744,6 @@ Given the reality of limited resources and the presence of potential risks, you 
             setMessages((prev) => [
               ...prev,
               { text: risksIntro, isBot: true, timestamp: formatTimestamp() },
-<<<<<<< HEAD
-              { text: personalityType === "intro" ? introAllocation : extroAllocation, isBot: true, timestamp: formatTimestamp() },
-              { 
-                text: "Please click the button below to start your NT$1,000,000 investment allocation: ",
-                isBot: true, 
-                timestamp: formatTimestamp(),
-                hasButton: true
-              }
-=======
               {
                 text:
                   personalityType === "intro"
@@ -978,7 +758,6 @@ Given the reality of limited resources and the presence of potential risks, you 
                 timestamp: formatTimestamp(),
                 hasButton: true,
               },
->>>>>>> main
             ]);
             setHasSeenProductIntro(true);
           } catch (e) {
@@ -994,113 +773,6 @@ Given the reality of limited resources and the presence of potential risks, you 
     }
 
     // INSURANCE QUESTIONNAIRE LOGIC (new)
-<<<<<<< HEAD
-  // ------------------------------------
-  if (
-    chatMode === "insurance" &&
-    currentQuestionIndex < questionnaire.length
-  ) {
-    const index = parseInt(inputText.trim(), 10) - 1;
-    const currentQ = questionnaire[currentQuestionIndex];
-
-    if (
-      isNaN(index) ||
-      index < 0 ||
-      index >= currentQ.options.length
-    ) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Please respond with a valid option number.",
-          isBot: true,
-          timestamp: formatTimestamp(),
-        },
-      ]);
-    } else {
-      // Valid answer
-      const allAnswers = [...userAnswers, index + 1];
-      setUserAnswers(allAnswers);
-
-      const isLast = currentQuestionIndex + 1 === questionnaire.length;
-
-      setMessages((prev) => [
-        ...prev,
-        { text: inputText, isBot: false, timestamp: formatTimestamp() },
-        !isLast
-          ? {
-              text: `Next:\n${questionnaire[currentQuestionIndex + 1].text}\n${questionnaire[currentQuestionIndex + 1].options
-                .map((opt, i) => `(${i + 1}) ${opt}`)
-                .join("\n")}`,
-              isBot: true,
-              timestamp: formatTimestamp(),
-            }
-          : {
-              text: "✅ Thanks! We’ve got all your answers. Let me analyze them...",
-              isBot: true,
-              timestamp: formatTimestamp(),
-            },
-      ]);
-
-      if (isLast) {
-        setHasCompletedQuestionnaire(true);
-        promptInsuranceSelection();
-        // setIsLoading(true);
-
-      
-        // const finalPrompt = getSystemPrompt(); // Will include base + derived content
-        const finalPrompt = getSystemPrompt(null, {}, allAnswers);
-        console.log("Final system prompt:\n\n" + finalPrompt);
-        setFinalInsurancePrompt(finalPrompt);
-
-        // try {
-        //   // Example call to your LLM endpoint
-        //   const res = await fetch("http://140.119.19.195:5000/chat", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({
-        //       messages: [
-        //         { role: "system", content: finalPrompt },
-        //         {
-        //           role: "user",
-        //           content: "Here are my answers. Please recommend a plan.",
-        //         },
-        //       ],
-        //     }),
-        //   });
-        //   const data = await res.json();
-
-        //   setMessages((prev) => [
-        //     ...prev,
-        //     {
-        //       text: data.response,
-        //       isBot: true,
-        //       timestamp: formatTimestamp(),
-        //     },
-        //   ]);
-        // } catch (error) {
-        //   console.error("Insurance Q&A error:", error);
-        //   setMessages((prev) => [
-        //     ...prev,
-        //     {
-        //       text:
-        //         "System error during insurance recommendation. Please try again later.",
-        //       isBot: true,
-        //       timestamp: formatTimestamp(),
-        //     },
-        //   ]);
-        // } finally {
-        //   setIsLoading(false);
-        // }
-      }
-
-      setCurrentQuestionIndex((prev) => prev + 1);
-    }
-
-    setInputText("");
-    return;
-  }
-
-=======
     // ------------------------------------
     if (
       chatMode === "insurance" &&
@@ -1203,17 +875,12 @@ Given the reality of limited resources and the presence of potential risks, you 
       return;
     }
 
->>>>>>> main
     // 處理投資分配格式
     if (
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
       hasSeenProductIntro &&
-<<<<<<< HEAD
-      !hasCompletedAllocation 
-=======
       !hasCompletedAllocation
->>>>>>> main
       // &&
       // inputText !== "allocate"
     ) {
@@ -1224,15 +891,6 @@ Given the reality of limited resources and the presence of potential risks, you 
 
     // 一般聊天模式
     const userMessage = { role: "user", content: inputText };
-<<<<<<< HEAD
-    setMessages((prev) => [...prev, { text: inputText, isBot: false, timestamp: formatTimestamp() }]);
-    
-    // Check if the user has typed "FINAL" to request final allocation
-    const isFinalRequested = chatMode === "investment" && 
-                            hasCompletedAllocation && 
-                            inputText.trim().toUpperCase() === "FINAL";
-    
-=======
     setMessages((prev) => [
       ...prev,
       { text: inputText, isBot: false, timestamp: formatTimestamp() },
@@ -1244,23 +902,12 @@ Given the reality of limited resources and the presence of potential risks, you 
       hasCompletedAllocation &&
       inputText.trim().toUpperCase() === "FINAL";
 
->>>>>>> main
     if (isFinalRequested) {
       setHasFinalRequested(true);
       const finalMessage = {
         text: "You've requested to make your final investment allocation adjustments. Based on our recommendations, you can now modify your portfolio to create your final investment allocation. Remember to maintain a total of exactly NT$1,000,000 and respect the minimum investment units for each category.\n\nClick the button below to make your final adjustments:",
         isBot: true,
         timestamp: formatTimestamp(),
-<<<<<<< HEAD
-        hasSecondAllocationButton: true
-      };
-      
-      setInputText("");
-      setMessages(prev => [...prev, finalMessage]);
-      return;
-    }
-    
-=======
         hasSecondAllocationButton: true,
       };
 
@@ -1269,7 +916,6 @@ Given the reality of limited resources and the presence of potential risks, you 
       return;
     }
 
->>>>>>> main
     setInputText("");
     setIsLoading(true);
 
@@ -1278,31 +924,16 @@ Given the reality of limited resources and the presence of potential risks, you 
       chatMode === "insurance" && finalInsurancePrompt
         ? finalInsurancePrompt
         : getSystemPrompt(totalScore, userAllocation);
-<<<<<<< HEAD
-    
-    if (chatMode === "investment") {
-          console.log("🟢 Investment Mode - Final Prompt:\n", prompt);
-        }
-=======
 
     if (chatMode === "investment") {
       console.log("🟢 Investment Mode - Final Prompt:\n", prompt);
     }
->>>>>>> main
 
     const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: prompt },
         //Start chat很重要，拿掉會跑不了
         { role: "user", content: "Start chat" },
-<<<<<<< HEAD
-        ...messages.map((msg) => ({
-          role: msg.isBot ? "assistant" : "user",
-          content: msg.isBot ? msg.text : `${msg.text}`,
-        }))
-        .filter((_, i) => i < 1 || i > 26),
-    userMessage,
-=======
         ...messages
           .map((msg) => ({
             role: msg.isBot ? "assistant" : "user",
@@ -1310,7 +941,6 @@ Given the reality of limited resources and the presence of potential risks, you 
           }))
           .filter((_, i) => i < 1 || i > 26),
         userMessage,
->>>>>>> main
       ]),
     };
     console.log("Request Body:", JSON.stringify(requestBody, null, 2));
@@ -1323,14 +953,10 @@ Given the reality of limited resources and the presence of potential risks, you 
       });
       const data = await res.json();
 
-<<<<<<< HEAD
-      setMessages((prev) => [...prev, { text: data.response, isBot: true, timestamp: formatTimestamp() }]);
-=======
       setMessages((prev) => [
         ...prev,
         { text: data.response, isBot: true, timestamp: formatTimestamp() },
       ]);
->>>>>>> main
     } catch (e) {
       console.error("Fetch error:", e);
       setMessages((prev) => [
@@ -1345,15 +971,6 @@ Given the reality of limited resources and the presence of potential risks, you 
       setIsLoading(false);
     }
   };
-<<<<<<< HEAD
-   // 確保每個 assistant message 搭配一個 user message
-   const ensureAlternatingMessages = (messages) => {
-    const result = [];
-  
-    for (let i = 0; i < messages.length; i++) {
-      result.push(messages[i]);
-  
-=======
   // 確保每個 assistant message 搭配一個 user message
   const ensureAlternatingMessages = (messages) => {
     const result = [];
@@ -1361,7 +978,6 @@ Given the reality of limited resources and the presence of potential risks, you 
     for (let i = 0; i < messages.length; i++) {
       result.push(messages[i]);
 
->>>>>>> main
       if (
         i < messages.length - 1 &&
         messages[i].role === "assistant" &&
@@ -1373,15 +989,6 @@ Given the reality of limited resources and the presence of potential risks, you 
         });
       }
     }
-<<<<<<< HEAD
-    return result; 
-  };
-  
-  const generateAllocationSummary = (allocation) => {
-    return Object.entries(allocation)
-      .map(([rr, amount]) => `- ${rr}: NT$${amount.toLocaleString()}`)
-      .join('\n');
-=======
     return result;
   };
 
@@ -1389,17 +996,12 @@ Given the reality of limited resources and the presence of potential risks, you 
     return Object.entries(allocation)
       .map(([rr, amount]) => `- ${rr}: NT$${amount.toLocaleString()}`)
       .join("\n");
->>>>>>> main
   };
 
   const calculateTotal = (allocation) => {
     return Object.values(allocation).reduce((sum, val) => sum + val, 0);
   };
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
   // 第二次配置的處理函數
   const handleSecondAllocation = () => {
     // Only proceed if user has requested final allocation by typing "FINAL"
@@ -1409,19 +1011,6 @@ Given the reality of limited resources and the presence of potential risks, you 
     setIsSecondAllocation(true);
     setShowPopup(true);
   };
-<<<<<<< HEAD
-  
-  
-  // 處理投資配置的邏輯
-  const handleAllocation = (allocation) => {
-    // 檢查並記錄數據
-    console.log('風險評分:', totalScore, '分配:', allocation);
-        
-    // 根據 personalityType 選擇合適的 prompt
-    const recPrompt = personalityType === "intro" 
-      ? introRcmdPrompt(totalScore, allocation)
-      : extroRcmdPrompt(totalScore, allocation);
-=======
 
   // 處理投資配置的邏輯
   const handleAllocation = (allocation) => {
@@ -1433,32 +1022,11 @@ Given the reality of limited resources and the presence of potential risks, you 
       personalityType === "intro"
         ? introRcmdPrompt(totalScore, allocation)
         : extroRcmdPrompt(totalScore, allocation);
->>>>>>> main
 
     setUserAllocation(allocation);
     setShowPopup(false);
     setHasCompletedAllocation(true);
     setIsLoading(true);
-<<<<<<< HEAD
-    
-    const allocationSummary = generateAllocationSummary(allocation);
-    const total = calculateTotal(allocation);
-    
-    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}`;
-    
-    setMessages(prev => [
-      ...prev,
-      { text: allocationMessage, isBot: true, timestamp: formatTimestamp() }
-    ]);
-    
-    const requestBody = {
-      messages: [
-        { role: "system", content: recPrompt },
-        { role: "user", content: "Review my investment allocation and provide balanced recommendations. For each increase you suggest, you MUST recommend a corresponding decrease elsewhere to maintain exactly NT$1,000,000 total. Be precise with amounts and ensure they respect the minimum investment units." },
-      ],
-    };
-    console.log('recommendationPrompt是：', requestBody)
-=======
 
     const allocationSummary = generateAllocationSummary(allocation);
     const total = calculateTotal(allocation);
@@ -1481,41 +1049,11 @@ Given the reality of limited resources and the presence of potential risks, you 
       ],
     };
     console.log("recommendationPrompt是：", requestBody);
->>>>>>> main
     fetch("http://140.119.19.195:5000/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     })
-<<<<<<< HEAD
-    .then(res => res.json())
-    .then(data => {
-      // 提取建議重點
-      const recommendations = extractRecommendationsFromLLMResponse(data.response, allocation);
-      setLlmRecommendation(recommendations);
-      console.log('recommendations重點', recommendations)
-
-      const responseWithNote = data.response + "\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type \"FINAL\" in the chat box and I'll provide a button for you to proceed with your final allocation.";
-
-      setMessages(prev => [
-        ...prev,
-        { 
-          text: responseWithNote, 
-          isBot: true, 
-          timestamp: formatTimestamp()
-        }
-      ]);
-    })
-    .catch(e => console.error(e))
-    .finally(() => setIsLoading(false));
-  };
-  
-  // 保存投資配置的邏輯 (抽象為一個獨立函數)
-  const handleSaveAllocation = (newAllocation) => {
-    // 檢查並記錄數據
-    console.log('風險評分:', totalScore, '新分配:', newAllocation);
-    
-=======
       .then((res) => res.json())
       .then((data) => {
         // 提取建議重點
@@ -1548,28 +1086,12 @@ Given the reality of limited resources and the presence of potential risks, you 
     // 檢查並記錄數據
     console.log("風險評分:", totalScore, "新分配:", newAllocation);
 
->>>>>>> main
     // 如果是第二次配置，則需要特殊處理
     if (isSecondAllocation) {
       setUserAllocation(newAllocation);
       setShowPopup(false);
       setIsSecondAllocation(false);
       setHasFinalRequested(false);
-<<<<<<< HEAD
-      
-      // 生成分配摘要訊息
-      const allocationSummary = generateAllocationSummary(newAllocation);
-      const total = calculateTotal(newAllocation);
-      
-      const allocationMessage = `**Your Final Investment Allocation:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}\n\n✅ **Your investment allocation process is now complete. Thank you for using our service!**`;
-      
-      // 添加分配摘要到訊息列表 並標記對話完成
-      setMessages(prev => [
-        ...prev,
-        { text: allocationMessage, isBot: true, timestamp: formatTimestamp() }
-      ]);
-      
-=======
 
       // 生成分配摘要訊息
       const allocationSummary = generateAllocationSummary(newAllocation);
@@ -1583,7 +1105,6 @@ Given the reality of limited resources and the presence of potential risks, you 
         { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
       ]);
 
->>>>>>> main
       // 標記對話已完成
       setIsConversationComplete(true);
     } else {
@@ -1591,11 +1112,7 @@ Given the reality of limited resources and the presence of potential risks, you 
       handleAllocation(newAllocation);
     }
   };
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
   // UI
   return (
     <div className="w-full h-screen bg-gray-200 relative">
@@ -1630,39 +1147,6 @@ Given the reality of limited resources and the presence of potential risks, you 
               Submit
             </button>
 
-<<<<<<< HEAD
-            {showPopup && <InvestmentPopup 
-              personalityType={personalityType} 
-              onClose={() => { 
-                setShowPopup(false);
-                setIsSecondAllocation(false);
-                setHasFinalRequested(false);
-              }} 
-              onSave={handleSaveAllocation}
-              recommendations={isSecondAllocation ? llmRecommendation : {}}
-              isSecondAllocation={isSecondAllocation}
-              initialAllocation={isSecondAllocation ? userAllocation : {}}
-            />}
-            {showInsurancePopup && (
-  <InsurancePopup
-    personalityType={personalityType} 
-    onClose={() => setShowInsurancePopup(false)} 
-    onSelect={(plan) => {
-      setShowInsurancePopup(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: `You selected the **${plan}**.`,
-          isBot: true,
-          timestamp: formatTimestamp()
-        }
-      ]);
-    }}
-    timesOpened={insurancePopupOpenCount}
-  />
-)}
-
-=======
             {showPopup && (
               <InvestmentPopup
                 personalityType={personalityType}
@@ -1695,7 +1179,6 @@ Given the reality of limited resources and the presence of potential risks, you 
                 timesOpened={insurancePopupOpenCount}
               />
             )}
->>>>>>> main
           </div>
         </div>
       </div>
@@ -1712,25 +1195,15 @@ Given the reality of limited resources and the presence of potential risks, you 
             </div>
           )}
           {messages.map((message, index) => (
-<<<<<<< HEAD
-            <ChatMessage 
-              key={index} 
-              message={message} 
-=======
             <ChatMessage
               key={index}
               message={message}
->>>>>>> main
               // onButtonClick={() => message.hasButton && setShowPopup(true)}
               onButtonClick={() => {
                 if (message.hasSecondAllocationButton) {
                   handleSecondAllocation();
                 } else if (message.hasButton && chatMode === "insurance") {
-<<<<<<< HEAD
-                  setInsurancePopupOpenCount((prev) => prev + 1); 
-=======
                   setInsurancePopupOpenCount((prev) => prev + 1);
->>>>>>> main
                   setShowInsurancePopup(true);
                 } else if (message.hasButton) {
                   setShowPopup(true);
@@ -1748,12 +1221,6 @@ Given the reality of limited resources and the presence of potential risks, you 
         {isConversationComplete ? (
           <div className="bg-green-50 p-4 border-t border-green-200">
             <div className="max-w-[800px] mx-auto text-center text-green-700 flex items-center justify-center gap-2">
-<<<<<<< HEAD
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-lg font-medium">Test completed, thank you for using our service.</span>
-=======
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6"
@@ -1771,7 +1238,6 @@ Given the reality of limited resources and the presence of potential risks, you 
               <span className="text-lg font-medium">
                 Test completed, thank you for using our service.
               </span>
->>>>>>> main
             </div>
           </div>
         ) : (
@@ -1782,26 +1248,16 @@ Given the reality of limited resources and the presence of potential risks, you 
             <input
               type="text"
               className="w-full text-lg bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-<<<<<<< HEAD
-              placeholder={isConversationComplete ? "您的投資配置已完成" : "輸入訊息..."}
-=======
               placeholder={
                 isConversationComplete ? "您的投資配置已完成" : "輸入訊息..."
               }
->>>>>>> main
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               // disabled={isLoading || isConversationComplete}
               disabled={
-<<<<<<< HEAD
-                   isConversationComplete ||
-                   (isLoading && chatMode !== "insurance")  // keep lock for other modes
-                 }
-=======
                 isConversationComplete ||
                 (isLoading && chatMode !== "insurance") // keep lock for other modes
               }
->>>>>>> main
             />
             <button
               type="submit"
