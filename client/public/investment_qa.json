@@ -1,0 +1,126 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "text": "Age:",
+      "options": [
+        "65 years or older",
+        "60–64 years old",
+        "50–59 years old",
+        "18–29 years old",
+        "30–49 years old"
+      ]
+    },
+    {
+      "id": 2,
+      "text": "Experience with financial investments (e.g., mutual funds, bonds, stocks):",
+      "options": [
+        "Less than 1 year",
+        "1 to less than 4 years",
+        "4 to less than 7 years",
+        "7 to less than 11 years",
+        "11 years or more"
+      ]
+    },
+    {
+      "id": 3,
+      "text": "Attitude toward investing in financial products:",
+      "options": [
+        "I cannot afford any loss of capital and will not take any risks",
+        "I can take minimal risk if the return is reasonable",
+        "I am willing to take moderate risk to pursue slightly higher returns",
+        "I’m open to medium-to-high risk if the potential return is good",
+        "I’m willing to take high risk for the chance of high returns"
+      ]
+    },
+    {
+      "id": 4,
+      "text": "How much would investment results affect your daily life?",
+      "options": [
+        "Extremely significant impact",
+        "Highly significant impact",
+        "Somewhat significant impact",
+        "Slight impact",
+        "No impact at all"
+      ]
+    },
+    {
+      "id": 5,
+      "text": "How soon will you likely need to use the money you plan to invest?",
+      "options": [
+        "Less than 1 year",
+        "1 to less than 3 years",
+        "3 to less than 6 years",
+        "6 to less than 11 years",
+        "11 years or more"
+      ]
+    },
+    {
+      "id": 6,
+      "text": "Expected average annual return on your investments:",
+      "options": [
+        "Bank deposit interest rate",
+        "3%–5%",
+        "6%–8%",
+        "9%–12%",
+        "Over 13%"
+      ]
+    },
+    {
+      "id": 7,
+      "text": "Maximum potential loss you can accept in your investment value:",
+      "options": ["Less than 5%", "6%–10%", "11%–20%", "21%–30%", "Over 31%"]
+    },
+    {
+      "id": 8,
+      "text": "Main objective of your investment plan:",
+      "options": [
+        "Purely to preserve capital",
+        "Mostly capital preservation, some growth",
+        "Balanced between preservation and growth",
+        "Mostly capital growth, some preservation",
+        "Purely for capital growth"
+      ]
+    },
+    {
+      "id": 9,
+      "text": "Aside from mutual funds, which financial tool do you use most often? (Pick one)",
+      "options": [
+        "Savings insurance / TWD deposits",
+        "Foreign currency deposits",
+        "Real estate / Bonds",
+        "Stocks / Investment-linked insurance",
+        "Futures, warrants, or other derivatives"
+      ]
+    },
+    {
+      "id": 10,
+      "text": "What type of mutual fund do you prefer?",
+      "options": [
+        "Money market fund",
+        "Bond fund",
+        "Balanced fund",
+        "Multi-asset fund",
+        "Equity fund"
+      ]
+    }
+  ],
+  "scoring": {
+    "method": "Each option corresponds to 1–5 points (Option 1 = 1 point, Option 5 = 5 points)",
+    "range": "10–50",
+    "levels": {
+      "low": {
+        "min": 10,
+        "max": 15
+      },
+      "moderate": {
+        "min": 16,
+        "max": 30
+      },
+      "high": {
+        "min": 31,
+        "max": 50
+      }
+    }
+  }
+}
