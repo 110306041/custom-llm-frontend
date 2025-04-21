@@ -95,6 +95,10 @@ const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
 };
 
 const ChatInterface = () => {
+  const [initialPlan, setInitialPlan] = useState(null);   // first selection
+  const [insurancePopupCount, setInsurancePopupCount] = useState(0); // open counter
+  const [insuranceStage, setInsuranceStage] = useState("idle");   // idle | choosePlan | questionnaire | done
+  const [selectedPlan, setSelectedPlan]   = useState(null);
   const [insurancePopupOpenCount, setInsurancePopupOpenCount] = useState(0);
   const [finalInsurancePrompt, setFinalInsurancePrompt] = useState("");
   const [showInsurancePopup, setShowInsurancePopup] = useState(false); //new
@@ -554,6 +558,22 @@ Given the reality of limited resources and the presence of potential risks, you 
         ]);
       });
     } else if (chatMode === "insurance") {
+      setInsuranceStage("choosePlan");
+      setSelectedPlan(null);
+      setUserAnswers([]);
+      setCurrentQuestionIndex(0);
+
+  setMessages([
+    greetingMessage,
+    {
+      text:
+        "📝 Before we continue, please pick the study‑abroad insurance plan that **looks right to you**. Click **Start** to open the plan table.",
+      isBot: true,
+      timestamp: formatTimestamp(),
+      hasButton: true,          // <‑‑ this shows the green button
+    },
+  ]);
+  return;      
       loadInsuranceQuestionnaire().then((questions) => {
         setQuestionnaire(questions);
         setMessages([
@@ -683,7 +703,12 @@ Given the reality of limited resources and the presence of potential risks, you 
 
     if (isConversationComplete) return;
 
-    if (inputText.trim() === "FINAL") {
+     if (
+         inputText.trim().toUpperCase() === "FINAL" &&
+         chatMode === "insurance" &&
+         insuranceStage === "done"        // user has finished the 3 questions
+       ) {
+      setInsuranceStage("choosePlanFinal");
       setMessages((prev) => [
         ...prev,
         {
@@ -776,6 +801,7 @@ Given the reality of limited resources and the presence of potential risks, you 
     // ------------------------------------
     if (
       chatMode === "insurance" &&
+      insuranceStage === "questionnaire" &&
       currentQuestionIndex < questionnaire.length
     ) {
       const index = parseInt(inputText.trim(), 10) - 1;
@@ -819,13 +845,62 @@ Given the reality of limited resources and the presence of potential risks, you 
 
         if (isLast) {
           setHasCompletedQuestionnaire(true);
-          promptInsuranceSelection();
-          // setIsLoading(true);
+          setInsuranceStage("done");
+          // promptInsuranceSelection();
+          setIsLoading(true);
 
-          // const finalPrompt = getSystemPrompt(); // Will include base + derived content
           const finalPrompt = getSystemPrompt(null, {}, allAnswers);
+          const reqBody = {
+            messages: [
+              { role: "system", content: finalPrompt },
+              {
+                role: "user",
+                content:
+                  `The user initially chose **${selectedPlan}**.\n` +
+                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt.`,
+              },
+            ],
+          };
+          // const finalPrompt = getSystemPrompt(null, {}, allAnswers);
           console.log("Final system prompt:\n\n" + finalPrompt);
-          setFinalInsurancePrompt(finalPrompt);
+          try {
+            const res  = await fetch("http://140.119.19.195:5000/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(reqBody),
+            });
+            const data = await res.json();
+        
+            /* ---------- NEW: append a fixed note to the model’s reply ---------- */
+            const followUpNote =
+              '\n\n---\n' +
+              'If you need any further information or clarification, please feel free to ask.\n' +
+              'Once you have everything you need and are ready to make your **final insurance plan selection**, ' +
+              'type **"FINAL"**.';
+            const botMessage = data.response + followUpNote;
+            /* ------------------------------------------------------------------- */
+        
+            setMessages((prev) => [
+              ...prev,
+              { text: botMessage, isBot: true, timestamp: formatTimestamp() },
+            ]);
+          } catch (err) {
+            console.error(err);
+            setMessages((prev) => [
+              ...prev,
+              {
+                text:
+                  "❗️System error during insurance recommendation. Please try again later.",
+                isBot: true,
+                timestamp: formatTimestamp(),
+              },
+            ]);
+          } finally {
+            setIsLoading(false);
+          }
+        
+        
+          // setFinalInsurancePrompt(finalPrompt);
 
           // try {
           //   // Example call to your LLM endpoint
@@ -1012,6 +1087,64 @@ Given the reality of limited resources and the presence of potential risks, you 
     setShowPopup(true);
   };
 
+  // Called when the user picks a plan in the popup
+  const handlePlanSelected = (plan) => {
+    // FIRST round – coming from 'choosePlan'
+    if (insuranceStage === "questionnaire" || insuranceStage === "choosePlan") {
+      setInitialPlan(plan);          // remember for later
+      setSelectedPlan(plan);
+      setShowInsurancePopup(false);
+      setInsuranceStage("questionnaire");
+  
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: `✅ You picked **${plan}**.\n\nGreat! I have three quick follow‑up questions to fine‑tune the advice.`,
+          isBot: true,
+          timestamp: formatTimestamp(),
+        },
+      ]);
+  
+      loadInsuranceQuestionnaire().then((qs) => {
+        setQuestionnaire(qs);
+        setCurrentQuestionIndex(0);
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: `Question 1:\n${qs[0].text}\n${qs[0].options
+              .map((o, i) => `(${i + 1}) ${o}`)
+              .join("\n")}`,
+            isBot: true,
+            timestamp: formatTimestamp(),
+          },
+        ]);
+      });
+      return;
+    }
+  
+    // SECOND round – coming from 'choosePlanFinal'
+    if (insuranceStage === "choosePlanFinal") {
+      setSelectedPlan(plan);
+      setShowInsurancePopup(false);
+      setIsConversationComplete(true);
+  
+      setMessages((prev) => [
+        ...prev,
+        {
+          text:
+            `✅ Final selection confirmed!\n\n` +
+            `• **Initial choice:** ${initialPlan}\n` +
+            `• **Final choice:** ${plan}\n\n` +
+            `Thank you for completing the insurance process. Safe travels!`,
+          isBot: true,
+          timestamp: formatTimestamp(),
+        },
+      ]);
+    }
+  };
+  
+
+
   // 處理投資配置的邏輯
   const handleAllocation = (allocation) => {
     // 檢查並記錄數據
@@ -1165,18 +1298,19 @@ Given the reality of limited resources and the presence of potential risks, you 
               <InsurancePopup
                 personalityType={personalityType}
                 onClose={() => setShowInsurancePopup(false)}
-                onSelect={(plan) => {
-                  setShowInsurancePopup(false);
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      text: `You selected the **${plan}**.`,
-                      isBot: true,
-                      timestamp: formatTimestamp(),
-                    },
-                  ]);
-                }}
-                timesOpened={insurancePopupOpenCount}
+                onSelect={(plan) => handlePlanSelected(plan)}
+                timesOpened={insurancePopupCount} 
+                // onSelect={(plan) => {
+                //   setShowInsurancePopup(false);
+                //   setMessages((prev) => [
+                //     ...prev,
+                //     {
+                //       text: `You selected the **${plan}**.`,
+                //       isBot: true,
+                //       timestamp: formatTimestamp(),
+                //     },
+                //   ]);
+                // }}
               />
             )}
           </div>
@@ -1200,14 +1334,31 @@ Given the reality of limited resources and the presence of potential risks, you 
               message={message}
               // onButtonClick={() => message.hasButton && setShowPopup(true)}
               onButtonClick={() => {
+                // if (message.hasSecondAllocationButton) {
+                //   handleSecondAllocation();
+                // } else if (chatMode === "insurance" && insuranceStage === "choosePlan") {
+                //   setShowInsurancePopup(true);
+                //   // setInsurancePopupOpenCount((prev) => prev + 1);
+                // } else if (message.hasButton) {
+                //   setShowPopup(true);
+                // }
+
                 if (message.hasSecondAllocationButton) {
-                  handleSecondAllocation();
-                } else if (message.hasButton && chatMode === "insurance") {
-                  setInsurancePopupOpenCount((prev) => prev + 1);
-                  setShowInsurancePopup(true);
-                } else if (message.hasButton) {
-                  setShowPopup(true);
-                }
+                      handleSecondAllocation();
+                      return;
+                    }
+                  
+                if (chatMode === "insurance" && message.hasButton) {
+                      // In any insurance stage, the green button opens the plan‑selection popup
+                      setInsurancePopupCount((c) => c + 1);
+                      setShowInsurancePopup(true);
+                      return;
+                    }
+                  
+                if (message.hasButton) {
+                      // Investment flow
+                      setShowPopup(true);
+                    }
               }}
               handleSecondAllocation={handleSecondAllocation}
             />
