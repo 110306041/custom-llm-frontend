@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const PRODUCT_TABLES = {
   intro: [
@@ -97,51 +97,87 @@ const PRODUCT_TABLES = {
     },
   ],
 };
-
-const InvestmentPopup = ({ 
-  onClose, 
-  personalityType, 
-  onSave, 
-  recommendations = {}, 
+const InvestmentPopup = ({
+  onClose,
+  personalityType,
+  onSave,
+  recommendations = {},
   isSecondAllocation = false,
-  initialAllocation = {}
+  initialAllocation = {},
 }) => {
   const [tableType, setTableType] = useState(personalityType);
   const [allocation, setAllocation] = useState(initialAllocation);
-  const productTable = PRODUCT_TABLES[tableType];
+  const [showConfirmation, setShowConfirmation] = useState(false); // State to manage confirmation modal
+  const [confirmAction, setConfirmAction] = useState(null); // Store confirm action (save)
 
-  // 初次渲染時使用 initialAllocation
-  React.useEffect(() => {
+  useEffect(() => {
     if (Object.keys(initialAllocation).length > 0) {
       setAllocation(initialAllocation);
     }
   }, [initialAllocation]);
 
   const handleChange = (rr) => (e) => {
-    // Parse input value to integer, ensuring 0 is properly handled as a valid value
-    const value = e.target.value === "" ? undefined : (parseInt(e.target.value) || 0);
+    const value = e.target.value === "" ? undefined : parseInt(e.target.value) || 0;
     setAllocation((prev) => ({
       ...prev,
       [rr]: value,
     }));
   };
 
-  // 顯示建議變化的輔助函數
   const renderRecommendation = (rr) => {
     if (!isSecondAllocation || !recommendations[rr]) return null;
-    
+
     const change = recommendations[rr];
     if (change === 0) return null;
-    
+
     const isIncrease = change > 0;
     const color = isIncrease ? "text-red-500" : "text-green-500";
     const prefix = isIncrease ? "+" : "-";
-    
+
     return (
       <div className={`${color} text-sm ml-2 font-medium`}>
         {`${prefix}NT$${Math.abs(change).toLocaleString()}`}
       </div>
     );
+  };
+
+  const handleSave = () => {
+    const total = Object.values(allocation).reduce((sum, val) => sum + val, 0);
+
+    // Validation checks
+    const hasMissingValues = Object.values(allocation).includes(undefined);
+    if (hasMissingValues) {
+      alert("❗️Please enter a value (including 0) for all investment categories!");
+      return;
+    }
+
+    const hasInvalid = Object.entries(allocation).some(
+      ([rr, value]) => value < PRODUCT_TABLES[tableType].find((prod) => prod.rr === rr).min && value > 0
+    );
+    if (hasInvalid) {
+      alert("❗️Please ensure all amounts are either 0 or not less than the minimum investment amount!");
+      return;
+    }
+
+    if (total !== 1000000) {
+      alert(`Please ensure the total investment amount is NT$1,000,000 (current: NT$${total.toLocaleString()})`);
+      return;
+    }
+
+    if (isSecondAllocation) {
+      setShowConfirmation(true); // Show confirmation window for second time allocation
+    } else {
+      onSave(allocation); // Directly save on first allocation
+    }
+  };
+
+  const handleConfirmSave = () => {
+    onSave(allocation); // Proceed with saving after confirmation
+    setShowConfirmation(false); // Close the confirmation modal
+  };
+
+  const handleCancelSave = () => {
+    setShowConfirmation(false); // Close the confirmation modal without saving
   };
 
   return (
@@ -175,7 +211,7 @@ const InvestmentPopup = ({
             </tr>
           </thead>
           <tbody>
-            {productTable.map((prod, idx) => (
+            {PRODUCT_TABLES[tableType].map((prod, idx) => (
               <tr key={idx}>
                 <td className="p-4 border">{prod.name}</td>
                 <td className="p-4 border">{prod.rr}</td>
@@ -218,71 +254,41 @@ const InvestmentPopup = ({
           >
             Close
           </button>
-          {/* <div className="mt-6 flex items-center gap-3">
-            <input
-              type="checkbox"
-              id="confirm-checkbox"
-              checked={isChecked}
-              onChange={(e) => setIsChecked(e.target.checked)}
-              className="w-5 h-5"
-            />
-            <label htmlFor="confirm-checkbox" className="text-base">
-              I have completed my investment portfolio consultation
-            </label>
-          </div> */}
+
           <button
-            onClick={() => {
-                const total = Object.values(allocation).reduce(
-                  (sum, val) => sum + val || 0,
-                  0
-                );
-                
-                // Check if any investment category is missing a value
-                const hasMissingValues = productTable.some(
-                  (prod) => allocation[prod.rr] === undefined
-                );
-                
-                if (hasMissingValues) {
-                  alert("❗️Please enter a value (including 0) for all investment categories!");
-                  return;
-                }
-                
-                // Check for invalid values: must be either 0 or meet the minimum investment requirement
-                const hasInvalid = productTable.some(
-                  (prod) =>
-                    allocation[prod.rr] !== undefined &&
-                    allocation[prod.rr] > 0 &&
-                    allocation[prod.rr] < prod.min
-                );
-              
-                if (hasInvalid) {
-                  alert("❗️Please ensure all amounts are either 0 or not less than the minimum investment amount!");
-                  return;
-                }
-              
-                if (total !== 1000000) {
-                  alert(
-                    `Please ensure the total investment amount is NT$1,000,000 (current: NT$${total.toLocaleString()})`
-                  );
-                  return;
-                }
-                
-                // Create a clean allocation object with all values set explicitly
-                const cleanAllocation = {};
-                productTable.forEach(prod => {
-                  cleanAllocation[prod.rr] = allocation[prod.rr] || 0;
-                });
-                
-                onSave(cleanAllocation);
-                alert("✅ Investment portfolio saved successfully!");
-            }}
-              
+            onClick={handleSave}
             className="px-6 py-3 text-lg bg-green-500 text-white rounded-xl"
           >
             Save Investment Portfolio
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl max-w-md w-full shadow-lg">
+            <h3 className="text-2xl font-semibold mb-4">Confirm Your Action</h3>
+            <p className="text-lg mb-6">
+              You are about to finalize your investment portfolio. Do you want to proceed with saving your final allocation?
+            </p>
+            <div className="flex justify-between gap-4">
+              <button
+                onClick={handleCancelSave}
+                className="px-6 py-3 bg-gray-400 text-white rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                className="px-6 py-3 bg-green-500 text-white rounded-xl"
+              >
+                Confirm Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 
-const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => {
+const InsurancePopup = ({
+  onClose,
+  onSelect,
+  personalityType,
+  timesOpened,
+  initialPlan,
+}) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -9,7 +15,7 @@ const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => 
     if (timesOpened > 1) {
       setShowConfirm(true);
     } else {
-      onSelect(plan);  
+      onSelect(plan);
     }
   };
 
@@ -31,16 +37,66 @@ const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => 
             </tr>
           </thead>
           <tbody>
-            <tr><td className="p-2 border">Insurance Premium</td><td className="p-2 border">NT$5,500/month</td><td className="p-2 border">NT$10,000/month</td><td className="p-2 border">NT$15,000/month</td></tr>
-            <tr><td className="p-2 border">Accidental Death & Disability</td><td className="p-2 border">NT$3 million</td><td className="p-2 border">NT$4 million</td><td className="p-2 border">NT$5 million</td></tr>
-            <tr><td className="p-2 border">Overseas Injury Medical (Limit)</td><td className="p-2 border">NT$300,000</td><td className="p-2 border">NT$500,000</td><td className="p-2 border">NT$500,000</td></tr>
-            <tr><td className="p-2 border">Emergency Hospitalization (Limit)</td><td className="p-2 border">NT$100,000</td><td className="p-2 border">NT$100,000</td><td className="p-2 border">NT$200,000</td></tr>
-            <tr><td className="p-2 border">Emergency Outpatient (Limit)</td><td className="p-2 border">NT$500</td><td className="p-2 border">NT$500</td><td className="p-2 border">NT$1,000</td></tr>
-            <tr><td className="p-2 border">Emergency ER Medical (Limit)</td><td className="p-2 border">NT$1,000</td><td className="p-2 border">NT$1,000</td><td className="p-2 border">NT$2,000</td></tr>
-            <tr><td className="p-2 border">Emergency Assistance</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1.5 million</td></tr>
-            <tr><td className="p-2 border">Liability (Injury)</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1 million</td></tr>
-            <tr><td className="p-2 border">Liability (Property)</td><td className="p-2 border">NT$200,000</td><td className="p-2 border">NT$200,000</td><td className="p-2 border">NT$200,000</td></tr>
-            <tr><td className="p-2 border">Max Compensation per Period</td><td className="p-2 border">NT$1.2 million</td><td className="p-2 border">NT$1.2 million</td><td className="p-2 border">NT$1.2 million</td></tr>
+            <tr>
+              <td className="p-2 border">Insurance Premium</td>
+              <td className="p-2 border">NT$5,500/month</td>
+              <td className="p-2 border">NT$10,000/month</td>
+              <td className="p-2 border">NT$15,000/month</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Accidental Death & Disability</td>
+              <td className="p-2 border">NT$3 million</td>
+              <td className="p-2 border">NT$4 million</td>
+              <td className="p-2 border">NT$5 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Overseas Injury Medical (Limit)</td>
+              <td className="p-2 border">NT$300,000</td>
+              <td className="p-2 border">NT$500,000</td>
+              <td className="p-2 border">NT$500,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Hospitalization (Limit)</td>
+              <td className="p-2 border">NT$100,000</td>
+              <td className="p-2 border">NT$100,000</td>
+              <td className="p-2 border">NT$200,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Outpatient (Limit)</td>
+              <td className="p-2 border">NT$500</td>
+              <td className="p-2 border">NT$500</td>
+              <td className="p-2 border">NT$1,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency ER Medical (Limit)</td>
+              <td className="p-2 border">NT$1,000</td>
+              <td className="p-2 border">NT$1,000</td>
+              <td className="p-2 border">NT$2,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Assistance</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1.5 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Liability (Injury)</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Liability (Property)</td>
+              <td className="p-2 border">NT$200,000</td>
+              <td className="p-2 border">NT$200,000</td>
+              <td className="p-2 border">NT$200,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Max Compensation per Period</td>
+              <td className="p-2 border">NT$1.2 million</td>
+              <td className="p-2 border">NT$1.2 million</td>
+              <td className="p-2 border">NT$1.2 million</td>
+            </tr>
           </tbody>
         </table>
       );
@@ -56,22 +112,71 @@ const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => 
             </tr>
           </thead>
           <tbody>
-            <tr><td className="p-2 border">Insurance Premium</td><td className="p-2 border">NT$5,500/month</td><td className="p-2 border">NT$10,000/month</td><td className="p-2 border">NT$15,000/month</td></tr>
-            <tr><td className="p-2 border">Accidental Death & Disability</td><td className="p-2 border">NT$3 million</td><td className="p-2 border">NT$5.45 million</td><td className="p-2 border">NT$8.18 million</td></tr>
-            <tr><td className="p-2 border">Emergency Hospitalization (Limit)</td><td className="p-2 border">NT$100,000</td><td className="p-2 border">NT$180,000</td><td className="p-2 border">NT$270,000</td></tr>
-            <tr><td className="p-2 border">Emergency Outpatient (Limit)</td><td className="p-2 border">NT$500</td><td className="p-2 border">NT$909</td><td className="p-2 border">NT$1,363</td></tr>
-            <tr><td className="p-2 border">Emergency ER Medical (Limit)</td><td className="p-2 border">NT$1,000</td><td className="p-2 border">NT$1,818</td><td className="p-2 border">NT$2,727</td></tr>
-            <tr><td className="p-2 border">Emergency Assistance</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1.81 million</td><td className="p-2 border">NT$2.72 million</td></tr>
-            <tr><td className="p-2 border">Liability (Injury)</td><td className="p-2 border">NT$1 million</td><td className="p-2 border">NT$1.81 million</td><td className="p-2 border">NT$2.72 million</td></tr>
-            <tr><td className="p-2 border">Liability (Property)</td><td className="p-2 border">NT$200,000</td><td className="p-2 border">NT$360,000</td><td className="p-2 border">NT$540,000</td></tr>
-            <tr><td className="p-2 border">Max Compensation per Period</td><td className="p-2 border">NT$1.2 million</td><td className="p-2 border">NT$2.18 million</td><td className="p-2 border">NT$3.27 million</td></tr>
+            <tr>
+              <td className="p-2 border">Insurance Premium</td>
+              <td className="p-2 border">NT$5,500/month</td>
+              <td className="p-2 border">NT$10,000/month</td>
+              <td className="p-2 border">NT$15,000/month</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Accidental Death & Disability</td>
+              <td className="p-2 border">NT$3 million</td>
+              <td className="p-2 border">NT$5.45 million</td>
+              <td className="p-2 border">NT$8.18 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Hospitalization (Limit)</td>
+              <td className="p-2 border">NT$100,000</td>
+              <td className="p-2 border">NT$180,000</td>
+              <td className="p-2 border">NT$270,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Outpatient (Limit)</td>
+              <td className="p-2 border">NT$500</td>
+              <td className="p-2 border">NT$909</td>
+              <td className="p-2 border">NT$1,363</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency ER Medical (Limit)</td>
+              <td className="p-2 border">NT$1,000</td>
+              <td className="p-2 border">NT$1,818</td>
+              <td className="p-2 border">NT$2,727</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Emergency Assistance</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1.81 million</td>
+              <td className="p-2 border">NT$2.72 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Liability (Injury)</td>
+              <td className="p-2 border">NT$1 million</td>
+              <td className="p-2 border">NT$1.81 million</td>
+              <td className="p-2 border">NT$2.72 million</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Liability (Property)</td>
+              <td className="p-2 border">NT$200,000</td>
+              <td className="p-2 border">NT$360,000</td>
+              <td className="p-2 border">NT$540,000</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Max Compensation per Period</td>
+              <td className="p-2 border">NT$1.2 million</td>
+              <td className="p-2 border">NT$2.18 million</td>
+              <td className="p-2 border">NT$3.27 million</td>
+            </tr>
           </tbody>
         </table>
       );
     }
   };
 
-  const introPlans = ["New Protection Plan", "Secure Choice Plan", "Comprehensive Shield Plan"];
+  const introPlans = [
+    "New Protection Plan",
+    "Secure Choice Plan",
+    "Comprehensive Shield Plan",
+  ];
   const extraPlans = ["Lite Plan", "Basic Plan", "Advanced Plan"];
   const planOptions = personalityType === "intro" ? introPlans : extraPlans;
 
@@ -81,26 +186,52 @@ const InsurancePopup = ({ onClose, onSelect, personalityType, timesOpened }) => 
         <h2 className="text-xl font-bold mb-4">Choose an Insurance Plan</h2>
         {renderTable()}
         <div className="space-y-4 mt-6">
-          {planOptions.map((plan) => (
-            <button
-              key={plan}
-              onClick={() => handlePlanClick(plan)}
-              className="w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200"
-            >
-              {plan}
-            </button>
-          ))}
+          {planOptions.map((plan) => {
+            const isPrevious = timesOpened > 1 && plan === initialPlan;
+            return (
+              <button
+                key={plan}
+                onClick={() => handlePlanClick(plan)}
+                className={`w-full text-left p-3 rounded-lg flex items-center justify-between ${
+                  isPrevious
+                    ? "bg-yellow-50 border-2 border-yellow-300"
+                    : "bg-blue-100 hover:bg-blue-200"
+                }`}
+              >
+                <span>{plan}</span>
+                {isPrevious && (
+                  <span className="ml-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded">
+                    Your previous choice
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-        <button onClick={onClose} className="mt-4 text-gray-500 underline">Cancel</button>
+        <button onClick={onClose} className="mt-4 text-gray-500 underline">
+          Cancel
+        </button>
       </div>
 
       {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm">
-            <p className="text-lg mb-4">Are you sure you want to select <strong>{selectedPlan}</strong>?</p>
+            <p className="text-lg mb-4">
+              Are you sure you want to select <strong>{selectedPlan}</strong>?
+            </p>
             <div className="flex justify-between">
-              <button onClick={confirmSelection} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Confirm</button>
-              <button onClick={() => setShowConfirm(false)} className="text-gray-600 underline ml-4">Cancel</button>
+              <button
+                onClick={confirmSelection}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="text-gray-600 underline ml-4"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

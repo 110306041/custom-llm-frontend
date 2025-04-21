@@ -487,7 +487,7 @@ Given the reality of limited resources and the presence of potential risks, you 
       },
 
       insurance: {
-        intro: `📚 Hello. I’m your insurance assistant—here to support you as you prepare for your upcoming journey.
+        intro: `Hello. I’m your insurance assistant—here to support you as you prepare for your upcoming journey.
 
         Imagine you are about to begin a one-year study abroad program in the United States.
         In a new environment, unfamiliar situations can sometimes arise—unexpected illness, accidental injury, lost items, delays in transportation, or high medical expenses. These events, though uncertain, may affect your daily routine and study plans, and could place pressure on your finances.
@@ -497,17 +497,17 @@ Given the reality of limited resources and the presence of potential risks, you 
         
         To support your decision, I’ve prepared three carefully designed insurance options:
         
-        🔹 New Protection Plan – Offers flexible coverage at an affordable monthly premium of NT$5,500. It’s ideal for students who want to balance protection with minimal impact on living expenses.
-        🔹 Secure Choice Plan – Provides slightly higher coverage with a monthly premium of NT$10,000. This is suitable if you’d like additional reassurance while still reserving some budget.
-        🔹 Comprehensive Shield Plan – A full-protection option with the highest premium (NT$15,000/month). It’s best for students who prefer to be well-prepared for high-cost medical events or emergencies.
+         New Protection Plan – Offers flexible coverage at an affordable monthly premium of NT$5,500. It’s ideal for students who want to balance protection with minimal impact on living expenses.
+         Secure Choice Plan – Provides slightly higher coverage with a monthly premium of NT$10,000. This is suitable if you’d like additional reassurance while still reserving some budget.
+        Comprehensive Shield Plan – A full-protection option with the highest premium (NT$15,000/month). It’s best for students who prefer to be well-prepared for high-cost medical events or emergencies.
         
         Each plan includes coverage for accidents, emergency treatment, hospitalization, assistance services, and third-party liability. While the core benefits remain consistent, the protection limits and monthly costs vary.
         
-        🧭 I encourage you to take your time to read through the cover story and review the insurance plan table (click the green button below). Then, select the plan that you feel best aligns with your personal risk comfort and lifestyle needs.
+         I encourage you to take your time to read through the cover story and review the insurance plan table (click the green button below). Then, select the plan that you feel best aligns with your personal risk comfort and lifestyle needs.
         
         If you have any questions—no matter how small—please feel free to ask me. I’m here to help you make a careful, confident choice.`,
 
-        extra: `🎒 Let’s say you’re heading off to study in the United States—how exciting is that?!
+        extra: `Let’s say you’re heading off to study in the United States—how exciting is that?!
 
         A brand-new country, new experiences, and a fresh chapter just waiting for you. But before you pack your bags, let’s talk about something super important—your insurance.
         
@@ -516,9 +516,9 @@ Given the reality of limited resources and the presence of potential risks, you 
         
         To help you kick things off, I’ve lined up three insurance plans designed specifically for students studying abroad. Check them out:
         
-        🔹 Overseas Lite Plan – Budget-friendly, covers the essentials. Perfect if you’re playing it safe and just want basic protection.
-        🔹 Overseas Basic Plan – Solid, well-rounded coverage for everyday risks at a reasonable monthly cost.
-        🔹 Overseas Advanced Plan – Premium-level protection for high-risk or adventure-filled plans. It’s the most comprehensive option.
+         Overseas Lite Plan – Budget-friendly, covers the essentials. Perfect if you’re playing it safe and just want basic protection.
+         Overseas Basic Plan – Solid, well-rounded coverage for everyday risks at a reasonable monthly cost.
+         Overseas Advanced Plan – Premium-level protection for high-risk or adventure-filled plans. It’s the most comprehensive option.
         
         Each plan affects your monthly budget (from NT$5,500 to NT$15,000), and includes coverage like:
         
@@ -527,10 +527,10 @@ Given the reality of limited resources and the presence of potential risks, you 
         ✔️ Emergency assistance (like transport, family visits, repatriation)
         ✔️ Liability protection in case of injuries or property damage
         
-        📖 So here’s what you need to do next:
+         So here’s what you need to do next:
         Click the green button below to view the full insurance plan comparison table, think about your personality and your plans, and then choose the insurance plan you believe fits you best.
         
-        Let’s make this adventure safe, smart, and unforgettable. I’m here if you need me—let’s do this! 💙✨`,
+        Let’s make this adventure safe, smart, and unforgettable. I’m here if you need me—let’s do this! `,
       },
     }[chatMode][personalityType];
 
@@ -857,7 +857,7 @@ Given the reality of limited resources and the presence of potential risks, you 
                 role: "user",
                 content:
                   `The user initially chose **${selectedPlan}**.\n` +
-                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt.`,
+                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt, and please using the second person viewpoint in the respponse.`,
               },
             ],
           };
@@ -1296,6 +1296,7 @@ Given the reality of limited resources and the presence of potential risks, you 
             )}
             {showInsurancePopup && (
               <InsurancePopup
+                initialPlan={initialPlan}
                 personalityType={personalityType}
                 onClose={() => setShowInsurancePopup(false)}
                 onSelect={(plan) => handlePlanSelected(plan)}
