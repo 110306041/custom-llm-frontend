@@ -14,6 +14,8 @@ import InsurancePopup from "./InsurancePopup";
 import { getFixedRecommendations as getIntroFixedRecommendations, generateRecommendationText as generateIntroRecommendationText } from '../utils/introverted/newIntroRcmd';
 import { getFixedRecommendations as getExtroFixedRecommendations, generateRecommendationText as generateExtroRecommendationText } from '../utils/extroverted/newExtroRcmd';
 
+
+
 const SendIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -818,6 +820,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         setUserAnswers(allAnswers);
 
         const isLast = currentQuestionIndex + 1 === questionnaire.length;
+        setInputText("");
 
         setMessages((prev) => [
           ...prev,
@@ -868,11 +871,16 @@ Given the reality of limited resources and the presence of potential risks, you 
             const data = await res.json();
         
             /* ---------- NEW: append a fixed note to the model's reply ---------- */
-            const followUpNote =
-              '\n\n---\n' +
-              'If you need any further information or clarification, please feel free to ask.\n' +
-              'Once you have everything you need and are ready to make your **final insurance plan selection**, ' +
-              'type **"FINAL"**.';
+            const followUpNote =' \n\n'+ `To assist you in making an informed decision, here are some key questions about the **New Protection Plan**, **Secure Choice Plan**, and **Comprehensive Shield Plan**:`+' \n\n'+`1.What are the main advantages and disadvantages of the 'New Protection Plan,' the 'Secure Choice Plan,' and the 'Comprehensive Shield Plan'?
+2. Could you briefly explain what the 'Maximum Compensation per Insurance Period' and the 'Deductible per Accident' mean for each plan and how they would affect my potential claims?
+3. In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?
+4. Are there any specific exclusions or limitations that I should be aware of for each of these insurance plans?
+5. If I have a pre-existing medical condition, how might that affect the coverage offered by these plans?
+
+
+If you are ready to select your final insurance please type **FINAL** in the input text field.
+`;
+
             const botMessage = data.response + followUpNote;
             /* ------------------------------------------------------------------- */
         
@@ -942,7 +950,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         setCurrentQuestionIndex((prev) => prev + 1);
       }
 
-      setInputText("");
+      // setInputText("");
       return;
     }
 
