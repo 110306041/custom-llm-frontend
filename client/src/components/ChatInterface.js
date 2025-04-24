@@ -1033,22 +1033,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         userMessage,
       ]),
     };
-
-
-    // const requestBody = {
-    //   messages: ensureAlternatingMessages([
-    //     { role: "system", content: prompt },
-    //     //Start chat很重要，拿掉會跑不了
-    //     { role: "user", content: "Start chat" },
-    //     ...messages
-    //       .map((msg) => ({
-    //         role: msg.isBot ? "assistant" : "user",
-    //         content: msg.isBot ? msg.text : `${msg.text}`,
-    //       }))
-    //       .filter((_, i) => i < 1 || i > 28),
-    //     userMessage,
-    //   ]),
-    // };
     console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
     try {
@@ -1062,7 +1046,10 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       let botResponse = data.response;
 
       // 若是 investment 模式且使用者已完成第一次 allocation，就在回應後附加提示語
-      if (chatMode === "investment" && hasCompletedFirstAllocation) {
+      if (chatMode === "investment" && 
+        hasCompletedFirstAllocation &&
+        !botResponse.includes("**Note:** You can now continue chatting with me")
+      ) {
         botResponse +=
           "\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type \"FINAL\" in the chat box.";
       }
