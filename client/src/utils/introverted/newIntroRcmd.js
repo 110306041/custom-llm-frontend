@@ -104,14 +104,29 @@ export const generateRecommendationText = (riskScore, recommendations) => {
       description += `⬇️ Decrease ${fund} by NT$${Math.abs(amount).toLocaleString()}\n`;
     }
   }
+
+  // 當推薦為空，代表使用者分配與建議完全相符
+  if (Object.keys(recommendations).length === 0) {
+    description += "✅ Your current allocation already matches the recommended structure for your risk level. Well done.\n\n";
+  } else {
+    // 否則，列出調整建議
+    for (const [fund, amount] of Object.entries(recommendations)) {
+      if (amount > 0) {
+        description += `⬆️ Increase ${fund} by NT$${amount.toLocaleString()}\n`;
+      } else if (amount < 0) {
+        description += `⬇️ Decrease ${fund} by NT$${Math.abs(amount).toLocaleString()}\n`;
+      }
+    }
+    description += "\nThese adjustments will help bring your portfolio closer in line with your ideal risk-based allocation.\n\n";
+  }
   
   // Add fund descriptions
   description += "\n**Fund Information:**\n";
   description += "- RR1: Franklin Templeton Sinoam Money Market Fund (Lowest risk)\n";
   description += "- RR2: BlackRock Global Government Bond Fund A2 (Low risk)\n";
-  description += "- RR3: Allianz Global Investors Fund - Allianz Income and Growth AM (Moderate risk)\n";
-  description += "- RR4: PIMCO Funds GIS plc - Income Fund E DIST (Moderate-high risk)\n";
-  description += "- RR5: BlackRock Global Funds - World Technology A2 USD (High risk)\n";
+  description += "- RR3: Schroder International Selection Fund Global Multi-Asset Balanced (Moderate risk)\n";
+  description += "- RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD (Moderate-high risk)\n";
+  description += "- RR5: Invesco Global Equity Income Fund A USD (High risk)\n";
   
   description += "\nThese recommendations are designed to optimize your portfolio based on your risk tolerance while maintaining a total investment of NT$1,000,000.";
   
