@@ -105,6 +105,19 @@ export const generateRecommendationText = (riskScore, recommendations) => {
     }
   }
 
+   if (Object.keys(recommendations).length === 0) {
+    description += "✅ Your current allocation already matches the recommended structure for your risk level. Great job!\n\n";
+  } else {
+    // Add recommendation details
+    for (const [fund, amount] of Object.entries(recommendations)) {
+      if (amount > 0) {
+        description += `⬆️ Increase ${fund} by NT$${amount.toLocaleString()}\n`;
+      } else if (amount < 0) {
+        description += `⬇️ Decrease ${fund} by NT$${Math.abs(amount).toLocaleString()}\n`;
+      }
+    }
+  }
+
     // Add fund descriptions
   description += "\n**Fund Information:**\n";
   description += "- RR1: Eastspring Investments Well Pool Money Market Fund (Lowest risk)\n";
