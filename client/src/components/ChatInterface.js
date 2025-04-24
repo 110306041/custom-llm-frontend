@@ -4,13 +4,15 @@ import remarkBreaks from "remark-breaks";
 import { loadInvestmentQuestionnaire } from "../utils/loadQuestionnaire";
 import { loadInsuranceQuestionnaire } from "../utils/loadInsuranceQuestionnaire"; // <-- NEW
 import { risksIntro } from "../utils/risksIntro";
-import { introAllocation } from "../utils/introAllocation";
-import { extroAllocation } from "../utils/extroAllocation";
+import { introAllocation } from "../utils/introverted/introAllocation";
+import { extroAllocation } from "../utils/extroverted/extroAllocation";
 import InvestmentPopup from "./InvestmentPopup";
-import { introRcmdPrompt } from "../utils/introRcmdPrompt";
-import { extroRcmdPrompt } from "../utils/extroRcmdPrompt";
+import { introRcmdPrompt } from "../utils/introverted/introRcmdPrompt";
+import { extroRcmdPrompt } from "../utils/extroverted/extroRcmdPrompt";
 import { extractRecommendationsFromLLMResponse } from "../utils/extractRecommendations";
 import InsurancePopup from "./InsurancePopup";
+import { getFixedRecommendations as getIntroFixedRecommendations, generateRecommendationText as generateIntroRecommendationText } from '../utils/introverted/newIntroRcmdPrompt';
+import { getFixedRecommendations as getExtroFixedRecommendations, generateRecommendationText as generateExtroRecommendationText } from '../utils/extroverted/newExtroRcmdPrompt';
 
 const SendIcon = () => (
   <svg
@@ -360,7 +362,7 @@ In an unfamiliar environment, unexpected situations can arise—such as illness,
  
 Therefore, it is essential to choose a suitable insurance plan to prepare for these uncertainties. Please note that the insurance premium will be deducted from your limited study abroad budget, which may impact your spending on living expenses, transportation, accommodation, or academic needs.
  
-Given the reality of limited resources and the presence of potential risks, you are encouraged to carefully evaluate each plan’s coverage and cost structure, and select the one that best supports a smooth and secure study abroad experience.
+Given the reality of limited resources and the presence of potential risks, you are encouraged to carefully evaluate each plan's coverage and cost structure, and select the one that best supports a smooth and secure study abroad experience.
 
     
     Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
@@ -487,38 +489,38 @@ Given the reality of limited resources and the presence of potential risks, you 
       },
 
       insurance: {
-        intro: `Hello. I’m your insurance assistant—here to support you as you prepare for your upcoming journey.
+        intro: `Hello. I'm your insurance assistant—here to support you as you prepare for your upcoming journey.
 
         Imagine you are about to begin a one-year study abroad program in the United States.
         In a new environment, unfamiliar situations can sometimes arise—unexpected illness, accidental injury, lost items, delays in transportation, or high medical expenses. These events, though uncertain, may affect your daily routine and study plans, and could place pressure on your finances.
         
-        That’s why it’s important to make thoughtful decisions now.
+        That's why it's important to make thoughtful decisions now.
         Choosing a suitable insurance plan will help you manage these uncertainties with more peace of mind. Please note that the insurance premium will be deducted from your fixed study abroad budget, so the plan you choose may influence how much you can spend on daily needs, transportation, housing, or academics.
         
-        To support your decision, I’ve prepared three carefully designed insurance options:
+        To support your decision, I've prepared three carefully designed insurance options:
         
-         New Protection Plan – Offers flexible coverage at an affordable monthly premium of NT$5,500. It’s ideal for students who want to balance protection with minimal impact on living expenses.
-         Secure Choice Plan – Provides slightly higher coverage with a monthly premium of NT$10,000. This is suitable if you’d like additional reassurance while still reserving some budget.
-        Comprehensive Shield Plan – A full-protection option with the highest premium (NT$15,000/month). It’s best for students who prefer to be well-prepared for high-cost medical events or emergencies.
+         New Protection Plan – Offers flexible coverage at an affordable monthly premium of NT$5,500. It's ideal for students who want to balance protection with minimal impact on living expenses.
+         Secure Choice Plan – Provides slightly higher coverage with a monthly premium of NT$10,000. This is suitable if you'd like additional reassurance while still reserving some budget.
+        Comprehensive Shield Plan – A full-protection option with the highest premium (NT$15,000/month). It's best for students who prefer to be well-prepared for high-cost medical events or emergencies.
         
         Each plan includes coverage for accidents, emergency treatment, hospitalization, assistance services, and third-party liability. While the core benefits remain consistent, the protection limits and monthly costs vary.
         
          I encourage you to take your time to read through the cover story and review the insurance plan table (click the green button below). Then, select the plan that you feel best aligns with your personal risk comfort and lifestyle needs.
         
-        If you have any questions—no matter how small—please feel free to ask me. I’m here to help you make a careful, confident choice.`,
+        If you have any questions—no matter how small—please feel free to ask me. I'm here to help you make a careful, confident choice.`,
 
-        extra: `Let’s say you’re heading off to study in the United States—how exciting is that?!
+        extra: `Let's say you're heading off to study in the United States—how exciting is that?!
 
-        A brand-new country, new experiences, and a fresh chapter just waiting for you. But before you pack your bags, let’s talk about something super important—your insurance.
+        A brand-new country, new experiences, and a fresh chapter just waiting for you. But before you pack your bags, let's talk about something super important—your insurance.
         
-        Hi! I’m your personal insurance assistant, here to make sure you’re fully prepared and protected while you chase your dreams overseas. 🌍💼
-        Have questions about coverage, claims, or what all those terms even mean? I’ve got your back. Just ask me anything—insurance is my thing!
+        Hi! I'm your personal insurance assistant, here to make sure you're fully prepared and protected while you chase your dreams overseas. 🌍💼
+        Have questions about coverage, claims, or what all those terms even mean? I've got your back. Just ask me anything—insurance is my thing!
         
-        To help you kick things off, I’ve lined up three insurance plans designed specifically for students studying abroad. Check them out:
+        To help you kick things off, I've lined up three insurance plans designed specifically for students studying abroad. Check them out:
         
-         Overseas Lite Plan – Budget-friendly, covers the essentials. Perfect if you’re playing it safe and just want basic protection.
+         Overseas Lite Plan – Budget-friendly, covers the essentials. Perfect if you're playing it safe and just want basic protection.
          Overseas Basic Plan – Solid, well-rounded coverage for everyday risks at a reasonable monthly cost.
-         Overseas Advanced Plan – Premium-level protection for high-risk or adventure-filled plans. It’s the most comprehensive option.
+         Overseas Advanced Plan – Premium-level protection for high-risk or adventure-filled plans. It's the most comprehensive option.
         
         Each plan affects your monthly budget (from NT$5,500 to NT$15,000), and includes coverage like:
         
@@ -527,10 +529,10 @@ Given the reality of limited resources and the presence of potential risks, you 
         ✔️ Emergency assistance (like transport, family visits, repatriation)
         ✔️ Liability protection in case of injuries or property damage
         
-         So here’s what you need to do next:
+         So here's what you need to do next:
         Click the green button below to view the full insurance plan comparison table, think about your personality and your plans, and then choose the insurance plan you believe fits you best.
         
-        Let’s make this adventure safe, smart, and unforgettable. I’m here if you need me—let’s do this! `,
+        Let's make this adventure safe, smart, and unforgettable. I'm here if you need me—let's do this! `,
       },
     }[chatMode][personalityType];
 
@@ -837,7 +839,7 @@ Given the reality of limited resources and the presence of potential risks, you 
                 timestamp: formatTimestamp(),
               }
             : {
-                text: "✅ Thanks! We’ve got all your answers. Let me analyze them...",
+                text: "✅ Thanks! We've got all your answers. Let me analyze them...",
                 isBot: true,
                 timestamp: formatTimestamp(),
               },
@@ -871,7 +873,7 @@ Given the reality of limited resources and the presence of potential risks, you 
             });
             const data = await res.json();
         
-            /* ---------- NEW: append a fixed note to the model’s reply ---------- */
+            /* ---------- NEW: append a fixed note to the model's reply ---------- */
             const followUpNote =
               '\n\n---\n' +
               'If you need any further information or clarification, please feel free to ask.\n' +
@@ -956,8 +958,6 @@ Given the reality of limited resources and the presence of potential risks, you 
       hasCompletedQuestionnaire &&
       hasSeenProductIntro &&
       !hasCompletedAllocation
-      // &&
-      // inputText !== "allocate"
     ) {
       setShowPopup(true);
       setInputText("");
@@ -1111,7 +1111,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         setMessages((prev) => [
           ...prev,
           {
-            text: `Question 1:\n${qs[0].text}\n${qs[0].options
+            text: `Question 1:\n${qs[0].text}\n${qs[0].options
               .map((o, i) => `(${i + 1}) ${o}`)
               .join("\n")}`,
             isBot: true,
@@ -1150,12 +1150,6 @@ Given the reality of limited resources and the presence of potential risks, you 
     // 檢查並記錄數據
     console.log("風險評分:", totalScore, "分配:", allocation);
 
-    // 根據 personalityType 選擇合適的 prompt
-    const recPrompt =
-      personalityType === "intro"
-        ? introRcmdPrompt(totalScore, allocation)
-        : extroRcmdPrompt(totalScore, allocation);
-
     setUserAllocation(allocation);
     setShowPopup(false);
     setHasCompletedAllocation(true);
@@ -1171,47 +1165,33 @@ Given the reality of limited resources and the presence of potential risks, you 
       { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
     ]);
 
-    const requestBody = {
-      messages: [
-        { role: "system", content: recPrompt },
-        {
-          role: "user",
-          content:
-            "Review my investment allocation and provide balanced recommendations. For each increase you suggest, you MUST recommend a corresponding decrease elsewhere to maintain exactly NT$1,000,000 total. Be precise with amounts and ensure they respect the minimum investment units.",
-        },
-      ],
-    };
-    console.log("recommendationPrompt是：", requestBody);
-    fetch("http://140.119.19.195:5000/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        // 提取建議重點
-        const recommendations = extractRecommendationsFromLLMResponse(
-          data.response,
-          allocation
-        );
-        setLlmRecommendation(recommendations);
-        console.log("recommendations重點", recommendations);
+    const recommendations = personalityType === "intro" 
+      ? getIntroFixedRecommendations(totalScore, allocation)
+      : getExtroFixedRecommendations(totalScore, allocation);
+    
+    const recommendationText = personalityType === "intro"
+      ? generateIntroRecommendationText(totalScore, recommendations)
+      : generateExtroRecommendationText(totalScore, recommendations);
+    
+    setLlmRecommendation(recommendations);
+    console.log("LLM 建議的 allocation:", recommendations);
 
-        const responseWithNote =
-          data.response +
-          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type "FINAL" in the chat box and I\'ll provide a button for you to proceed with your final allocation.';
+    // Add note about continuing the conversation
+    const responseWithNote =
+      recommendationText +
+      '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type "FINAL" in the chat box and I\'ll provide a button for you to proceed with your final allocation.';
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: responseWithNote,
-            isBot: true,
-            timestamp: formatTimestamp(),
-          },
-        ]);
-      })
-      .catch((e) => console.error(e))
-      .finally(() => setIsLoading(false));
+    // Add the recommendations to the message history
+    setMessages((prev) => [
+      ...prev,
+      {
+        text: responseWithNote,
+        isBot: true,
+        timestamp: formatTimestamp(),
+      },
+    ]);
+
+    setIsLoading(false);
   };
 
   // 保存投資配置的邏輯 (抽象為一個獨立函數)
