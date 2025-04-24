@@ -74,7 +74,7 @@ export const getFixedRecommendations = (riskScore, currentAllocation) => {
   // Check that all recommendations respect minimum amounts for each fund
   // Adjust if needed to maintain total of NT$1,000,000
   
-  console.log("Generated fixed recommendations:", recommendations);
+  console.log("內向 LLM 的 fixed recommendations:", recommendations);
   return recommendations;
 };
 

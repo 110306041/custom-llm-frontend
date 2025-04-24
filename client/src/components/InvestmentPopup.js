@@ -108,7 +108,6 @@ const InvestmentPopup = ({
   const [tableType, setTableType] = useState(personalityType);
   const [allocation, setAllocation] = useState(initialAllocation);
   const [showConfirmation, setShowConfirmation] = useState(false); // State to manage confirmation modal
-  const [confirmAction, setConfirmAction] = useState(null); // Store confirm action (save)
 
   useEffect(() => {
     if (Object.keys(initialAllocation).length > 0) {
@@ -125,22 +124,15 @@ const InvestmentPopup = ({
   };
 
   const renderRecommendation = (rr) => {
-    if (!isSecondAllocation || !recommendations[rr]) return null;
-
-    const change = recommendations[rr];
-    if (change === 0) return null;
-
-    const isIncrease = change > 0;
-    const color = isIncrease ? "text-red-500" : "text-green-500";
-    const prefix = isIncrease ? "+" : "-";
-
+    if (!isSecondAllocation || !initialAllocation[rr]) return null;
+  
     return (
-      <div className={`${color} text-sm ml-2 font-medium`}>
-        {`${prefix}NT$${Math.abs(change).toLocaleString()}`}
+      <div className="text-gray-500 text-sm ml-2 font-medium">
+        (Previous: NT${initialAllocation[rr].toLocaleString()})
       </div>
     );
   };
-
+  
   const handleSave = () => {
     const total = Object.values(allocation).reduce((sum, val) => sum + val, 0);
 
@@ -192,7 +184,9 @@ const InvestmentPopup = ({
           You must enter a value for each category - either 0 or an amount that meets the minimum investment requirement.
           {isSecondAllocation && 
             <span className="text-blue-600 ml-2">
-              Consider the LLM recommendations in red (increase) or green (decrease)
+            <span className="text-blue-600 ml-2">
+              For reference, your previous allocation for each category is shown in gray
+            </span>
             </span>
           }
         </p>
@@ -205,7 +199,7 @@ const InvestmentPopup = ({
               <th className="p-4 border">Annualized Return (%)</th>
               <th className="p-4 border">Volatility</th>
               <th className="p-4 border">Minimum Investment</th>
-              <th className="p-4 border">Amount {isSecondAllocation && <span className="text-sm text-blue-500">+ Recommendation</span>}</th>
+              <th className="p-4 border">Amount {isSecondAllocation && <span className="ml-14 text-sm text-gray-500"> Your First Allocation</span>}</th>
               <th className="p-4 border">Fund Type</th>
               <th className="p-4 border">Description</th>
             </tr>

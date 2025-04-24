@@ -11,8 +11,8 @@ import { introRcmdPrompt } from "../utils/introverted/introRcmdPrompt";
 import { extroRcmdPrompt } from "../utils/extroverted/extroRcmdPrompt";
 import { extractRecommendationsFromLLMResponse } from "../utils/extractRecommendations";
 import InsurancePopup from "./InsurancePopup";
-import { getFixedRecommendations as getIntroFixedRecommendations, generateRecommendationText as generateIntroRecommendationText } from '../utils/introverted/newIntroRcmdPrompt';
-import { getFixedRecommendations as getExtroFixedRecommendations, generateRecommendationText as generateExtroRecommendationText } from '../utils/extroverted/newExtroRcmdPrompt';
+import { getFixedRecommendations as getIntroFixedRecommendations, generateRecommendationText as generateIntroRecommendationText } from '../utils/introverted/newIntroRcmd';
+import { getFixedRecommendations as getExtroFixedRecommendations, generateRecommendationText as generateExtroRecommendationText } from '../utils/extroverted/newExtroRcmd';
 
 const SendIcon = () => (
   <svg
@@ -118,6 +118,7 @@ const ChatInterface = () => {
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] =
     useState(false);
   const [hasSeenProductIntro, setHasSeenProductIntro] = useState(false);
+  const [hasCompletedFirstAllocation, setHasCompletedFirstAllocation] = useState(false);
   const [hasCompletedAllocation, setHasCompletedAllocation] = useState(false);
   const [userAllocation, setUserAllocation] = useState({
     RR1: 0,
@@ -191,104 +192,90 @@ const ChatInterface = () => {
 
     // Investment mode 的 Scenario
     const investmentScenarios = {
-      intro: (score, allocation) =>
-        `Scenario:
-      You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. Your role is to guide users through investment product categories and help them build a risk-aligned portfolio.
-
-      First of all, the user has been asked to allocate a hypothetical NT$1,000,000 across available investment products. Their current allocation is as follows:
+      intro: (score, allocation) => `
+      Scenario:
+      You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. The recommended portfolio allocation has already been tailored to match the user's risk tolerance score of **${score}**.
+      
+      Please help the user *understand* why this specific allocation makes sense for them. Focus on explaining:
+      
+      1. Why each chosen RR category is a good match based on their score.
+      2. Why *non-included* RR categories (if the user asks) are not ideal for their risk level — e.g., "Why isn't RR1 included for High Risk users?" or "Can I put more in RR5 if I am Moderate Risk?"
+      3. Emphasize that the goal is not to chase high returns at all costs, but to build a resilient, risk-aligned portfolio.
+      
+      Here is their recommended allocation:
       ${
-        total === 0
-          ? "Their allocation has not been provided yet."
-          : Object.entries(allocation)
-              .filter(([_, v]) => v > 0)
-              .map(
-                ([rr, val]) =>
-                  `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
-              )
-              .join("\n")
+        Object.entries(allocation)
+          .map(
+            ([rr, val]) =>
+              `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
+          )
+          .join("\n")
       }
-      Please carefully review this allocation and consider how it aligns with the user's risk tolerance score.
-
-      Secondly, based on the user's risk tolerance score of **${score}**, determine whether their current allocation is:
-      - too aggressive (should reduce exposure to high-risk funds)
-      - too conservative (should consider increasing allocation to higher-return options)
-      - well-aligned (can maintain current distribution)
-
-      For each RR category the user has chosen, give a recommendation:
-        - Maintain current level ✅
-        - Increase investment ⬆️
-        - Reduce investment ⬇️
-
-      Then explain *why*, using plain language and tying it back to their score and the characteristics of each fund category.
-      You may use the following product guidance along with the user's score to support your decisions:
-
-      - **Risk Score 10–15 (Low Risk)**:
-        - Franklin Templeton Sinoam Money Market Fund (RR1) (Unit Size: NT$10,000)
-        - BlackRock Global Government Bond Fund A2 (RR2) (Unit Size: NT$50,000)
-
-      - **Risk Score 16–30 (Moderate Risk)**:
-        - BlackRock Global Government Bond Fund A2 (RR2) (Unit Size: NT$50,000)
-        - Schroder International Selection Fund Global Multi-Asset Balanced (RR3) (Unit Size: NT$100,000)
-        - JPMorgan Funds - Europe Equity Fund A (acc) - USD (RR4) (Unit Size: NT$150,000)
-
-      - **Risk Score 31–50 (High Risk)**:
-        - Schroder International Selection Fund Global Multi-Asset Balanced (RR3) (Unit Size: NT$100,000)
-        - JPMorgan Funds - Europe Equity Fund A (acc) - USD (RR4) (Unit Size: NT$150,000)
-        - Invesco Global Equity Income Fund A USD (RR5) (Unit Size: NT$300,000) 
-
-      💡 Note: "Unit size" means the investment amount must be a multiple of that number (e.g., NT$10,000, NT$20,000... for RR1). Avoid recommending values that are not valid units.    
-      Your goal is to help them understand not just the "what" but also the "why"—build confidence in their investment decisions.
-    `,
-
-      extra: (score) => `Scenario:
-    You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your task is to educate users about our investment product types and guide them to build portfolios aligned with their risk personality.
-    
-    First of all, the user has just played portfolio manager with a virtual NT$1,000,000! 🎯  
-    Here's how they've allocated it across available products:
-    ${
-      total === 0
-        ? "Their allocation has not been provided yet."
-        : Object.entries(allocation)
-            .filter(([_, v]) => v > 0)
-            .map(
-              ([rr, val]) =>
-                `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
-            )
-            .join("\n")
-    }
-    Your job: Celebrate their effort 👏, then review whether this matches their actual risk profile!
-
-    Second, based on the user's risk tolerance score of **${score}**, decide whether their current allocation is:
-    - too aggressive (may need to scale back on high-risk plays)  
-    - too conservative (may have more room to explore higher returns)  
-    - well-aligned (great balance, let's keep it rolling)
-
-    For each RR category the user invested in, provide a simple call:
-      - ✅ Maintain  
-      - ⬆️ Increase  
-      - ⬇️ Reduce  
-
-    Use exciting but grounded explanations—why this fits (or doesn't fit) their score, and what kind of investor this choice supports.
-
-    🔥 Product Guidance – Match ideas to their risk score:
-
-    - **Score 10–15 (Low Risk)**:
-      - Schroder Global High Yield Bond Fund A1 (RR2) (Unit Size: NT$50,000)
-      - PineBridge Preferred Securities Income Fund (RR3) (Unit Size: NT$100,000)
-
-    - **Score 16–30 (Moderate Risk)**:
-      - PineBridge Preferred Securities Income Fund (RR3) (Unit Size: NT$100,000)
-      - FSITC China Century Fund-TWD (RR4)  (Unit Size: NT$150,000)
-      - Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (RR5) (Unit Size: NT$300,000)
-
-    - **Score 31–50 (High Risk)**:
-      - FSITC China Century Fund-TWD (RR4)  (Unit Size: NT$150,000)
-      - Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (RR5) (Unit Size: NT$300,000)
-
-    💡 *Note: Unit size means you can only invest in multiples of that amount (e.g., RR3 = NT$100,000, NT$200,000, etc). Please avoid suggesting invalid values.*
-
-    End with an upbeat note—remind them that bold doesn't mean reckless, and that they're building something exciting, one smart choice at a time.`,
-    };
+      
+      You are not allowed to suggest alternative amounts. Instead, your role is to support the user in understanding and gaining confidence in this recommended structure. Use simple, reassuring language and tie each recommendation to their risk score and the product’s characteristics.
+      
+      Available product guidance:
+      - **Low Risk (10–15)**:
+        - RR1: Franklin Templeton Sinoam Money Market Fund (unit NT$10,000)
+        - RR2: BlackRock Global Funds - Global Government Bond Fund A2 (unit NT$50,000)
+      
+      - **Moderate Risk (16–30)**:
+        - RR2: BlackRock Global Funds - Global Government Bond Fund A2 (unit NT$50,000)
+        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced (unit NT$100,000)
+        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD (unit NT$150,000)
+      
+      - **High Risk (31–50)**:
+        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced (unit NT$100,000)
+        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD (unit NT$150,000)
+        - RR5: Invesco Global Equity Income Fund A USD (unit NT$300,000)
+      
+      💡 Note: Each fund has a minimum investment unit. The system has already optimized allocations to match those constraints.
+      `
+      ,      
+      extra: (score, allocation) => `Scenario:
+      You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** their recommended investment portfolio fits their personal risk score and future goals.
+      
+      The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
+      ${
+        Object.entries(allocation)
+          .map(
+            ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
+          )
+          .join("\n")
+      }
+      
+      Your job:
+      - Help the user understand *why this configuration fits their risk profile*
+      - Encourage them with upbeat, growth-oriented language
+      - Address potential user doubts, like:
+        - “Why can't I include RR1?”
+        - “I’m Moderate Risk—why am I investing so much in RR5?”
+      
+      Please provide reassuring, insightful, and motivating answers, explaining:
+      - How each RR category aligns with the user's risk personality
+      - What kind of growth or volatility they might expect
+      - Why some higher- or lower-risk products might *not* be suitable right now
+      
+      🔥 Product guidance for reference:
+      - **Low Risk (Score 10–15)**:
+        - RR2: Schroder International Selection Fund Global High Yield A1 Distribution MF (Unit NT$50,000)
+        - RR3: PineBridge Preferred Securities Income Fund USD N (Unit NT$100,000)
+      
+      - **Moderate Risk (Score 16–30)**:
+        - RR3: PineBridge Preferred Securities Income Fund USD N (Unit NT$100,000)
+        - RR4: FSITC China Century Fund-TWD (Unit NT$150,000)
+        - RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (Unit NT$300,000)
+      
+      - **High Risk (Score 31–50)**:
+        - RR4: FSITC China Century Fund-TWD (Unit NT$150,000)
+        - RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (Unit NT$300,000)
+      
+      💡 Note: Each fund has a minimum unit size, and the current allocation already respects these constraints.
+      
+      🎯 Final goal:
+      Build user confidence in this risk-aligned configuration. Show them that high potential doesn’t mean chaos—it means smart, intentional risk-taking. End with an encouraging, forward-looking tone.
+      `
+  };
 
     // Insurance mode 的 Scenario
     const insuranceScenarios = {
@@ -952,7 +939,6 @@ Given the reality of limited resources and the presence of potential risks, you 
       return;
     }
 
-    // 處理投資分配格式
     if (
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
@@ -1001,7 +987,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         : getSystemPrompt(totalScore, userAllocation);
 
     if (chatMode === "investment") {
-      console.log("🟢 Investment Mode - Final Prompt:\n", prompt);
+      console.log("使用的完整 investment prompt: \n", prompt);
     }
 
     const requestBody = {
@@ -1014,7 +1000,7 @@ Given the reality of limited resources and the presence of potential risks, you 
             role: msg.isBot ? "assistant" : "user",
             content: msg.isBot ? msg.text : `${msg.text}`,
           }))
-          .filter((_, i) => i < 1 || i > 26),
+          .filter((_, i) => i < 1 || i > 28),
         userMessage,
       ]),
     };
@@ -1028,9 +1014,17 @@ Given the reality of limited resources and the presence of potential risks, you 
       });
       const data = await res.json();
 
+      let botResponse = data.response;
+
+      // 若是 investment 模式且使用者已完成第一次 allocation，就在回應後附加提示語
+      if (chatMode === "investment" && hasCompletedFirstAllocation) {
+        botResponse +=
+          "\n\n**Note:**: You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type \"FINAL\" in the chat box.";
+      }
+
       setMessages((prev) => [
         ...prev,
-        { text: data.response, isBot: true, timestamp: formatTimestamp() },
+        { text: botResponse, isBot: true, timestamp: formatTimestamp() },
       ]);
     } catch (e) {
       console.error("Fetch error:", e);
@@ -1142,14 +1136,8 @@ Given the reality of limited resources and the presence of potential risks, you 
       ]);
     }
   };
-  
 
-
-  // 處理投資配置的邏輯
   const handleAllocation = (allocation) => {
-    // 檢查並記錄數據
-    console.log("風險評分:", totalScore, "分配:", allocation);
-
     setUserAllocation(allocation);
     setShowPopup(false);
     setHasCompletedAllocation(true);
@@ -1223,6 +1211,7 @@ Given the reality of limited resources and the presence of potential risks, you 
     } else {
       // 第一次配置的原始邏輯
       handleAllocation(newAllocation);
+      setHasCompletedFirstAllocation(true);
     }
   };
 

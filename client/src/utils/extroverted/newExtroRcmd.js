@@ -11,7 +11,7 @@ export const getFixedRecommendations = (riskScore, currentAllocation) => {
   if (riskScore >= 10 && riskScore <= 15) {
     const recommendedAllocation = {
       RR1: 0, 
-      RR2: 400000, // 40% in RR2 (BlackRock Global Government Bond Fund A2)
+      RR2: 400000, // 40% in RR2
       RR3: 600000, // 60% in RR3
       RR4: 0,
       RR5: 0
@@ -104,16 +104,16 @@ export const generateRecommendationText = (riskScore, recommendations) => {
       description += `⬇️ Reduce ${fund} by NT$${Math.abs(amount).toLocaleString()} to optimize your strategy!\n`;
     }
   }
-  
-  // Add fund descriptions with more engaging details
-  description += "\n**Exciting Investment Opportunities:**\n";
-  description += "- RR1: Franklin Templeton Sinoam Money Market Fund (Rock-solid stability foundation)\n";
-  description += "- RR2: BlackRock Global Government Bond Fund A2 (Reliable global government bond exposure)\n";
-  description += "- RR3: Allianz Global Investors Fund - Allianz Income and Growth AM (Perfect balance of income and growth potential)\n";
-  description += "- RR4: PIMCO Funds GIS plc - Income Fund E DIST (Enhanced income with growth prospects)\n";
-  description += "- RR5: BlackRock Global Funds - World Technology A2 USD (Dynamic tech exposure for maximum growth potential)\n";
-  
-  description += "\nThis personalized strategy is designed to maximize your investment potential while aligning with your risk profile! The total investment remains at NT$1,000,000.";
+
+    // Add fund descriptions
+  description += "\n**Fund Information:**\n";
+  description += "- RR1: Eastspring Investments Well Pool Money Market Fund (Lowest risk)\n";
+  description += "- RR2: Schroder International Selection Fund Global High Yield A1 Distribution MF (Low risk)\n";
+  description += "- RR3: PineBridge Preferred Securities Income Fund USD N (Moderate risk)\n";
+  description += "- RR4: FSITC China Century Fund-TWD (Moderate-high risk)\n";
+  description += "- RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (High risk)\n";
+    
+  description += "\nThis personalized strategy is designed to maximize your investment potential while aligning with your risk profile!";
   
   return description;
 }; 
