@@ -199,7 +199,7 @@ const InvestmentPopup = ({
               <th className="p-4 border">Annualized Return (%)</th>
               <th className="p-4 border">Volatility</th>
               <th className="p-4 border">Minimum Investment</th>
-              <th className="p-4 border">Amount {isSecondAllocation && <span className="ml-14 text-sm text-gray-500"> Your First Allocation</span>}</th>
+              <th className="p-4 border">Amount {isSecondAllocation && <span className="ml-15 text-sm text-gray-500"> / Your First Allocation</span>}</th>
               <th className="p-4 border">Fund Type</th>
               <th className="p-4 border">Description</th>
             </tr>

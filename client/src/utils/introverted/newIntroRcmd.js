@@ -95,15 +95,6 @@ export const generateRecommendationText = (riskScore, recommendations) => {
   } else if (riskScore >= 31 && riskScore <= 50) {
     description += "Based on your high risk profile (score: " + riskScore + "), I recommend a growth-oriented investment strategy:\n\n";
   }
-  
-  // Add recommendation details
-  for (const [fund, amount] of Object.entries(recommendations)) {
-    if (amount > 0) {
-      description += `⬆️ Increase ${fund} by NT$${amount.toLocaleString()}\n`;
-    } else if (amount < 0) {
-      description += `⬇️ Decrease ${fund} by NT$${Math.abs(amount).toLocaleString()}\n`;
-    }
-  }
 
   // 當推薦為空，代表使用者分配與建議完全相符
   if (Object.keys(recommendations).length === 0) {
