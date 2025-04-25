@@ -194,7 +194,7 @@ const InsurancePopup = ({
                 onClick={() => handlePlanClick(plan)}
                 className={`w-full text-left p-3 rounded-lg flex items-center justify-between ${
                   isPrevious
-                    ? "bg-yellow-50 border-2 border-yellow-300"
+                    ? "bg-yellow-50 border-2 border-yellow-300 hover:bg-yellow-100"
                     : "bg-blue-100 hover:bg-blue-200"
                 }`}
               >

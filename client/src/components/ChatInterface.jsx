@@ -869,7 +869,7 @@ Given the reality of limited resources and the presence of potential risks, you 
         
             /* ---------- NEW: append a fixed note to the model's reply ---------- */
             const followUpNotes = {
-              intro:`1. What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
+              intro:`<br>1. What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
 2. Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 3. In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
 4. Are there any specific exclusions or limitations that I should be aware of for each of these insurance plans?  
@@ -877,7 +877,8 @@ Given the reality of limited resources and the presence of potential risks, you 
             
 If you are ready to select your final insurance please type **FINAL** in the input text field.  
             `,
-              extra: `              1. What are the main advantages and disadvantages of the **Lite Plan**, the **Basic Plan** and the **Advanced Plan**?  
+              extra: `              
+1. What are the main advantages and disadvantages of the **Lite Plan**, the **Basic Plan** and the **Advanced Plan**?  
 2. Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 3. In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
 4. Are there any specific exclusions or limitations that I should be aware of for each of these insurance plans?  
