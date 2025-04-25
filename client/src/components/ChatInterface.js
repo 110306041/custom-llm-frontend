@@ -136,6 +136,13 @@ const ChatInterface = () => {
     return userAnswers.reduce((a, b) => a + b, 0);
   }, [userAnswers]);
   const [isConversationComplete, setIsConversationComplete] = useState(false);
+  const RISK_SCORE_PREFIXES = [
+    "Your risk profile score of",
+    "With your balanced risk profile",
+    "Wow! Your high risk tolerance",
+    "Based on your"
+  ];
+  
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1012,17 +1019,31 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       console.log("使用的完整 investment prompt: \n", prompt);
     }
 
+    // 將全部訊息轉成 Chat API 格式
+    const chatMessages = messages.map((msg) => ({
+      role: msg.isBot ? "assistant" : "user",
+      content: msg.text
+    }));
+
+    // 找出第一個符合「風險分析」起始句的 index
+    const firstAnalysisIndex = chatMessages.findIndex(
+      (msg) =>
+        msg.role === "assistant" &&
+        RISK_SCORE_PREFIXES.some((prefix) => msg.content.startsWith(prefix))
+    );
+
+    // 如果找不到，就 fallback 用最後 10 則訊息（避免 crash）
+    const slicedMessages =
+      firstAnalysisIndex !== -1
+        ? chatMessages.slice(firstAnalysisIndex)
+        : chatMessages.slice(-10);
+
+    // 建立 requestBody
     const requestBody = {
       messages: ensureAlternatingMessages([
         { role: "system", content: prompt },
-        //Start chat很重要，拿掉會跑不了
         { role: "user", content: "Start chat" },
-        ...messages
-          .map((msg) => ({
-            role: msg.isBot ? "assistant" : "user",
-            content: msg.isBot ? msg.text : `${msg.text}`,
-          }))
-          .filter((_, i) => i < 1 || i > 28),
+        ...slicedMessages,
         userMessage,
       ]),
     };
@@ -1039,9 +1060,12 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       let botResponse = data.response;
 
       // 若是 investment 模式且使用者已完成第一次 allocation，就在回應後附加提示語
-      if (chatMode === "investment" && hasCompletedFirstAllocation) {
+      if (chatMode === "investment" && 
+        hasCompletedFirstAllocation &&
+        !botResponse.includes("**Note:** You can now continue chatting with me")
+      ) {
         botResponse +=
-          "\n\n**Note:**: You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type \"FINAL\" in the chat box.";
+          "\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type \"FINAL\" in the chat box.";
       }
 
       setMessages((prev) => [

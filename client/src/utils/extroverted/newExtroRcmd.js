@@ -96,16 +96,8 @@ export const generateRecommendationText = (riskScore, recommendations) => {
     description += "Wow! Your high risk tolerance (score: " + riskScore + ") opens the door to exceptional growth opportunities! Here's a powerful growth-focused strategy designed for maximum potential returns:\n\n";
   }
   
-  // Add recommendation details with more energetic language
-  for (const [fund, amount] of Object.entries(recommendations)) {
-    if (amount > 0) {
-      description += `⬆️ Boost ${fund} by adding NT$${amount.toLocaleString()} for greater potential!\n`;
-    } else if (amount < 0) {
-      description += `⬇️ Reduce ${fund} by NT$${Math.abs(amount).toLocaleString()} to optimize your strategy!\n`;
-    }
-  }
-
-   if (Object.keys(recommendations).length === 0) {
+  // 如果沒有任何需要調整的項目
+  if (Object.keys(recommendations).length === 0) {
     description += "✅ Your current allocation already matches the recommended structure for your risk level. Great job!\n\n";
   } else {
     // Add recommendation details
