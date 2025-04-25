@@ -204,8 +204,12 @@ const ChatInterface = () => {
       intro: (score, allocation) => `
       Scenario:
       You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. The recommended portfolio allocation has already been tailored to match the user's risk tolerance score of **${score}**.
+      
+      Instraction:
       Also plese do not expose your personality anyway.
       And please do not use the entire greeting messsage again.
+      And please more insistenct with your knowledge and provided information, and for the user's risk information, must accord with the system prompt provided information.
+
       Please help the user *understand* why this specific allocation makes sense for them. Focus on explaining:
       
       1. Why each chosen RR category is a good match based on their score.
@@ -244,8 +248,10 @@ const ChatInterface = () => {
       ,      
       extra: (score, allocation) => `Scenario:
       You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** their recommended investment portfolio fits their personal risk score and future goals.
+      Instraction:
       Also plese do not expose your personality anyway.
       And please do not use the entire greeting messsage again.
+      And please more insistenct with your knowledge and provided information, and for the user's risk information, must accord with the system prompt provided information.
       The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
       ${
         Object.entries(allocation)
@@ -877,6 +883,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
             /* ---------- NEW: append a fixed note to the model's reply ---------- */
             const followUpNotes = {
               intro:`
+The following are the FAQ:
 (1) What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
 (2) Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 (3) In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
@@ -886,6 +893,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
 If you are ready to select your final insurance please type **FINAL** in the input text field.  
             `,
               extra: ` 
+The following are the FAQ:
 (1). What are the main advantages and disadvantages of the **Lite Plan**, the **Basic Plan** and the **Advanced Plan**?  
 (2) Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 (3) In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
