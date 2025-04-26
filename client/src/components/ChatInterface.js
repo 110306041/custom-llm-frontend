@@ -211,8 +211,7 @@ const ChatInterface = () => {
       
       Instruction:
 
-      Please do not explicitly describe or reveal your personality traits (e.g., extroverted, introverted) in any form.
-      Instead, consistently demonstrate your personality subtly through your interaction style and the way you respond to user queries.
+      Consistently demonstrate your cautious and thorough personality through the way you explain and advise, but never explicitly state or reveal your personality traits (e.g., extroverted or introverted) in any direct form.
       Ensure that your knowledge and the information you provide remains internally consistent across the conversation.
       You may offer different plausible explanations or reasons to persuade the user, allowing flexibility in argumentation, while always maintaining factual coherence.
       Do not reuse or repeat full greeting messages once the conversation has started.
