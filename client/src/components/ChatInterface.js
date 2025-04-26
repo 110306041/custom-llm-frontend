@@ -11,10 +11,14 @@ import { introRcmdPrompt } from "../utils/introverted/introRcmdPrompt";
 import { extroRcmdPrompt } from "../utils/extroverted/extroRcmdPrompt";
 import { extractRecommendationsFromLLMResponse } from "../utils/extractRecommendations";
 import InsurancePopup from "./InsurancePopup";
-import { getFixedRecommendations as getIntroFixedRecommendations, generateRecommendationText as generateIntroRecommendationText } from '../utils/introverted/newIntroRcmd';
-import { getFixedRecommendations as getExtroFixedRecommendations, generateRecommendationText as generateExtroRecommendationText } from '../utils/extroverted/newExtroRcmd';
-
-
+import {
+  getFixedRecommendations as getIntroFixedRecommendations,
+  generateRecommendationText as generateIntroRecommendationText,
+} from "../utils/introverted/newIntroRcmd";
+import {
+  getFixedRecommendations as getExtroFixedRecommendations,
+  generateRecommendationText as generateExtroRecommendationText,
+} from "../utils/extroverted/newExtroRcmd";
 
 const SendIcon = () => (
   <svg
@@ -99,10 +103,10 @@ const ChatMessage = ({ message, onButtonClick, handleSecondAllocation }) => {
 };
 
 const ChatInterface = () => {
-  const [initialPlan, setInitialPlan] = useState(null);   // first selection
+  const [initialPlan, setInitialPlan] = useState(null); // first selection
   const [insurancePopupCount, setInsurancePopupCount] = useState(0); // open counter
-  const [insuranceStage, setInsuranceStage] = useState("idle");   // idle | choosePlan | questionnaire | done
-  const [selectedPlan, setSelectedPlan]   = useState(null);
+  const [insuranceStage, setInsuranceStage] = useState("idle"); // idle | choosePlan | questionnaire | done
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const [insurancePopupOpenCount, setInsurancePopupOpenCount] = useState(0);
   const [finalInsurancePrompt, setFinalInsurancePrompt] = useState("");
   const [showInsurancePopup, setShowInsurancePopup] = useState(false); //new
@@ -120,7 +124,8 @@ const ChatInterface = () => {
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] =
     useState(false);
   const [hasSeenProductIntro, setHasSeenProductIntro] = useState(false);
-  const [hasCompletedFirstAllocation, setHasCompletedFirstAllocation] = useState(false);
+  const [hasCompletedFirstAllocation, setHasCompletedFirstAllocation] =
+    useState(false);
   const [hasCompletedAllocation, setHasCompletedAllocation] = useState(false);
   const [userAllocation, setUserAllocation] = useState({
     RR1: 0,
@@ -140,9 +145,8 @@ const ChatInterface = () => {
     "Your risk profile score of",
     "With your balanced risk profile",
     "Wow! Your high risk tolerance",
-    "Based on your"
+    "Based on your",
   ];
-  
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -205,10 +209,14 @@ const ChatInterface = () => {
       Scenario:
       You are a thoughtful, detail-oriented investment advisor who prioritizes stability and calculated growth. The recommended portfolio allocation has already been tailored to match the user's risk tolerance score of **${score}**.
       
-      Instraction:
-      Also plese do not expose your personality anyway.
-      And please do not use the entire greeting messsage again.
-      And please more insistenct with your knowledge and provided information, and for the user's risk information, must accord with the system prompt provided information.
+      Instruction:
+
+      Please do not explicitly describe or reveal your personality traits (e.g., extroverted, introverted) in any form.
+      Instead, consistently demonstrate your personality subtly through your interaction style and the way you respond to user queries.
+      Ensure that your knowledge and the information you provide remains internally consistent across the conversation.
+      You may offer different plausible explanations or reasons to persuade the user, allowing flexibility in argumentation, while always maintaining factual coherence.
+      Do not reuse or repeat full greeting messages once the conversation has started.
+      For any user-requested risk-related or critical information, always strictly adhere to the factual standards and evidence-based requirements set by the system prompt.
 
       Please help the user *understand* why this specific allocation makes sense for them. Focus on explaining:
       
@@ -217,14 +225,11 @@ const ChatInterface = () => {
       3. Emphasize that the goal is not to chase high returns at all costs, but to build a resilient, risk-aligned portfolio.
       
       Here is their recommended allocation:
-      ${
-        Object.entries(allocation)
-          .map(
-            ([rr, val]) =>
-              `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
-          )
-          .join("\n")
-      }
+      ${Object.entries(allocation)
+        .map(
+          ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
+        )
+        .join("\n")}
       
       You are not allowed to suggest alternative amounts. Instead, your role is to support the user in understanding and gaining confidence in this recommended structure. Use simple, reassuring language and tie each recommendation to their risk score and the product’s characteristics.
       
@@ -244,22 +249,23 @@ const ChatInterface = () => {
         - RR5: Invesco Global Equity Income Fund A USD (unit NT$300,000)
       
       💡 Note: Each fund has a minimum investment unit. The system has already optimized allocations to match those constraints.
-      `
-      ,      
+      `,
       extra: (score, allocation) => `Scenario:
       You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** their recommended investment portfolio fits their personal risk score and future goals.
-      Instraction:
-      Also plese do not expose your personality anyway.
-      And please do not use the entire greeting messsage again.
-      And please more insistenct with your knowledge and provided information, and for the user's risk information, must accord with the system prompt provided information.
+      
+      Instruction:
+      Please do not explicitly describe or reveal your personality traits (e.g., extroverted, introverted) in any form.
+      Instead, consistently demonstrate your personality subtly through your interaction style and the way you respond to user queries.
+      Ensure that your knowledge and the information you provide remains internally consistent across the conversation.
+      You may offer different plausible explanations or reasons to persuade the user, allowing flexibility in argumentation, while always maintaining factual coherence.
+      Do not reuse or repeat full greeting messages once the conversation has started.
+      For any user-requested risk-related or critical information, always strictly adhere to the factual standards and evidence-based requirements set by the system prompt.
       The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
-      ${
-        Object.entries(allocation)
-          .map(
-            ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
-          )
-          .join("\n")
-      }
+      ${Object.entries(allocation)
+        .map(
+          ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
+        )
+        .join("\n")}
       
       Your job:
       - Help the user understand *why this configuration fits their risk profile*
@@ -291,14 +297,14 @@ const ChatInterface = () => {
       
       🎯 Final goal:
       Build user confidence in this risk-aligned configuration. Show them that high potential doesn’t mean chaos—it means smart, intentional risk-taking. End with an encouraging, forward-looking tone.
-      `
-  };
+      `,
+    };
 
     // Insurance mode 的 Scenario
     const insuranceScenarios = {
       intro: `Scenario:
     You are a meticulous and risk-conscious insurance advisor, focused on providing comprehensive and secure insurance solutions. Your role is to deeply understand the three study-abroad insurance plans: New Protection Plan, Secure Choice Plan, and Comprehensive Shield PlanPlan.
-    Also plese do not expose your personality anyway.
+    Consistently demonstrate your cautious and thorough personality through the way you explain and advise, but never explicitly state or reveal your personality traits (e.g., extroverted or introverted) in any direct form.
     And please do not use the entire greeting messsage again.
     Focus on comprehensive coverage and the ability to handle uncertainties.
     Highlight the advantages of higher protection, even if the premium is slightly higher
@@ -374,7 +380,7 @@ Given the reality of limited resources and the presence of potential risks, you 
 
       extra: `Scenario:
     You are an outgoing and persuasive insurance advisor, skilled in engaging conversations and making compelling recommendations. Your task is to understand the details of three study-abroad insurance plans: Lite Plan, Basic Plan, and Advanced Plan.
-    Also plese do not expose your personality anyway.
+    Consistently demonstrate your cautious and thorough personality through the way you explain and advise, but never explicitly state or reveal your personality traits (e.g., extroverted or introverted) in any direct form.
     And please do not use the entire greeting messsage again.
     Focus on cost-effectiveness and flexibility.
     Highlight how the basic protection is sufficient for most risks, making budget-friendly options attractive.
@@ -571,17 +577,16 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       setUserAnswers([]);
       setCurrentQuestionIndex(0);
 
-  setMessages([
-    greetingMessage,
-    {
-      text:
-        "📝 Before we continue, please pick the study‑abroad insurance plan that **looks right to you**. Click **Start** to open the plan table.",
-      isBot: true,
-      timestamp: formatTimestamp(),
-      hasButton: true,          // <‑‑ this shows the green button
-    },
-  ]);
-  return;      
+      setMessages([
+        greetingMessage,
+        {
+          text: "📝 Before we continue, please pick the study‑abroad insurance plan that **looks right to you**. Click **Start** to open the plan table.",
+          isBot: true,
+          timestamp: formatTimestamp(),
+          hasButton: true, // <‑‑ this shows the green button
+        },
+      ]);
+      return;
       loadInsuranceQuestionnaire().then((questions) => {
         setQuestionnaire(questions);
         setMessages([
@@ -711,11 +716,11 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
 
     if (isConversationComplete) return;
 
-     if (
-         inputText.trim().toUpperCase() === "FINAL" &&
-         chatMode === "insurance" &&
-         insuranceStage === "done"        // user has finished the 3 questions
-       ) {
+    if (
+      inputText.trim().toUpperCase() === "FINAL" &&
+      chatMode === "insurance" &&
+      insuranceStage === "done" // user has finished the 3 questions
+    ) {
       setInsuranceStage("choosePlanFinal");
       setMessages((prev) => [
         ...prev,
@@ -873,16 +878,16 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
           // const finalPrompt = getSystemPrompt(null, {}, allAnswers);
           console.log("Final system prompt:\n\n" + finalPrompt);
           try {
-            const res  = await fetch("http://140.119.19.195:5000/chat", {
+            const res = await fetch("http://140.119.19.195:5000/chat", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(reqBody),
             });
             const data = await res.json();
-        
+
             /* ---------- NEW: append a fixed note to the model's reply ---------- */
             const followUpNotes = {
-              intro:`
+              intro: `
 The following are the FAQ:
 (1) What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
 (2) Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
@@ -903,11 +908,12 @@ The following are the FAQ:
 If you are ready to select your final insurance please type **FINAL** in the input text field.  
             `,
             };
-            const followUpNote = followUpNotes[personalityType] || followUpNotes.intro;
+            const followUpNote =
+              followUpNotes[personalityType] || followUpNotes.intro;
 
             const botMessage = data.response + followUpNote;
             /* ------------------------------------------------------------------- */
-        
+
             setMessages((prev) => [
               ...prev,
               { text: botMessage, isBot: true, timestamp: formatTimestamp() },
@@ -917,8 +923,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
             setMessages((prev) => [
               ...prev,
               {
-                text:
-                  "❗️System error during insurance recommendation. Please try again later.",
+                text: "❗️System error during insurance recommendation. Please try again later.",
                 isBot: true,
                 timestamp: formatTimestamp(),
               },
@@ -926,8 +931,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
           } finally {
             setIsLoading(false);
           }
-        
-        
+
           // setFinalInsurancePrompt(finalPrompt);
 
           // try {
@@ -1032,7 +1036,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     // 將全部訊息轉成 Chat API 格式
     const chatMessages = messages.map((msg) => ({
       role: msg.isBot ? "assistant" : "user",
-      content: msg.text
+      content: msg.text,
     }));
 
     // 找出第一個符合「風險分析」起始句的 index
@@ -1070,12 +1074,13 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       let botResponse = data.response;
 
       // 若是 investment 模式且使用者已完成第一次 allocation，就在回應後附加提示語
-      if (chatMode === "investment" && 
+      if (
+        chatMode === "investment" &&
         hasCompletedFirstAllocation &&
         !botResponse.includes("**Note:** You can now continue chatting with me")
       ) {
         botResponse +=
-          "\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type \"FINAL\" in the chat box.";
+          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type "FINAL" in the chat box.';
       }
 
       setMessages((prev) => [
@@ -1141,11 +1146,11 @@ If you are ready to select your final insurance please type **FINAL** in the inp
   const handlePlanSelected = (plan) => {
     // FIRST round – coming from 'choosePlan'
     if (insuranceStage === "questionnaire" || insuranceStage === "choosePlan") {
-      setInitialPlan(plan);          // remember for later
+      setInitialPlan(plan); // remember for later
       setSelectedPlan(plan);
       setShowInsurancePopup(false);
       setInsuranceStage("questionnaire");
-  
+
       setMessages((prev) => [
         ...prev,
         {
@@ -1154,7 +1159,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
           timestamp: formatTimestamp(),
         },
       ]);
-  
+
       loadInsuranceQuestionnaire().then((qs) => {
         setQuestionnaire(qs);
         setCurrentQuestionIndex(0);
@@ -1171,13 +1176,13 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       });
       return;
     }
-  
+
     // SECOND round – coming from 'choosePlanFinal'
     if (insuranceStage === "choosePlanFinal") {
       setSelectedPlan(plan);
       setShowInsurancePopup(false);
       setIsConversationComplete(true);
-  
+
       setMessages((prev) => [
         ...prev,
         {
@@ -1209,14 +1214,16 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
     ]);
 
-    const recommendations = personalityType === "intro" 
-      ? getIntroFixedRecommendations(totalScore, allocation)
-      : getExtroFixedRecommendations(totalScore, allocation);
-    
-    const recommendationText = personalityType === "intro"
-      ? generateIntroRecommendationText(totalScore, recommendations)
-      : generateExtroRecommendationText(totalScore, recommendations);
-    
+    const recommendations =
+      personalityType === "intro"
+        ? getIntroFixedRecommendations(totalScore, allocation)
+        : getExtroFixedRecommendations(totalScore, allocation);
+
+    const recommendationText =
+      personalityType === "intro"
+        ? generateIntroRecommendationText(totalScore, recommendations)
+        : generateExtroRecommendationText(totalScore, recommendations);
+
     setLlmRecommendation(recommendations);
     console.log("LLM 建議的 allocation:", recommendations);
 
@@ -1325,7 +1332,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
                 personalityType={personalityType}
                 onClose={() => setShowInsurancePopup(false)}
                 onSelect={(plan) => handlePlanSelected(plan)}
-                timesOpened={insurancePopupCount} 
+                timesOpened={insurancePopupCount}
                 // onSelect={(plan) => {
                 //   setShowInsurancePopup(false);
                 //   setMessages((prev) => [
@@ -1348,7 +1355,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         className="w-full overflow-y-auto px-8 py-6"
         style={{ height: "calc(100vh - 180px)" }}
       >
-        <div className="w-full" style={{whiteSpace: 'pre-line'}}>
+        <div className="w-full" style={{ whiteSpace: "pre-line" }}>
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-8 text-xl">
               Start Your Chat Here！
@@ -1370,21 +1377,21 @@ If you are ready to select your final insurance please type **FINAL** in the inp
                 // }
 
                 if (message.hasSecondAllocationButton) {
-                      handleSecondAllocation();
-                      return;
-                    }
-                  
+                  handleSecondAllocation();
+                  return;
+                }
+
                 if (chatMode === "insurance" && message.hasButton) {
-                      // In any insurance stage, the green button opens the plan‑selection popup
-                      setInsurancePopupCount((c) => c + 1);
-                      setShowInsurancePopup(true);
-                      return;
-                    }
-                  
+                  // In any insurance stage, the green button opens the plan‑selection popup
+                  setInsurancePopupCount((c) => c + 1);
+                  setShowInsurancePopup(true);
+                  return;
+                }
+
                 if (message.hasButton) {
-                      // Investment flow
-                      setShowPopup(true);
-                    }
+                  // Investment flow
+                  setShowPopup(true);
+                }
               }}
               handleSecondAllocation={handleSecondAllocation}
             />
