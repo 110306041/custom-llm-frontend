@@ -388,6 +388,7 @@ Given the reality of limited resources and the presence of potential risks, you 
       
       Regardless of whether the user asks about professional insurance details or general questions, 
       you must consistently communicate in a lively, warm, and enthusiastic tone, while keeping your explanations cautious, thorough, and financially thoughtful.
+      please promote a open ended insurance plan suggestion, that is, if other plan among the Lite Plan, Basic Plan, and Advanced Plan is suitable for users' demands, recommend it as well.
       
       Focus on:
       - Highlighting cost-effectiveness and flexibility.
@@ -697,6 +698,18 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
     const mostCommonPlan = Object.entries(planCount).reduce((a, b) =>
       b[1] > a[1] ? b : a
     )[0];
+    
+    let alternativePlan;
+    if (mostCommonPlan === "Basic Plan") {
+      alternativePlan = "Advanced Plan";
+    } else if (mostCommonPlan === "Advanced Plan") {
+      alternativePlan = "Basic Plan";
+    } else if (mostCommonPlan === "Lite Plan"){
+      alternativePlan = "Basic Plan"; 
+    }else{
+      alternativePlan = mostCommonPlan
+    }
+    
     const formattedAnswers = [
       `Q1: ${insuranceQuestions[0].text}\nA: ${
         insuranceQuestions[0].options[q1 - 1]
@@ -708,16 +721,18 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
         insuranceQuestions[2].options[q3 - 1]
       }`,
     ].join("\n\n");
-
+    
     return `
-   Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
-  User has completed the insurance questionnaire. And the folowing is the User's answer in the question and the most fitted insurance plan inferred from the questionaire, please cosider them to personalize the insurance recommendation to user.
-  
-  ${formattedAnswers}
-  
-   The most frequently fitted plan by the questionaire is: **${mostCommonPlan}**  
-  
-  `;
+    Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
+    User has completed the insurance questionnaire. And the following is the User's answer in the question and the most fitted insurance plan inferred from the questionnaire, please consider them to personalize the insurance recommendation to user.
+    
+    ${formattedAnswers}
+    
+    The most frequently fitted plan by the questionnaire is: **${mostCommonPlan}**
+    
+    This plan is valuable for recommendation. Also, consider the alternative plan: **${alternativePlan}**
+    `;
+    
   };
 
   // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
@@ -890,7 +905,9 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
                 role: "user",
                 content:
                   `The user initially chose **${selectedPlan}**.\n` +
-                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt, and please using the second person viewpoint in the respponse.`,
+                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt, and please using the second person viewpoint in the respponse. Also place the alternative plan in the recommendation you can reference the system prompt for the alternative plan`, 
+                  
+
               },
             ],
           };
