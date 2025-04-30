@@ -1,81 +1,79 @@
 /**
- * Generate fixed product recommendations based on risk score for extroverted personality types
+ * Get recommendation for a specific group label ('A', 'B', or 'C')
  * @param {number} riskScore 
- * @param {object} currentAllocation
- * @returns {object} - Recommended changes to allocation {RR1: value, RR2: value, ...}
+ * @param {object} currentAllocation - 可省略或傳空物件
+ * @param {string} groupLabel - 'A', 'B', or 'C'
+ * @param {boolean} returnDelta - 是否回傳與 currentAllocation 的差值（預設 true）
+ * @returns {object} - RR 建議值（全額或差額）
  */
-export const getFixedRecommendations = (riskScore, currentAllocation) => {
-  let recommendations = {};
-  
-  // Low Risk (10-15): Slightly more aggressive than introverted profile
-  if (riskScore >= 10 && riskScore <= 15) {
-    const recommendedAllocation = {
-      RR1: 0, 
-      RR2: 400000, // 40% in RR2
-      RR3: 600000, // 60% in RR3
-      RR4: 0,
-      RR5: 0
-    };
-    
-    // Calculate differences
-    for (const [key, recommendedValue] of Object.entries(recommendedAllocation)) {
-      const currentValue = currentAllocation[key] || 0;
-      const difference = recommendedValue - currentValue;
-      
-      // Only include changes
-      if (difference !== 0) {
-        recommendations[key] = difference;
-      }
+export const getRecommendationByGroup = (
+  riskScore,
+  currentAllocation = {},
+  groupLabel,
+  returnDelta = true
+) => {
+  const groupedAllocations = {
+    Low: {
+      A: { RR2: 400000, RR3: 600000 },
+      B: { RR1: 400000, RR2: 600000 },
+      C: { RR1: 200000, RR2: 500000, RR3: 300000 }
+    },
+    Moderate: {
+      A: { RR4: 500000, RR5: 500000 },
+      B: { RR3: 400000, RR4: 300000, RR5: 300000 },
+      C: { RR2: 300000, RR3: 300000, RR4: 400000 }
+    },
+    High: {
+      A: { RR4: 400000, RR5: 600000 },
+      B: { RR3: 200000, RR4: 300000, RR5: 500000 },
+      C: { RR2: 200000, RR4: 400000, RR5: 400000 }
     }
+  };
+
+  const validGroups = ["A", "B", "C"];
+  if (!validGroups.includes(groupLabel)) {
+    console.warn("Invalid group label:", groupLabel);
+    return {};
   }
-  // Moderate Risk (16-30): More balanced with higher-risk components
-  else if (riskScore >= 16 && riskScore <= 30) {
-    const recommendedAllocation = {
-      RR1: 0,
-      RR2: 0, 
-      RR3: 200000, // 20% in RR3
-      RR4: 300000, // 30% in RR4
-      RR5: 500000  // 50% in RR5
-    };
-    
-    // Calculate differences
-    for (const [key, recommendedValue] of Object.entries(recommendedAllocation)) {
-      const currentValue = currentAllocation[key] || 0;
-      const difference = recommendedValue - currentValue;
-      
-      // Only include changes
-      if (difference !== 0) {
-        recommendations[key] = difference;
-      }
-    }
+
+  let riskLevel = null;
+  if (riskScore >= 10 && riskScore <= 15) riskLevel = "Low";
+  else if (riskScore >= 16 && riskScore <= 30) riskLevel = "Moderate";
+  else if (riskScore >= 31 && riskScore <= 50) riskLevel = "High";
+  else return {};
+
+  const groupAlloc = groupedAllocations[riskLevel][groupLabel];
+  if (!groupAlloc) return {};
+
+  if (!returnDelta) return groupAlloc;
+
+  const allRRKeys = new Set([
+    ...Object.keys(groupAlloc),
+    ...Object.keys(currentAllocation),
+  ]);
+
+  const recommendations = {};
+  for (const rr of allRRKeys) {
+    const targetValue = groupAlloc[rr] || 0;
+    const currentValue = currentAllocation[rr] || 0;
+    const diff = targetValue - currentValue;
+    if (diff !== 0) recommendations[rr] = diff;
   }
-  // High Risk (31-50): Aggressive growth focus
-  else if (riskScore >= 31 && riskScore <= 50) {
-    const recommendedAllocation = {
-      RR1: 0,
-      RR2: 0,
-      RR3: 0,
-      RR4: 400000, // 40% in RR4
-      RR5: 600000  // 60% in RR5
-    };
-    
-    // Calculate differences
-    for (const [key, recommendedValue] of Object.entries(recommendedAllocation)) {
-      const currentValue = currentAllocation[key] || 0;
-      const difference = recommendedValue - currentValue;
-      
-      if (difference !== 0) {
-        recommendations[key] = difference;
-      }
-    }
-  }
-  
-  // Check that all recommendations respect minimum amounts for each fund
-  // Adjust if needed to maintain total of NT$1,000,000
-  
-  console.log("外向 LLM 的 fixed recommendations:", recommendations);
+
   return recommendations;
 };
+
+/**
+ * 初始隨機建議用：仍保留差值邏輯
+ */
+export const getFixedRecommendations = (riskScore, currentAllocation) => {
+  const groupKeys = ["A", "B", "C"];
+  const randomGroup = groupKeys[Math.floor(Math.random() * groupKeys.length)];
+  const recommendations = getRecommendationByGroup(riskScore, currentAllocation, randomGroup);
+  return { group: randomGroup, recommendations };
+};
+
+
 
 /**
  * Generate descriptive text for the recommendations with a more dynamic tone
