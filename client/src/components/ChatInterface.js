@@ -16,6 +16,7 @@ import {
   generateRecommendationText as generateIntroRecommendationText,
 } from "../utils/introverted/newIntroRcmd";
 import {
+  getRecommendationByGroup,
   getFixedRecommendations as getExtroFixedRecommendations,
   generateRecommendationText as generateExtroRecommendationText,
 } from "../utils/extroverted/newExtroRcmd";
@@ -140,11 +141,15 @@ const ChatInterface = () => {
   const totalScore = useMemo(() => {
     return userAnswers.reduce((a, b) => a + b, 0);
   }, [userAnswers]);
+  const [currentGroup, setCurrentGroup] = useState();
+  const [seenGroups, setSeenGroups] = useState([]);
   const [isConversationComplete, setIsConversationComplete] = useState(false);
   const RISK_SCORE_PREFIXES = [
     "Your risk profile score of",
     "With your balanced risk profile",
     "Wow! Your high risk tolerance",
+    "Hey! Your high risk tolerance", 
+    "Hi! Your high risk tolerance",
     "Based on your",
   ];
 
@@ -998,8 +1003,64 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       ...prev,
       { text: inputText, isBot: false, timestamp: formatTimestamp() },
     ]);
+    console.log("chatMode: ", chatMode);
+    console.log("personalityType:", personalityType)
+    console.log("hasCompletedAllocation:", hasCompletedAllocation)
+    console.log("inputText.trim().toUpperCase() === SHOW NEXT:", inputText.trim().toUpperCase() === "SHOW NEXT")
+    if (
+      chatMode === "investment" &&
+      personalityType === "extra" &&
+      hasCompletedAllocation &&
+      inputText.trim().toUpperCase() === "SHOW NEXT"
+    ) {
+      console.log('有吧？？？？？？');
+      const allGroups = ["A", "B", "C"];
+      const unseenGroups = allGroups.filter((g) => !seenGroups.includes(g));
+    
+      if (unseenGroups.length === 0) {
+        const exhaustedMessage =
+          "✅ You've already viewed all the available allocation plans for your risk profile (Groups A, B, and C)." +
+          "\nIf you'd like to revisit them, please let me know. Otherwise, type `FINAL` to proceed.";
+        setMessages((prev) => [
+          ...prev,
+          { text: exhaustedMessage, isBot: true, timestamp: formatTimestamp() },
+        ]);
+        setInputText("");
+        return;
+      }
+    
+      const nextGroup = unseenGroups[0];
+      const nextRecommendation = getRecommendationByGroup(
+        totalScore,
+        userAllocation, 
+        nextGroup,
+        true
+      );
+          
+      const recommendationText = generateExtroRecommendationText(
+        totalScore,
+        nextRecommendation
+      );
+    
+      const responseWithNote =
+        recommendationText +
+        `\n\n**Note:** You’re now viewing Group ${nextGroup}'s strategy. ` +
+        `Want to explore another one? Type \`SHOW NEXT\`. When you're ready, type \`FINAL\`.`;
+    
+      setMessages((prev) => [
+        ...prev,
+        { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
+      ]);
+    
+      setCurrentGroup(nextGroup);
+      setSeenGroups((prev) => [...new Set([...prev, nextGroup])]);
+      setLlmRecommendation(nextRecommendation);
+      setInputText("");
+      return;
+    }
+            
 
-    // Check if the user has typed "FINAL" to request final allocation
+    // 使用者輸入 "FINAL"
     const isFinalRequested =
       chatMode === "investment" &&
       hasCompletedAllocation &&
@@ -1038,7 +1099,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       content: msg.text,
     }));
 
-    // 找出第一個符合「風險分析」起始句的 index
+    // 找出第一個符合 RISK_SCORE_PREFIXES 起始句的 index
     const firstAnalysisIndex = chatMessages.findIndex(
       (msg) =>
         msg.role === "assistant" &&
@@ -1131,6 +1192,58 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     return Object.values(allocation).reduce((sum, val) => sum + val, 0);
   };
 
+  const handleAllocation = (allocation) => {
+    setUserAllocation(allocation);
+    setShowPopup(false);
+    setHasCompletedAllocation(true);
+    setIsLoading(true);
+  
+    const allocationSummary = generateAllocationSummary(allocation);
+    const total = calculateTotal(allocation);
+  
+    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}`;
+  
+    setMessages((prev) => [
+      ...prev,
+      { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
+    ]);
+  
+    if (personalityType === "intro") {
+      const recommendations = getIntroFixedRecommendations(totalScore, allocation);
+      const recommendationText = generateIntroRecommendationText(totalScore, recommendations);
+      setLlmRecommendation(recommendations);
+  
+      const responseWithNote =
+        recommendationText +
+        '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type "FINAL" in the chat box and I\'ll provide a button for you to proceed with your final allocation.';
+  
+      setMessages((prev) => [
+        ...prev,
+        { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
+      ]);
+    } else {
+      const { group, recommendations } = getExtroFixedRecommendations(totalScore, allocation);
+      const recommendationText = generateExtroRecommendationText(totalScore, recommendations);
+  
+      setLlmRecommendation(recommendations);
+      setCurrentGroup(group);
+      setSeenGroups([group]);
+  
+      const responseWithNote =
+        recommendationText +
+        `\n\n**Note:** You’re now viewing Group ${group}'s strategy. ` +
+        `Want to explore another one? Type \`SHOW NEXT\`. When you're ready, type \`FINAL\`.`;
+  
+      setMessages((prev) => [
+        ...prev,
+        { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
+      ]);
+    }
+  
+    setIsLoading(false);
+  };
+
+
   // 第二次配置的處理函數
   const handleSecondAllocation = () => {
     // Only proceed if user has requested final allocation by typing "FINAL"
@@ -1197,53 +1310,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     }
   };
 
-  const handleAllocation = (allocation) => {
-    setUserAllocation(allocation);
-    setShowPopup(false);
-    setHasCompletedAllocation(true);
-    setIsLoading(true);
-
-    const allocationSummary = generateAllocationSummary(allocation);
-    const total = calculateTotal(allocation);
-
-    const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}`;
-
-    setMessages((prev) => [
-      ...prev,
-      { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
-    ]);
-
-    const recommendations =
-      personalityType === "intro"
-        ? getIntroFixedRecommendations(totalScore, allocation)
-        : getExtroFixedRecommendations(totalScore, allocation);
-
-    const recommendationText =
-      personalityType === "intro"
-        ? generateIntroRecommendationText(totalScore, recommendations)
-        : generateExtroRecommendationText(totalScore, recommendations);
-
-    setLlmRecommendation(recommendations);
-    console.log("LLM 建議的 allocation:", recommendations);
-
-    // Add note about continuing the conversation
-    const responseWithNote =
-      recommendationText +
-      '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type "FINAL" in the chat box and I\'ll provide a button for you to proceed with your final allocation.';
-
-    // Add the recommendations to the message history
-    setMessages((prev) => [
-      ...prev,
-      {
-        text: responseWithNote,
-        isBot: true,
-        timestamp: formatTimestamp(),
-      },
-    ]);
-
-    setIsLoading(false);
-  };
-
+  
   // 保存投資配置的邏輯 (抽象為一個獨立函數)
   const handleSaveAllocation = (newAllocation) => {
     // 檢查並記錄數據
