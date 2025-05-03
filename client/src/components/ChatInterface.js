@@ -167,6 +167,12 @@ const ChatInterface = () => {
     });
   };
 
+  const buildChatMessages = (base, pending) =>
+    [...base, ...pending].map(m => ({
+      role: m.isBot ? "assistant" : "user",
+      content: m.text,
+    }));
+
   const promptInsuranceSelection = () => {
     setMessages((prev) => [
       ...prev,
@@ -649,8 +655,8 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
         ],
       },
     ];
-    console.log("the answers are ");
-    console.log(answers);
+    // console.log("the answers are ");
+    // console.log(answers);
     const q1 = answers[0]; // Concern about risk
     const q2 = answers[1]; // Importance of saving money
     const q3 = answers[2]; // Lifestyle
@@ -979,7 +985,8 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       return;
     
     }
-
+    
+      
     if (
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
