@@ -1,16 +1,15 @@
 /**
  * Get recommendation for a specific group label ('A', 'B', or 'C')
  * @param {number} riskScore 
- * @param {object} currentAllocation - 可省略或傳空物件
- * @param {string} groupLabel - 'A', 'B', or 'C'
- * @param {boolean} returnDelta - 是否回傳與 currentAllocation 的差值（預設 true）
- * @returns {object} - RR 建議值（全額或差額）
+ * @param {object} currentAllocation 
+ * @param {string} groupLabel 
+ * @param {boolean} returnDelta - if false, return full allocation
  */
 export const getRecommendationByGroup = (
   riskScore,
   currentAllocation = {},
   groupLabel,
-  returnDelta = true
+  returnDelta = false
 ) => {
   const groupedAllocations = {
     Low: {
@@ -63,60 +62,69 @@ export const getRecommendationByGroup = (
   return recommendations;
 };
 
+
+
 /**
- * 初始隨機建議用：仍保留差值邏輯
+ * Generate full investment text (no ⬆️/⬇️)
  */
-export const getFixedRecommendations = (riskScore, currentAllocation) => {
-  const groupKeys = ["A", "B", "C"];
-  const randomGroup = groupKeys[Math.floor(Math.random() * groupKeys.length)];
-  const recommendations = getRecommendationByGroup(riskScore, currentAllocation, randomGroup);
-  return { group: randomGroup, recommendations };
+export const generateRecommendationText = (riskScore, recommendationMap) => {
+  let description = "";
+
+  if (riskScore >= 10 && riskScore <= 15) {
+    description += `Your risk profile score of ${riskScore} shows you prefer stability with some growth potential! Here's an exciting portfolio that balances safety with opportunity:\n\n`;
+  } else if (riskScore >= 16 && riskScore <= 30) {
+    description += `With your balanced risk profile (score: ${riskScore}), you're ready for a dynamic investment approach that can really grow your wealth! Check out this optimized strategy:\n\n`;
+  } else if (riskScore >= 31 && riskScore <= 50) {
+    description += `Wow! Your high risk tolerance (score: ${riskScore}) opens the door to exceptional growth opportunities! Here's a powerful growth-focused strategy designed for maximum potential returns:\n\n`;
+  }
+
+  for (const [rr, amount] of Object.entries(recommendationMap)) {
+    description += `${rr}: NT$${amount.toLocaleString()}\n`;
+  }
+
+  return description.trim();
 };
 
+export const generateMultipleGroupText = (riskScore, allocationMap) => {
+  let intro = "";
 
-
-/**
- * Generate descriptive text for the recommendations with a more dynamic tone
- * suitable for extroverted personalities
- * @param {number} riskScore - User's risk score
- * @param {object} recommendations - Recommended changes
- * @returns {string} - Descriptive text explaining recommendations
- */
-export const generateRecommendationText = (riskScore, recommendations) => {
-  let description = "";
-  
-  // Add risk profile description with a more enthusiastic tone
   if (riskScore >= 10 && riskScore <= 15) {
-    description += "Your risk profile score of " + riskScore + " shows you prefer stability with some growth potential! Here's an exciting portfolio that balances safety with opportunity:\n\n";
+    intro += `Your risk profile score of ${riskScore} shows you prefer stability with some growth potential! Here are some exciting portfolio strategies that balance safety with opportunity:\n\n`;
   } else if (riskScore >= 16 && riskScore <= 30) {
-    description += "With your balanced risk profile (score: " + riskScore + "), you're ready for a dynamic investment approach that can really grow your wealth! Check out this optimized strategy:\n\n";
+    intro += `With your balanced risk profile (score: ${riskScore}), you're ready for a dynamic investment approach that can really grow your wealth! Here are some optimized strategies for you:\n\n`;
   } else if (riskScore >= 31 && riskScore <= 50) {
-    description += "Wow! Your high risk tolerance (score: " + riskScore + ") opens the door to exceptional growth opportunities! Here's a powerful growth-focused strategy designed for maximum potential returns:\n\n";
-  }
-  
-  // 如果沒有任何需要調整的項目
-  if (Object.keys(recommendations).length === 0) {
-    description += "✅ Your current allocation already matches the recommended structure for your risk level. Great job!\n\n";
-  } else {
-    // Add recommendation details
-    for (const [fund, amount] of Object.entries(recommendations)) {
-      if (amount > 0) {
-        description += `⬆️ Increase ${fund} by NT$${amount.toLocaleString()}\n`;
-      } else if (amount < 0) {
-        description += `⬇️ Decrease ${fund} by NT$${Math.abs(amount).toLocaleString()}\n`;
-      }
-    }
+    intro += `Wow! Your high risk tolerance (score: ${riskScore}) opens the door to exceptional growth opportunities! Here are some powerful growth-focused strategies designed for your maximum potential returns:\n\n`;
   }
 
-    // Add fund descriptions
-  description += "\n**Fund Information:**\n";
-  description += "- RR1: Eastspring Investments Well Pool Money Market Fund (Lowest risk)\n";
-  description += "- RR2: Schroder International Selection Fund Global High Yield A1 Distribution MF (Low risk)\n";
-  description += "- RR3: PineBridge Preferred Securities Income Fund USD N (Moderate risk)\n";
-  description += "- RR4: FSITC China Century Fund-TWD (Moderate-high risk)\n";
-  description += "- RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (High risk)\n";
-    
-  description += "\nThis personalized strategy is designed to maximize your investment potential while aligning with your risk profile!";
-  
-  return description;
-}; 
+  const groups = ["A", "B", "C"];
+  const groupTexts = groups.map((g) => {
+    const recommendation = allocationMap[g];
+    const lines = Object.entries(recommendation)
+      .map(([rr, amount]) => `${rr}: NT$${amount.toLocaleString()}`)
+      .join("\n");
+    return `📊 **Group ${g}**\n${lines}`;
+  });
+
+  const fundInfo = "\n\n**Fund Information:**\n" +
+    "- RR1: Eastspring Investments Well Pool Money Market Fund (Lowest risk)\n" +
+    "- RR2: Schroder International Selection Fund Global High Yield A1 Distribution MF (Low risk)\n" +
+    "- RR3: PineBridge Preferred Securities Income Fund USD N (Moderate risk)\n" +
+    "- RR4: FSITC China Century Fund-TWD (Moderate-high risk)\n" +
+    "- RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (High risk)";
+
+  const prompt = "\n\nPlease type `A`, `B`, or `C` to select your preferred recommendation group.";
+
+  return intro + groupTexts.join("\n\n") + fundInfo + prompt;
+};
+
+export const generateSelectedGroupText = (groupLabel, recommendationMap, riskScore) => {
+  let intro = `✅ You've selected **Group ${groupLabel}**.\nHere is your target allocation:\n\n`;
+
+  const lines = Object.entries(recommendationMap)
+    .map(([rr, amount]) => `${rr}: NT$${amount.toLocaleString()}`)
+    .join("\n");
+
+  const prompt = "\n\nWhen you're ready, type `FINAL` to confirm your final allocation.";
+
+  return intro + lines + prompt;
+};

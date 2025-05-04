@@ -17,8 +17,9 @@ import {
 } from "../utils/introverted/newIntroRcmd";
 import {
   getRecommendationByGroup,
-  getFixedRecommendations as getExtroFixedRecommendations,
   generateRecommendationText as generateExtroRecommendationText,
+  generateMultipleGroupText,
+  generateSelectedGroupText
 } from "../utils/extroverted/newExtroRcmd";
 
 const SendIcon = () => (
@@ -141,7 +142,7 @@ const ChatInterface = () => {
   const totalScore = useMemo(() => {
     return userAnswers.reduce((a, b) => a + b, 0);
   }, [userAnswers]);
-  const [currentGroup, setCurrentGroup] = useState();
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [seenGroups, setSeenGroups] = useState([]);
   const [isConversationComplete, setIsConversationComplete] = useState(false);
   const RISK_SCORE_PREFIXES = [
@@ -1039,58 +1040,42 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     console.log("personalityType:", personalityType)
     console.log("hasCompletedAllocation:", hasCompletedAllocation)
     console.log("inputText.trim().toUpperCase() === SHOW NEXT:", inputText.trim().toUpperCase() === "SHOW NEXT")
+    const upperInput = inputText.trim().toUpperCase();
+
     if (
       chatMode === "investment" &&
-      personalityType === "extra" &&
+      personalityType === "extro" &&
       hasCompletedAllocation &&
-      inputText.trim().toUpperCase() === "SHOW NEXT"
+      !selectedGroup
     ) {
-      console.log('有吧？？？？？？');
-      const allGroups = ["A", "B", "C"];
-      const unseenGroups = allGroups.filter((g) => !seenGroups.includes(g));
+      const selected = inputText.trim().toUpperCase();
     
-      if (unseenGroups.length === 0) {
-        const exhaustedMessage =
-          "✅ You've already viewed all the available allocation plans for your risk profile (Groups A, B, and C)." +
-          "\nIf you'd like to revisit them, please let me know. Otherwise, type `FINAL` to proceed.";
+      if (!["A", "B", "C"].includes(selected)) {
         setMessages((prev) => [
           ...prev,
-          { text: exhaustedMessage, isBot: true, timestamp: formatTimestamp() },
+          {
+            text: "❗️Please respond with `A`, `B`, or `C` to select one of the recommended allocation groups.",
+            isBot: true,
+            timestamp: formatTimestamp(),
+          },
         ]);
         setInputText("");
         return;
       }
     
-      const nextGroup = unseenGroups[0];
-      const nextRecommendation = getRecommendationByGroup(
-        totalScore,
-        userAllocation, 
-        nextGroup,
-        true
-      );
-          
-      const recommendationText = generateExtroRecommendationText(
-        totalScore,
-        nextRecommendation
-      );
+      const target = getRecommendationByGroup(totalScore, {}, selected, false);
+      const recapText = generateSelectedGroupText(selected, target, totalScore);
     
-      const responseWithNote =
-        recommendationText +
-        `\n\n**Note:** You’re now viewing Group ${nextGroup}'s strategy. ` +
-        `Want to explore another one? Type \`SHOW NEXT\`. When you're ready, type \`FINAL\`.`;
-    
+      setSelectedGroup(selected);
+      setLlmRecommendation(target);
       setMessages((prev) => [
         ...prev,
-        { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
+        { text: recapText, isBot: true, timestamp: formatTimestamp() },
       ]);
-    
-      setCurrentGroup(nextGroup);
-      setSeenGroups((prev) => [...new Set([...prev, nextGroup])]);
-      setLlmRecommendation(nextRecommendation);
       setInputText("");
       return;
     }
-            
+                    
 
     // 使用者輸入 "FINAL"
     const isFinalRequested =
@@ -1254,24 +1239,17 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
       ]);
     } else {
-      const { group, recommendations } = getExtroFixedRecommendations(totalScore, allocation);
-      const recommendationText = generateExtroRecommendationText(totalScore, recommendations);
-  
-      setLlmRecommendation(recommendations);
-      setCurrentGroup(group);
-      setSeenGroups([group]);
-  
-      const responseWithNote =
-        recommendationText +
-        `\n\n**Note:** You’re now viewing Group ${group}'s strategy. ` +
-        `Want to explore another one? Type \`SHOW NEXT\`. When you're ready, type \`FINAL\`.`;
-  
+      const allocationMap = {};
+      for (const g of ["A", "B", "C"]) {
+        allocationMap[g] = getRecommendationByGroup(totalScore, {}, g, false);
+      }
+      const combinedText = generateMultipleGroupText(totalScore, allocationMap);
+          
       setMessages((prev) => [
         ...prev,
-        { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
+        { text: combinedText, isBot: true, timestamp: formatTimestamp() },
       ]);
     }
-  
     setIsLoading(false);
   };
 
