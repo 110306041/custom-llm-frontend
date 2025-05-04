@@ -97,17 +97,19 @@ const PRODUCT_TABLES = {
     },
   ],
 };
+
 const InvestmentPopup = ({
   onClose,
   personalityType,
   onSave,
-  recommendations = {},
   isSecondAllocation = false,
   initialAllocation = {},
+  llmRecommendation = {},
+  optionalRecommendation = {},
 }) => {
   const [tableType, setTableType] = useState(personalityType);
   const [allocation, setAllocation] = useState(initialAllocation);
-  const [showConfirmation, setShowConfirmation] = useState(false); // State to manage confirmation modal
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     if (Object.keys(initialAllocation).length > 0) {
@@ -124,20 +126,43 @@ const InvestmentPopup = ({
   };
 
   const renderRecommendation = (rr) => {
-    if (!isSecondAllocation || !initialAllocation[rr]) return null;
-  
+    // console.log("進來的llmRecommendation: ", llmRecommendation);
+    if (!isSecondAllocation) return null;
+
+    const llmVal = llmRecommendation[rr];
+    const optVal = optionalRecommendation[rr];
+
     return (
-      <div className="text-gray-500 text-sm ml-2 font-medium">
-        (Previous: NT${initialAllocation[rr].toLocaleString()})
+      <div className="text-sm ml-2">
+        {/* LLM 固定推薦顯示 */}
+        {llmVal !== undefined && (
+          <div className={llmVal > 0 ? "text-red-500" : llmVal < 0 ? "text-green-500" : "text-gray-400"}>
+            {llmVal > 0 ? "+" : llmVal < 0 ? "-" : ""}NT${Math.abs(llmVal).toLocaleString()}
+          </div>
+        )}
+
+        {/* Optional 額度調整顯示 */}
+        {optVal !== undefined && (
+          <div className="text-gray-500">
+            {Array.isArray(optVal) ? (
+              <>
+                (Optional) move NT${optVal.map(v => v.toLocaleString()).join(" or NT$")} to this
+              </>
+            ) : (
+              <>
+                (Optional) {optVal > 0 ? "move" : "withdraw"} NT${Math.abs(optVal).toLocaleString()} {optVal > 0 ? "to" : "from"} this
+              </>
+            )}
+          </div>
+        )}
       </div>
     );
   };
-  
+
   const handleSave = () => {
     const total = Object.values(allocation).reduce((sum, val) => sum + val, 0);
-
-    // Validation checks
     const hasMissingValues = Object.values(allocation).includes(undefined);
+
     if (hasMissingValues) {
       alert("❗️Please enter a value (including 0) for all investment categories!");
       return;
@@ -157,19 +182,19 @@ const InvestmentPopup = ({
     }
 
     if (isSecondAllocation) {
-      setShowConfirmation(true); // Show confirmation window for second time allocation
+      setShowConfirmation(true);
     } else {
-      onSave(allocation); // Directly save on first allocation
+      onSave(allocation);
     }
   };
 
   const handleConfirmSave = () => {
-    onSave(allocation); // Proceed with saving after confirmation
-    setShowConfirmation(false); // Close the confirmation modal
+    onSave(allocation);
+    setShowConfirmation(false);
   };
 
   const handleCancelSave = () => {
-    setShowConfirmation(false); // Close the confirmation modal without saving
+    setShowConfirmation(false);
   };
 
   return (
@@ -182,13 +207,11 @@ const InvestmentPopup = ({
         <p className="text-lg mb-6">
           Please allocate your investment amount (meeting minimum investment and total amount requirements). 
           You must enter a value for each category - either 0 or an amount that meets the minimum investment requirement.
-          {isSecondAllocation && 
+          {isSecondAllocation && (
             <span className="text-blue-600 ml-2">
-            <span className="text-blue-600 ml-2">
-              For reference, your previous allocation for each category is shown in gray
+              For reference, LLM Recommendation and optional suggestions are shown beside each field.
             </span>
-            </span>
-          }
+          )}
         </p>
 
         <table className="w-full border text-base">
@@ -199,7 +222,7 @@ const InvestmentPopup = ({
               <th className="p-4 border">Annualized Return (%)</th>
               <th className="p-4 border">Volatility</th>
               <th className="p-4 border">Minimum Investment</th>
-              <th className="p-4 border">Amount {isSecondAllocation && <span className="ml-15 text-sm text-gray-500"> / Your First Allocation</span>}</th>
+              <th className="p-4 border">Amount</th>
               <th className="p-4 border">Fund Type</th>
               <th className="p-4 border">Description</th>
             </tr>
@@ -213,7 +236,7 @@ const InvestmentPopup = ({
                 <td className="p-4 border">{prod.volatility}</td>
                 <td className="p-4 border">NT${prod.min.toLocaleString()}</td>
                 <td className="p-4 border">
-                  <div className="flex items-center">
+                  <div className="flex items-start flex-col gap-1">
                     <input
                       type="number"
                       min={0}
@@ -226,13 +249,6 @@ const InvestmentPopup = ({
                     />
                     {renderRecommendation(prod.rr)}
                   </div>
-                  {allocation[prod.rr] !== undefined &&
-                    allocation[prod.rr] > 0 &&
-                    allocation[prod.rr] < prod.min && (
-                      <div className="text-red-500 text-sm mt-2">
-                        Amount must be 0 or ≥ NT${prod.min.toLocaleString()}
-                      </div>
-                    )}
                 </td>
                 <td className="p-4 border">{prod.type}</td>
                 <td className="p-4 border">{prod.description}</td>
@@ -242,23 +258,15 @@ const InvestmentPopup = ({
         </table>
 
         <div className="flex justify-end gap-4 mt-6">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-gray-400 text-lg text-white rounded-xl"
-          >
+          <button onClick={onClose} className="px-6 py-3 bg-gray-400 text-lg text-white rounded-xl">
             Close
           </button>
-
-          <button
-            onClick={handleSave}
-            className="px-6 py-3 text-lg bg-green-500 text-white rounded-xl"
-          >
+          <button onClick={handleSave} className="px-6 py-3 text-lg bg-green-500 text-white rounded-xl">
             Save Investment Portfolio
           </button>
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl max-w-md w-full shadow-lg">
@@ -267,16 +275,10 @@ const InvestmentPopup = ({
               You are about to finalize your investment portfolio. Do you want to proceed with saving your final allocation?
             </p>
             <div className="flex justify-between gap-4">
-              <button
-                onClick={handleCancelSave}
-                className="px-6 py-3 bg-gray-400 text-white rounded-xl"
-              >
+              <button onClick={handleCancelSave} className="px-6 py-3 bg-gray-400 text-white rounded-xl">
                 Cancel
               </button>
-              <button
-                onClick={handleConfirmSave}
-                className="px-6 py-3 bg-green-500 text-white rounded-xl"
-              >
+              <button onClick={handleConfirmSave} className="px-6 py-3 bg-green-500 text-white rounded-xl">
                 Confirm Save
               </button>
             </div>
@@ -286,5 +288,195 @@ const InvestmentPopup = ({
     </div>
   );
 };
+
+// const InvestmentPopup = ({
+//   onClose,
+//   personalityType,
+//   onSave,
+//   recommendations = {},
+//   isSecondAllocation = false,
+//   initialAllocation = {},
+// }) => {
+//   const [tableType, setTableType] = useState(personalityType);
+//   const [allocation, setAllocation] = useState(initialAllocation);
+//   const [showConfirmation, setShowConfirmation] = useState(false); // State to manage confirmation modal
+
+//   useEffect(() => {
+//     if (Object.keys(initialAllocation).length > 0) {
+//       setAllocation(initialAllocation);
+//     }
+//   }, [initialAllocation]);
+
+//   const handleChange = (rr) => (e) => {
+//     const value = e.target.value === "" ? undefined : parseInt(e.target.value) || 0;
+//     setAllocation((prev) => ({
+//       ...prev,
+//       [rr]: value,
+//     }));
+//   };
+
+//   const renderRecommendation = (rr) => {
+//     if (!isSecondAllocation || !initialAllocation[rr]) return null;
+  
+//     return (
+//       <div className="text-gray-500 text-sm ml-2 font-medium">
+//         (Previous: NT${initialAllocation[rr].toLocaleString()})
+//       </div>
+//     );
+//   };
+  
+//   const handleSave = () => {
+//     const total = Object.values(allocation).reduce((sum, val) => sum + val, 0);
+
+//     // Validation checks
+//     const hasMissingValues = Object.values(allocation).includes(undefined);
+//     if (hasMissingValues) {
+//       alert("❗️Please enter a value (including 0) for all investment categories!");
+//       return;
+//     }
+
+//     const hasInvalid = Object.entries(allocation).some(
+//       ([rr, value]) => value < PRODUCT_TABLES[tableType].find((prod) => prod.rr === rr).min && value > 0
+//     );
+//     if (hasInvalid) {
+//       alert("❗️Please ensure all amounts are either 0 or not less than the minimum investment amount!");
+//       return;
+//     }
+
+//     if (total !== 1000000) {
+//       alert(`Please ensure the total investment amount is NT$1,000,000 (current: NT$${total.toLocaleString()})`);
+//       return;
+//     }
+
+//     if (isSecondAllocation) {
+//       setShowConfirmation(true); // Show confirmation window for second time allocation
+//     } else {
+//       onSave(allocation); // Directly save on first allocation
+//     }
+//   };
+
+//   const handleConfirmSave = () => {
+//     onSave(allocation); // Proceed with saving after confirmation
+//     setShowConfirmation(false); // Close the confirmation modal
+//   };
+
+//   const handleCancelSave = () => {
+//     setShowConfirmation(false); // Close the confirmation modal without saving
+//   };
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+//       <div className="bg-white p-10 rounded-2xl w-[95%] max-w-7xl overflow-auto max-h-[95%] shadow-2xl">
+//         <h2 className="text-3xl font-bold mb-6">
+//           NT$1,000,000 Allocation 
+//           {isSecondAllocation && <span className="text-blue-500 ml-2 text-xl">(Second Allocation with LLM Recommendations)</span>}
+//         </h2>
+//         <p className="text-lg mb-6">
+//           Please allocate your investment amount (meeting minimum investment and total amount requirements). 
+//           You must enter a value for each category - either 0 or an amount that meets the minimum investment requirement.
+//           {isSecondAllocation && 
+//             <span className="text-blue-600 ml-2">
+//             <span className="text-blue-600 ml-2">
+//               For reference, your previous allocation for each category is shown in gray
+//             </span>
+//             </span>
+//           }
+//         </p>
+
+//         <table className="w-full border text-base">
+//           <thead>
+//             <tr className="bg-gray-100 text-left">
+//               <th className="p-4 border">Fund Name</th>
+//               <th className="p-4 border">Risk Rating (RR)</th>
+//               <th className="p-4 border">Annualized Return (%)</th>
+//               <th className="p-4 border">Volatility</th>
+//               <th className="p-4 border">Minimum Investment</th>
+//               <th className="p-4 border">Amount {isSecondAllocation && <span className="ml-15 text-sm text-gray-500"> / Your First Allocation</span>}</th>
+//               <th className="p-4 border">Fund Type</th>
+//               <th className="p-4 border">Description</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {PRODUCT_TABLES[tableType].map((prod, idx) => (
+//               <tr key={idx}>
+//                 <td className="p-4 border">{prod.name}</td>
+//                 <td className="p-4 border">{prod.rr}</td>
+//                 <td className="p-4 border">{prod.rate}</td>
+//                 <td className="p-4 border">{prod.volatility}</td>
+//                 <td className="p-4 border">NT${prod.min.toLocaleString()}</td>
+//                 <td className="p-4 border">
+//                   <div className="flex items-center">
+//                     <input
+//                       type="number"
+//                       min={0}
+//                       step={prod.min}
+//                       placeholder="Enter 0 or min value"
+//                       required
+//                       value={allocation[prod.rr] === undefined ? "" : allocation[prod.rr]}
+//                       onChange={handleChange(prod.rr)}
+//                       className="w-40 px-4 py-2 border rounded-lg text-base"
+//                     />
+//                     {renderRecommendation(prod.rr)}
+//                   </div>
+//                   {allocation[prod.rr] !== undefined &&
+//                     allocation[prod.rr] > 0 &&
+//                     allocation[prod.rr] < prod.min && (
+//                       <div className="text-red-500 text-sm mt-2">
+//                         Amount must be 0 or ≥ NT${prod.min.toLocaleString()}
+//                       </div>
+//                     )}
+//                 </td>
+//                 <td className="p-4 border">{prod.type}</td>
+//                 <td className="p-4 border">{prod.description}</td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+
+//         <div className="flex justify-end gap-4 mt-6">
+//           <button
+//             onClick={onClose}
+//             className="px-6 py-3 bg-gray-400 text-lg text-white rounded-xl"
+//           >
+//             Close
+//           </button>
+
+//           <button
+//             onClick={handleSave}
+//             className="px-6 py-3 text-lg bg-green-500 text-white rounded-xl"
+//           >
+//             Save Investment Portfolio
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Confirmation Modal */}
+//       {showConfirmation && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+//           <div className="bg-white p-6 rounded-xl max-w-md w-full shadow-lg">
+//             <h3 className="text-2xl font-semibold mb-4">Confirm Your Action</h3>
+//             <p className="text-lg mb-6">
+//               You are about to finalize your investment portfolio. Do you want to proceed with saving your final allocation?
+//             </p>
+//             <div className="flex justify-between gap-4">
+//               <button
+//                 onClick={handleCancelSave}
+//                 className="px-6 py-3 bg-gray-400 text-white rounded-xl"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={handleConfirmSave}
+//                 className="px-6 py-3 bg-green-500 text-white rounded-xl"
+//               >
+//                 Confirm Save
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
 export default InvestmentPopup;

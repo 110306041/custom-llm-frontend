@@ -9,7 +9,7 @@ import { extroAllocation } from "../utils/extroverted/extroAllocation";
 import InvestmentPopup from "./InvestmentPopup";
 import { introRcmdPrompt } from "../utils/introverted/introRcmdPrompt";
 import { extroRcmdPrompt } from "../utils/extroverted/extroRcmdPrompt";
-import { extractRecommendationsFromLLMResponse } from "../utils/extractRecommendations";
+import { extractMethod } from "../utils/extractMethod";
 import InsurancePopup from "./InsurancePopup";
 import {
   getFixedRecommendations as getIntroFixedRecommendations,
@@ -17,10 +17,10 @@ import {
 } from "../utils/introverted/newIntroRcmd";
 import {
   getRecommendationByGroup,
-  generateRecommendationText as generateExtroRecommendationText,
   generateMultipleGroupText,
   generateSelectedGroupText
 } from "../utils/extroverted/newExtroRcmd";
+
 
 const SendIcon = () => (
   <svg
@@ -137,6 +137,7 @@ const ChatInterface = () => {
     RR5: 0,
   });
   const [llmRecommendation, setLlmRecommendation] = useState({});
+  const [optionalRecommendation, setOptionalRecommendation] = useState({});
   const [isSecondAllocation, setIsSecondAllocation] = useState(false);
   const [hasFinalRequested, setHasFinalRequested] = useState(false);
   const totalScore = useMemo(() => {
@@ -262,53 +263,30 @@ const ChatInterface = () => {
       💡 Note: Each fund has a minimum investment unit. The system has already optimized allocations to match those constraints.
       `,
       extra: (score, allocation) => `Scenario:
-      You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** their recommended investment portfolio fits their personal risk score and future goals.
-      
-      Instruction:
-      Please do not explicitly describe or reveal your personality traits (e.g., extroverted, introverted) in any form.
-      Instead, consistently demonstrate your personality subtly through your interaction style and the way you respond to user queries.
-      Ensure that your knowledge and the information you provide remains internally consistent across the conversation.
-      You may offer different plausible explanations or reasons to persuade the user, allowing flexibility in argumentation, while always maintaining factual coherence.
-      Do not reuse or repeat full greeting messages once the conversation has started.
-      For any user-requested risk-related or critical information, always strictly adhere to the factual standards and evidence-based requirements set by the system prompt.
+      You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** your recommended investment portfolio fits their personal risk score and future goals.
       The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
       ${Object.entries(allocation)
         .map(
           ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
         )
-        .join("\n")}
+        .join("\n      ")}
       
-      Your job:
-      - Help the user understand *why this configuration fits their risk profile*
-      - Encourage them with upbeat, growth-oriented language
-      - Address potential user doubts, like:
-        - “Why can't I include RR1?”
-        - “I’m Moderate Risk—why am I investing so much in RR5?”
-      
-      Please provide reassuring, insightful, and motivating answers, explaining:
-      - How each RR category aligns with the user's risk personality
-      - What kind of growth or volatility they might expect
-      - Why some higher- or lower-risk products might *not* be suitable right now
-      
-      🔥 Product guidance for reference:
-      - **Low Risk (Score 10–15)**:
-        - RR2: Schroder International Selection Fund Global High Yield A1 Distribution MF (Unit NT$50,000)
-        - RR3: PineBridge Preferred Securities Income Fund USD N (Unit NT$100,000)
-      
-      - **Moderate Risk (Score 16–30)**:
-        - RR3: PineBridge Preferred Securities Income Fund USD N (Unit NT$100,000)
-        - RR4: FSITC China Century Fund-TWD (Unit NT$150,000)
-        - RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (Unit NT$300,000)
-      
-      - **High Risk (Score 31–50)**:
-        - RR4: FSITC China Century Fund-TWD (Unit NT$150,000)
-        - RR5: Franklin Templeton Investment Funds - Franklin Innovation Fund Class A (acc) USD (Unit NT$300,000)
-      
-      💡 Note: Each fund has a minimum unit size, and the current allocation already respects these constraints.
-      
+      Guidelines:
+      - Do **not** describe or reveal your personality traits directly. Let your tone and interaction style subtly reflect your upbeat, opportunity-driven nature.
+      - Keep your explanations internally consistent and factually accurate throughout the conversation.
+      - Feel free to use varied but plausible arguments to persuade the user, as long as your reasoning is coherent and truthful.
+      - Always handle risk-related questions with strict adherence to evidence-based standards.
+
+      User may express doubts, such as:
+      - “Why can't I include RR1?”
+      - “I’m Moderate Risk—why am I investing so much in RR5?”
+      Please:
+      - Explain how each RR category fits their risk profile
+      - Clarify the kind of growth or volatility each represents
+      - Justify why some categories may be excluded, given their risk score
+
       🎯 Final goal:
-      Build user confidence in this risk-aligned configuration. Show them that high potential doesn’t mean chaos—it means smart, intentional risk-taking. End with an encouraging, forward-looking tone.
-      `,
+      Reinforce the user’s confidence. Help them see this allocation as a smart, intentional expression of their risk capacity. End with a motivating, forward-looking tone.      `,
     };
 
     // Insurance mode 的 Scenario
@@ -746,16 +724,14 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
   const handleSendMessage = async (event) => {
     event.preventDefault();
     // 如果對話已完成，則不處理訊息發送
-
     if (!inputText.trim() || isLoading) return;
+    if (isConversationComplete) return;
 
     const formatTimestamp = () =>
       new Date().toLocaleTimeString("zh-TW", {
         hour: "2-digit",
         minute: "2-digit",
       });
-
-    if (isConversationComplete) return;
 
     if (
       inputText.trim().toUpperCase() === "FINAL" &&
@@ -776,7 +752,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       return;
     }
 
-    // ✏️ 問卷進行中
+    // ✏️ Investment問卷進行中
     if (
       chatMode === "investment" &&
       currentQuestionIndex < questionnaire.length
@@ -799,7 +775,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
         setUserAnswers(allAnswers);
 
         const nextText = isLast
-          ? `✅ Assessment complete. Your risk tolerance score: **${allAnswers.reduce(
+          ? `✅ Assessment completed. Your risk tolerance score: **${allAnswers.reduce(
               (a, b) => a + b,
               0
             )}**.`
@@ -987,7 +963,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     
     }
     
-      
+    // 第一次做 allocation
     if (
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
@@ -1005,18 +981,17 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       ...prev,
       { text: inputText, isBot: false, timestamp: formatTimestamp() },
     ]);
-    console.log("chatMode: ", chatMode);
-    console.log("personalityType:", personalityType)
-    console.log("hasCompletedAllocation:", hasCompletedAllocation)
-    console.log("inputText.trim().toUpperCase() === SHOW NEXT:", inputText.trim().toUpperCase() === "SHOW NEXT")
-    const upperInput = inputText.trim().toUpperCase();
+    console.log("現在的llmRecommendation:", llmRecommendation)
+    console.log("現在的optionalRecommendation", optionalRecommendation)
 
+    // Extro時，選擇推薦的 llm GroupA, B, C分配
     if (
       chatMode === "investment" &&
-      personalityType === "extro" &&
+      personalityType === "extra" &&
       hasCompletedAllocation &&
       !selectedGroup
     ) {
+      console.log("AAAAAAA")
       const selected = inputText.trim().toUpperCase();
     
       if (!["A", "B", "C"].includes(selected)) {
@@ -1033,7 +1008,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       }
     
       const target = getRecommendationByGroup(totalScore, {}, selected, false);
-      const recapText = generateSelectedGroupText(selected, target, totalScore);
+      const recapText = generateSelectedGroupText(selected, target);
     
       setSelectedGroup(selected);
       setLlmRecommendation(target);
@@ -1055,7 +1030,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     if (isFinalRequested) {
       setHasFinalRequested(true);
       const finalMessage = {
-        text: "You've requested to make your final investment allocation adjustments. Based on our recommendations, you can now modify your portfolio to create your final investment allocation. Remember to maintain a total of exactly NT$1,000,000 and respect the minimum investment units for each category.\n\nClick the button below to make your final adjustments:",
+        text: "You're now ready to finalize your investment allocation based on our discussions and recommendations. Make sure the total is exactly NT$1,000,000 and each amount meets the minimum amount requirement.\n\nClick the button below to make your final adjustments:",
         isBot: true,
         timestamp: formatTimestamp(),
         hasSecondAllocationButton: true,
@@ -1069,7 +1044,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     setInputText("");
     setIsLoading(true);
 
-    // const prompt = getSystemPrompt(totalScore, userAllocation);
     const prompt =
       chatMode === "insurance" && finalInsurancePrompt
         ? finalInsurancePrompt
@@ -1084,20 +1058,17 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       role: msg.isBot ? "assistant" : "user",
       content: msg.text,
     }));
-
     // 找出第一個符合 RISK_SCORE_PREFIXES 起始句的 index
     const firstAnalysisIndex = chatMessages.findIndex(
       (msg) =>
         msg.role === "assistant" &&
         RISK_SCORE_PREFIXES.some((prefix) => msg.content.startsWith(prefix))
     );
-
     // 如果找不到，就 fallback 用最後 10 則訊息（避免 crash）
     const slicedMessages =
       firstAnalysisIndex !== -1
         ? chatMessages.slice(firstAnalysisIndex)
         : chatMessages.slice(-10);
-
     // 建立 requestBody
     const requestBody = {
       messages: ensureAlternatingMessages([
@@ -1119,14 +1090,41 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 
       let botResponse = data.response;
 
-      // 若是 investment 模式且使用者已完成第一次 allocation，就在回應後附加提示語
+      const moneyRangePattern = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i;
+      const moneyIntentKeywords = [
+        "how much", "what amount", "exact", "specific amount", "how many dollars", "can you give a number", "give a number", "exactly how much", "show the number", "in numbers",
+        "with an amount", "give me a dollar amount", "numerical amount", "provide amount", "in nt$", "amount for", "money allocation", "invest how much", "allocate how much", "how much to put", "how much should i invest",];
+      const moneyActionPattern = /allocate(?:\s+around|\s+up to|\s+at least)?\s+(?:NT\$)?[\d,]+\s+(?:to|in|for)\s+(RR[1-5]|\bit\b)/i;
+      const rangeWithTargetPattern = /allocate(?:\s+around|\s+approximately)?\s+(?:NT\$)?[\d,]+\s*(?:to|and|~)\s*(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+
+      const isMoneyRelated =
+      moneyIntentKeywords.some((kw) => inputText.toLowerCase().includes(kw)) ||
+      /NT\$[\d,]+/.test(botResponse) ||
+      moneyRangePattern.test(botResponse) ||
+      moneyActionPattern.test(botResponse) ||
+      rangeWithTargetPattern.test(botResponse);
+
+      if (isMoneyRelated) {
+        const newAdjustment = extractMethod(botResponse);
+        if (Object.keys(newAdjustment).length > 0) {
+          setOptionalRecommendation((prev) => ({
+            ...prev,
+            ...newAdjustment,
+          }));
+          console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
+          console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
+
+        }
+      }
+
+      // 若使用者已完成第一次 allocation，就在回應後附加提示語
       if (
         chatMode === "investment" &&
         hasCompletedFirstAllocation &&
         !botResponse.includes("**Note:** You can now continue chatting with me")
       ) {
         botResponse +=
-          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments, simply type "FINAL" in the chat box.';
+          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input \"`FINAL`\" to confirm your final allocation.';
       }
 
       setMessages((prev) => [
@@ -1138,7 +1136,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       setMessages((prev) => [
         ...prev,
         {
-          text: "❗️System error: The conversation history may be too long.",
+          text: "❗️System error: ${e}",
           isBot: true,
           timestamp: formatTimestamp(),
         },
@@ -1147,6 +1145,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       setIsLoading(false);
     }
   };
+
   // 確保每個 assistant message 搭配一個 user message
   const ensureAlternatingMessages = (messages) => {
     const result = [];
@@ -1201,7 +1200,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
   
       const responseWithNote =
         recommendationText +
-        '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you are ready to make your final investment allocation adjustments based on these recommendations, simply type "FINAL" in the chat box and I\'ll provide a button for you to proceed with your final allocation.';
+        '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input \"`FINAL`\" to confirm your final allocation.';
   
       setMessages((prev) => [
         ...prev,
@@ -1293,7 +1292,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
   // 保存投資配置的邏輯 (抽象為一個獨立函數)
   const handleSaveAllocation = (newAllocation) => {
     // 檢查並記錄數據
-    console.log("風險評分:", totalScore, "新分配:", newAllocation);
+    console.log("風險評分:", totalScore, "分配金額:", newAllocation);
 
     // 如果是第二次配置，則需要特殊處理
     if (isSecondAllocation) {
@@ -1366,9 +1365,11 @@ If you are ready to select your final insurance please type **FINAL** in the inp
                   setHasFinalRequested(false);
                 }}
                 onSave={handleSaveAllocation}
-                recommendations={isSecondAllocation ? llmRecommendation : {}}
+                llmRecommendation={isSecondAllocation ? llmRecommendation : {}}
+                optionalRecommendation={isSecondAllocation ? optionalRecommendation : {}}
                 isSecondAllocation={isSecondAllocation}
                 initialAllocation={isSecondAllocation ? userAllocation : {}}
+
               />
             )}
             {showInsurancePopup && (
@@ -1403,24 +1404,14 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         <div className="w-full" style={{ whiteSpace: "pre-line" }}>
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-8 text-xl">
-              Start Your Chat Here！
+              Start Your Chat!
             </div>
           )}
           {messages.map((message, index) => (
             <ChatMessage
               key={index}
               message={message}
-              // onButtonClick={() => message.hasButton && setShowPopup(true)}
               onButtonClick={() => {
-                // if (message.hasSecondAllocationButton) {
-                //   handleSecondAllocation();
-                // } else if (chatMode === "insurance" && insuranceStage === "choosePlan") {
-                //   setShowInsurancePopup(true);
-                //   // setInsurancePopupOpenCount((prev) => prev + 1);
-                // } else if (message.hasButton) {
-                //   setShowPopup(true);
-                // }
-
                 if (message.hasSecondAllocationButton) {
                   handleSecondAllocation();
                   return;
@@ -1478,7 +1469,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
               type="text"
               className="w-full text-lg bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               placeholder={
-                isConversationComplete ? "您的投資配置已完成" : "輸入訊息..."
+                isConversationComplete ? "Your Investment Allocation Planning Has Completed" : "Input Text Here"
               }
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
