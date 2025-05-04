@@ -168,6 +168,12 @@ const ChatInterface = () => {
     });
   };
 
+  const buildChatMessages = (base, pending) =>
+    [...base, ...pending].map(m => ({
+      role: m.isBot ? "assistant" : "user",
+      content: m.text,
+    }));
+
   const promptInsuranceSelection = () => {
     setMessages((prev) => [
       ...prev,
@@ -650,8 +656,8 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
         ],
       },
     ];
-    console.log("the answers are ");
-    console.log(answers);
+    // console.log("the answers are ");
+    // console.log(answers);
     const q1 = answers[0]; // Concern about risk
     const q2 = answers[1]; // Importance of saving money
     const q3 = answers[2]; // Lifestyle
@@ -852,80 +858,91 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       insuranceStage === "questionnaire" &&
       currentQuestionIndex < questionnaire.length
     ) {
-      const index = parseInt(inputText.trim(), 10) - 1;
-      const currentQ = questionnaire[currentQuestionIndex];
-
-      if (isNaN(index) || index < 0 || index >= currentQ.options.length) {
-        setMessages((prev) => [
+      const idx       = parseInt(inputText.trim(), 10) - 1;
+      const curQ      = questionnaire[currentQuestionIndex];
+      const isInvalid = isNaN(idx) || idx < 0 || idx >= curQ.options.length;
+    
+      // 1) Validation
+      if (isInvalid) {
+        setMessages(prev => [
           ...prev,
           {
             text: "Please respond with a valid option number.",
             isBot: true,
-            timestamp: formatTimestamp(),
-          },
+            timestamp: formatTimestamp()
+          }
         ]);
-      } else {
-        // Valid answer
-        const allAnswers = [...userAnswers, index + 1];
-        setUserAnswers(allAnswers);
-
-        const isLast = currentQuestionIndex + 1 === questionnaire.length;
         setInputText("");
-
-        setMessages((prev) => [
-          ...prev,
-          { text: inputText, isBot: false, timestamp: formatTimestamp() },
-          !isLast
-            ? {
-                text: `Next:\n${
-                  questionnaire[currentQuestionIndex + 1].text
-                }\n${questionnaire[currentQuestionIndex + 1].options
-                  .map((opt, i) => `(${i + 1}) ${opt}`)
-                  .join("\n")}`,
-                isBot: true,
-                timestamp: formatTimestamp(),
-              }
-            : {
-                text: "✅ Thanks! We've got all your answers. Let me analyze them...",
-                isBot: true,
-                timestamp: formatTimestamp(),
-              },
-        ]);
-
-        if (isLast) {
-          setHasCompletedQuestionnaire(true);
-          setInsuranceStage("done");
-          // promptInsuranceSelection();
-          setIsLoading(true);
-
-          const finalPrompt = getSystemPrompt(null, {}, allAnswers);
-          const reqBody = {
-            messages: [
-              { role: "system", content: finalPrompt },
-              {
-                role: "user",
-                content:
-                  `The user initially chose **${selectedPlan}**.\n` +
-                  `Here are the questionnaire answers. Please confirm whether ${selectedPlan} is still the best match or suggest a better plan and explain why according to the knowledge and instrcution in the system prompt, and please using the second person viewpoint in the respponse. Also place the alternative plan in the recommendation you can reference the system prompt for the alternative plan`, 
-                  
-
-              },
-            ],
-          };
-          // const finalPrompt = getSystemPrompt(null, {}, allAnswers);
-          console.log("Final system prompt:\n\n" + finalPrompt);
-          try {
-            const res = await fetch("http://140.119.19.195:5000/chat", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(reqBody),
-            });
-            const data = await res.json();
-
-            /* ---------- NEW: append a fixed note to the model's reply ---------- */
-            const followUpNotes = {
-              intro: `
-The following are the FAQ:
+        return;
+      }
+    
+      // 2) Record answer
+      const newAnswers = [...userAnswers, idx + 1];
+      setUserAnswers(newAnswers);
+      setInputText("");
+    
+      const isLast = currentQuestionIndex + 1 === questionnaire.length;
+    
+      // 3) Build the two “pending” messages: user’s answer + bot’s next prompt / thank-you
+      const nextQ = !isLast
+        ? `${questionnaire[currentQuestionIndex + 1].text}\n` +
+          questionnaire[currentQuestionIndex + 1].options
+            .map((o, i) => `(${i + 1}) ${o}`)
+            .join("\n")
+        : "";
+    
+      const pending = [
+        { text: inputText, isBot: false, timestamp: formatTimestamp() },
+        isLast
+          ? {
+              text: "✅ Thanks! We've got all your answers. Let me analyze them…",
+              isBot: true,
+              timestamp: formatTimestamp()
+            }
+          : {
+              text: `Next:\n${nextQ}`,
+              isBot: true,
+              timestamp: formatTimestamp()
+            }
+      ];
+    
+      // 4) Emit those into state
+      setMessages(prev => [...prev, ...pending]);
+    
+      // 5) If it’s *not* the last question, just advance and exit
+      if (!isLast) {
+        setCurrentQuestionIndex(i => i + 1);
+        return;
+      }
+    
+      // 6) If it *is* the last question, trigger LLM call exactly once:
+      setHasCompletedQuestionnaire(true);
+      setInsuranceStage("done");
+      setIsLoading(true);
+    
+      const finalPrompt = getSystemPrompt(null, {}, newAnswers);
+      console.log("Final system prompt:", finalPrompt);
+    
+      const payload = [
+        { role: "system", content: finalPrompt },
+        {
+          role: "user",
+          content: `The user initially chose **${selectedPlan ?? "an insurance plan"}**.\n` +
+                   `Please give them two recommended insurance plans (including an alternative) and explain your reasoning in the second person.`
+        }
+      ];
+    
+      try {
+        console.log("sending to LLM endpoint");
+        const res = await fetch("http://140.119.19.195:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: payload })
+        });
+        const data = await res.json();
+    
+        const followUpNotes = {
+          intro: `The following are the FAQ:
 (1) What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
 (2) Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 (3) In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
@@ -934,91 +951,43 @@ The following are the FAQ:
             
 If you are ready to select your final insurance please type **FINAL** in the input text field.  
             `,
-              extra: ` 
-The following are the FAQ:
+          extra: `The following are the FAQ:
 (1). What are the main advantages and disadvantages of the **Lite Plan**, the **Basic Plan** and the **Advanced Plan**?  
 (2) Could you briefly explain what the **Maximum Compensation per Insurance Period** and the **Deductible per Accident** mean for each plan and how they would affect my potential claims?  
 (3) In the event of an accident in the US requiring me to return to Taiwan for medical treatment, which plan provides assistance for this situation?  
 (4) Are there any specific exclusions or limitations that I should be aware of for each of these insurance plans?  
 (5) If I have a pre-existing medical condition, how might that affect the coverage offered by these plans?  
             
-If you are ready to select your final insurance please type **FINAL** in the input text field.  
-            `,
-            };
-            const followUpNote =
-              followUpNotes[personalityType] || followUpNotes.intro;
-
-            const botMessage = data.response + followUpNote;
-            /* ------------------------------------------------------------------- */
-
-            setMessages((prev) => [
-              ...prev,
-              { text: botMessage, isBot: true, timestamp: formatTimestamp() },
-            ]);
-          } catch (err) {
-            console.error(err);
-            setMessages((prev) => [
-              ...prev,
-              {
-                text: "❗️System error during insurance recommendation. Please try again later.",
-                isBot: true,
-                timestamp: formatTimestamp(),
-              },
-            ]);
-          } finally {
-            setIsLoading(false);
+If you are ready to select your final insurance please type **FINAL** in the input text field.`
+        };
+        const note = followUpNotes[personalityType] || followUpNotes.intro;
+    
+        const botMessage = data.response + note;
+        setMessages(prev => [
+          ...prev,
+          { text: botMessage, isBot: true, timestamp: formatTimestamp() }
+        ]);
+      } catch (err) {
+        console.error(err);
+        setMessages(prev => [
+          ...prev,
+          {
+            text: "❗️System error during insurance recommendation.",
+            isBot: true,
+            timestamp: formatTimestamp()
           }
-
-          // setFinalInsurancePrompt(finalPrompt);
-
-          // try {
-          //   // Example call to your LLM endpoint
-          //   const res = await fetch("http://140.119.19.195:5000/chat", {
-          //     method: "POST",
-          //     headers: { "Content-Type": "application/json" },
-          //     body: JSON.stringify({
-          //       messages: [
-          //         { role: "system", content: finalPrompt },
-          //         {
-          //           role: "user",
-          //           content: "Here are my answers. Please recommend a plan.",
-          //         },
-          //       ],
-          //     }),
-          //   });
-          //   const data = await res.json();
-
-          //   setMessages((prev) => [
-          //     ...prev,
-          //     {
-          //       text: data.response,
-          //       isBot: true,
-          //       timestamp: formatTimestamp(),
-          //     },
-          //   ]);
-          // } catch (error) {
-          //   console.error("Insurance Q&A error:", error);
-          //   setMessages((prev) => [
-          //     ...prev,
-          //     {
-          //       text:
-          //         "System error during insurance recommendation. Please try again later.",
-          //       isBot: true,
-          //       timestamp: formatTimestamp(),
-          //     },
-          //   ]);
-          // } finally {
-          //   setIsLoading(false);
-          // }
-        }
-
-        setCurrentQuestionIndex((prev) => prev + 1);
+        ]);
+      } finally {
+        setIsLoading(false);
       }
-
-      // setInputText("");
+    
+      // 7) advance the index (though stage="done" will prevent re-entry)
+      setCurrentQuestionIndex(i => i + 1);
       return;
+    
     }
-
+    
+      
     if (
       chatMode === "investment" &&
       hasCompletedQuestionnaire &&
