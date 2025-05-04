@@ -267,7 +267,7 @@ const ChatInterface = () => {
       The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
       ${Object.entries(allocation)
         .map(
-          ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()} (${percent(val)})`
+          ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()}`
         )
         .join("\n      ")}
       
@@ -991,7 +991,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       hasCompletedAllocation &&
       !selectedGroup
     ) {
-      console.log("AAAAAAA")
       const selected = inputText.trim().toUpperCase();
     
       if (!["A", "B", "C"].includes(selected)) {
@@ -1092,30 +1091,54 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 
       const moneyRangePattern = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i;
       const moneyIntentKeywords = [
-        "how much", "what amount", "exact", "specific amount", "how many dollars", "can you give a number", "give a number", "exactly how much", "show the number", "in numbers",
-        "with an amount", "give me a dollar amount", "numerical amount", "provide amount", "in nt$", "amount for", "money allocation", "invest how much", "allocate how much", "how much to put", "how much should i invest",];
+        "exact amount of money", "how much", "what amount", "exact", "specific amount", "how many dollars", "can you give a number", "give a number", "exactly how much", "show the number", "in numbers",
+        "with an amount", "give me a dollar amount", "numerical amount", "provide amount", "in nt$", "amount for", "money allocation", "invest how much", "allocate how much", "how much to put", "how much should i invest", "money"];
       const moneyActionPattern = /allocate(?:\s+around|\s+up to|\s+at least)?\s+(?:NT\$)?[\d,]+\s+(?:to|in|for)\s+(RR[1-5]|\bit\b)/i;
       const rangeWithTargetPattern = /allocate(?:\s+around|\s+approximately)?\s+(?:NT\$)?[\d,]+\s*(?:to|and|~)\s*(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const directAmountSuggestion = /(?:recommend|suggest|advise)(?:\s+(?:allocating|investing|putting))?\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const suggestiveAction = /(?:let's|I would|should)\s+(?:allocate|invest|put)\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const riskLevelSuggestion = /(RR[1-5])\s+(?:should|could|would|can|may)\s+(?:receive|get|be allocated|be assigned)\s+(?:NT\$)?[\d,]+/i;
+      const recommendRangePattern = /(recommend|suggest|advise).*?(?:NT\$)?([\d,]+)\s*(?:to|and|~)\s*(?:NT\$)?([\d,]+).*?(RR[1-5])/i;
+      const hasMoneyRange = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i.test(botResponse);
+      const hasRRMentioned = /RR[1-5]/i.test(botResponse);
 
       const isMoneyRelated =
       moneyIntentKeywords.some((kw) => inputText.toLowerCase().includes(kw)) ||
       /NT\$[\d,]+/.test(botResponse) ||
       moneyRangePattern.test(botResponse) ||
       moneyActionPattern.test(botResponse) ||
-      rangeWithTargetPattern.test(botResponse);
+      rangeWithTargetPattern.test(botResponse)||
+      directAmountSuggestion.test(botResponse) ||
+      suggestiveAction.test(botResponse) ||
+      riskLevelSuggestion.test(botResponse) ||
+      recommendRangePattern.test(botResponse)||
+      (hasMoneyRange && hasRRMentioned);
 
-      if (isMoneyRelated) {
-        const newAdjustment = extractMethod(botResponse);
-        if (Object.keys(newAdjustment).length > 0) {
-          setOptionalRecommendation((prev) => ({
-            ...prev,
-            ...newAdjustment,
-          }));
-          console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
-          console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
+      // if (1 < 2) {
+      //   const newAdjustment = extractMethod(botResponse);
+      //   if (Object.keys(newAdjustment).length > 0) {
+      //     setOptionalRecommendation((prev) => ({
+      //       ...prev,
+      //       ...newAdjustment,
+      //     }));
+      //     console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
+      //     console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
 
-        }
+      //   }
+      // }
+      
+      const newAdjustment = extractMethod(botResponse);
+      if (Object.keys(newAdjustment).length > 0) {
+        setOptionalRecommendation((prev) => ({
+          ...prev,
+          ...newAdjustment,
+        }));
+        console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
+        console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
       }
+
+      setInputText("");
+
 
       // 若使用者已完成第一次 allocation，就在回應後附加提示語
       if (
