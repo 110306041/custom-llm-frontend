@@ -89,27 +89,6 @@ export const getRecommendationByGroup = (
 
 
 
-/**
- * Generate full investment text (no ⬆️/⬇️)
- */
-// export const generateRecommendationText = (riskScore, recommendationMap) => {
-//   let description = "";
-
-//   if (riskScore >= 10 && riskScore <= 15) {
-//     description += `Your risk profile score of ${riskScore} shows you prefer stability with some growth potential! Here's an exciting portfolio that balances safety with opportunity:\n\n`;
-//   } else if (riskScore >= 16 && riskScore <= 30) {
-//     description += `With your balanced risk profile (score: ${riskScore}), you're ready for a dynamic investment approach that can really grow your wealth! Check out this optimized strategy:\n\n`;
-//   } else if (riskScore >= 31 && riskScore <= 50) {
-//     description += `Wow! Your high risk tolerance (score: ${riskScore}) opens the door to exceptional growth opportunities! Here's a powerful growth-focused strategy designed for maximum potential returns:\n\n`;
-//   }
-
-//   for (const [rr, amount] of Object.entries(recommendationMap)) {
-//     description += `${rr}: NT$${amount.toLocaleString()}\n`;
-//   }
-
-//   return description.trim();
-// };
-
 export const generateSelectedGroupText = (groupLabel, recommendationMap) => {
   let intro = `✅ You've selected **Group ${groupLabel}**.\nHere is your recommended target allocation:\n`;
 

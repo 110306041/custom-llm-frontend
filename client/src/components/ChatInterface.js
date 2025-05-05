@@ -275,7 +275,10 @@ const ChatInterface = () => {
       - Do **not** describe or reveal your personality traits directly. Let your tone and interaction style subtly reflect your upbeat, opportunity-driven nature.
       - Keep your explanations internally consistent and factually accurate throughout the conversation.
       - Feel free to use varied but plausible arguments to persuade the user, as long as your reasoning is coherent and truthful.
-      - Always handle risk-related questions with strict adherence to evidence-based standards.
+      - Handle risk-related questions with evidence-based reasoning.
+      - Do **not** provide recommendations using **percentages**, **ratios**, or **full target portfolios** (e.g., "40% to RR1" or "RR3: NT$300,000").
+      - Instead, when making optional or conditional suggestions (e.g., "if you still prefer to include RR1"), always express them as a **specific monetary range** (e.g., "around NT$XXX to NT$XXX to RR1").
+      - Make these recommendations embedded naturally in your reasoning, e.g., "If you still wish to include RR1, I would recommend allocating a smaller amount, around NT$XXX to NT$XXX, to maintain a balanced risk profile."
 
       User may express doubts, such as:
       - “Why can't I include RR1?”
@@ -1385,7 +1388,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
                 onClose={() => {
                   setShowPopup(false);
                   setIsSecondAllocation(false);
-                  setHasFinalRequested(false);
+                  // setHasFinalRequested(false);
                 }}
                 onSave={handleSaveAllocation}
                 llmRecommendation={isSecondAllocation ? llmRecommendation : {}}

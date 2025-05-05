@@ -138,7 +138,7 @@ const InvestmentPopup = ({
           <div className="text-gray-500">
             {Array.isArray(optVal) ? (
               <>
-                (Optional) move NT${optVal.map((v) => v.toLocaleString()).join(" or NT$")} to this
+                (Optional) move NT${optVal.map((v) => v.toLocaleString()).join(" to NT$")} to this item.
               </>
             ) : (
               <>

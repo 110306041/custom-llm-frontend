@@ -108,6 +108,30 @@ export function extractMethod(responseText) {
     pushAmount(rr, amount2);
   }
 
+  // Pattern 9: Percentage allocation like "40-50% to RR1" or "30% for RR2"
+  const regexRangePct = /(RR[1-5]).*?(\d{1,2})\s*[-~to]+\s*(\d{1,2})\s*%/gi;
+  while ((match = regexRangePct.exec(responseText)) !== null) {
+    const rr = match[1];
+    const minPct = parseInt(match[2], 10);
+    const maxPct = parseInt(match[3], 10);
+    if (!result[rr]) result[rr] = [];
+    result[rr].push(Math.round(1000000 * minPct / 100));
+    result[rr].push(Math.round(1000000 * maxPct / 100));
+  }
+
+  // Pattern 10: Single percentage like "allocate 25% to RR1"
+  const regexSinglePct = /(RR[1-5]).*?(\d{1,2})\s*%/gi;
+  while ((match = regexSinglePct.exec(responseText)) !== null) {
+    const rr = match[1];
+    const pct = parseInt(match[2], 10);
+    if (!result[rr]) result[rr] = [];
+    if (result[rr].length === 0) { // don't overwrite a previous range
+      result[rr].push(Math.round(1000000 * pct / 100));
+    }
+  }
+  
+  
+
 
   return result;
 }
