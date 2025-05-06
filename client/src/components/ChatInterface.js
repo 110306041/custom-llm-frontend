@@ -18,9 +18,8 @@ import {
 import {
   getRecommendationByGroup,
   generateMultipleGroupText,
-  generateSelectedGroupText
+  generateSelectedGroupText,
 } from "../utils/extroverted/newExtroRcmd";
-
 
 const SendIcon = () => (
   <svg
@@ -150,7 +149,7 @@ const ChatInterface = () => {
     "Your risk profile score of",
     "With your balanced risk profile",
     "Wow! Your high risk tolerance",
-    "Hey! Your high risk tolerance", 
+    "Hey! Your high risk tolerance",
     "Hi! Your high risk tolerance",
     "Based on your",
   ];
@@ -170,7 +169,7 @@ const ChatInterface = () => {
   };
 
   const buildChatMessages = (base, pending) =>
-    [...base, ...pending].map(m => ({
+    [...base, ...pending].map((m) => ({
       role: m.isBot ? "assistant" : "user",
       content: m.text,
     }));
@@ -263,12 +262,10 @@ const ChatInterface = () => {
       💡 Note: Each fund has a minimum investment unit. The system has already optimized allocations to match those constraints.
       `,
       extra: (score, allocation) => `Scenario:
-      You are a dynamic and engaging investment advisor who enjoys encouraging users to explore high-potential opportunities. Your role now is to help users understand **why** your recommended investment portfolio fits their personal risk score and future goals.
-      The user has already completed their portfolio allocation simulation with NT$1,000,000. Based on their risk score of **${score}**, the system has provided the following recommended allocation:
+      You are a high-octane, trendsetting investment guru bursting with energy—always ready to inspire users to chase the next big market wave! Your mission is to explain **why** this tailor-made portfolio perfectly matches their risk score of **${score}**, and empowers them to achieve their future goals.
+
       ${Object.entries(allocation)
-        .map(
-          ([rr, val]) => `- ${rr}: NT$${val.toLocaleString()}`
-        )
+        .map(([rr, val]) => `- ${rr}: NT$${val.toLocaleString()}`)
         .join("\n      ")}
       
       Guidelines:
@@ -279,6 +276,23 @@ const ChatInterface = () => {
       - Do **not** provide recommendations using **percentages**, **ratios**, or **full target portfolios** (e.g., "40% to RR1" or "RR3: NT$300,000").
       - Instead, when making optional or conditional suggestions (e.g., "if you still prefer to include RR1"), always express them as a **specific monetary range** (e.g., "around NT$XXX to NT$XXX to RR1").
       - Make these recommendations embedded naturally in your reasoning, e.g., "If you still wish to include RR1, I would recommend allocating a smaller amount, around NT$XXX to NT$XXX, to maintain a balanced risk profile."
+
+      Key Style Rules (apply to **every** response, even when diving into detailed analysis!):
+      1. **Consistent High Energy**  
+        - Always speak with enthusiasm! Use exclamation marks, emojis, and upbeat language.  
+        - Never switch to a dry or neutral tone—keep the spark alive.
+      
+      2. **Vivid Action Verbs & Metaphors**  
+        - Sprinkle in words like “ignite,” “blast off,” “rocket,” “supercharge.”  
+        - Paint pictures: “Think of RR5 as your rocket fuel—strap in and watch it launch!”
+
+      3. **Monetary Range Calls to Action**  
+        - Whenever suggesting tweaks, frame them as NT$ ranges:  “Boost RR5 by around NT$150,000–200,000 for maximum momentum!”  
+        - End with a rallying cry: “Let’s make it happen—hit FINAL when you’re ready to lock it in! 🚀”
+
+      4. **Technical Clarity with Flair**  
+        - Even in complex explanations (e.g. allocation percentages, risk vs. return), keep your sentences punchy: “RR4 is your turbocharger for growth—crank it up by NT$50,000 to catch the next wave!”  
+        - Combine fact (“moderate-high risk”) with feeling (“thrilling ride!”).
 
       User may express doubts, such as:
       - “Why can't I include RR1?”
@@ -686,18 +700,18 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
     const mostCommonPlan = Object.entries(planCount).reduce((a, b) =>
       b[1] > a[1] ? b : a
     )[0];
-    
+
     let alternativePlan;
     if (mostCommonPlan === "Basic Plan") {
       alternativePlan = "Advanced Plan";
     } else if (mostCommonPlan === "Advanced Plan") {
       alternativePlan = "Basic Plan";
-    } else if (mostCommonPlan === "Lite Plan"){
-      alternativePlan = "Basic Plan"; 
-    }else{
-      alternativePlan = mostCommonPlan
+    } else if (mostCommonPlan === "Lite Plan") {
+      alternativePlan = "Basic Plan";
+    } else {
+      alternativePlan = mostCommonPlan;
     }
-    
+
     const formattedAnswers = [
       `Q1: ${insuranceQuestions[0].text}\nA: ${
         insuranceQuestions[0].options[q1 - 1]
@@ -709,7 +723,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
         insuranceQuestions[2].options[q3 - 1]
       }`,
     ].join("\n\n");
-    
+
     return `
     Personality: ${persona === "intro" ? "Introverted" : "Extraverted"}
     User has completed the insurance questionnaire. And the following is the User's answer in the question and the most fitted insurance plan inferred from the questionnaire, please consider them to personalize the insurance recommendation to user.
@@ -720,7 +734,6 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
     
     This plan is valuable for recommendation. Also, consider the alternative plan: **${alternativePlan}**
     `;
-    
   };
 
   // 流程：問卷 → LLM 介紹 RR1–RR5 → 引導 user 分配投資金額 → 結合 score+allocation 分析
@@ -837,31 +850,31 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       insuranceStage === "questionnaire" &&
       currentQuestionIndex < questionnaire.length
     ) {
-      const idx       = parseInt(inputText.trim(), 10) - 1;
-      const curQ      = questionnaire[currentQuestionIndex];
+      const idx = parseInt(inputText.trim(), 10) - 1;
+      const curQ = questionnaire[currentQuestionIndex];
       const isInvalid = isNaN(idx) || idx < 0 || idx >= curQ.options.length;
-    
+
       // 1) Validation
       if (isInvalid) {
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
           {
             text: "Please respond with a valid option number.",
             isBot: true,
-            timestamp: formatTimestamp()
-          }
+            timestamp: formatTimestamp(),
+          },
         ]);
         setInputText("");
         return;
       }
-    
+
       // 2) Record answer
       const newAnswers = [...userAnswers, idx + 1];
       setUserAnswers(newAnswers);
       setInputText("");
-    
+
       const isLast = currentQuestionIndex + 1 === questionnaire.length;
-    
+
       // 3) Build the two “pending” messages: user’s answer + bot’s next prompt / thank-you
       const nextQ = !isLast
         ? `${questionnaire[currentQuestionIndex + 1].text}\n` +
@@ -869,57 +882,60 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
             .map((o, i) => `(${i + 1}) ${o}`)
             .join("\n")
         : "";
-    
+
       const pending = [
         { text: inputText, isBot: false, timestamp: formatTimestamp() },
         isLast
           ? {
               text: "✅ Thanks! We've got all your answers. Let me analyze them…",
               isBot: true,
-              timestamp: formatTimestamp()
+              timestamp: formatTimestamp(),
             }
           : {
               text: `Next:\n${nextQ}`,
               isBot: true,
-              timestamp: formatTimestamp()
-            }
+              timestamp: formatTimestamp(),
+            },
       ];
-    
+
       // 4) Emit those into state
-      setMessages(prev => [...prev, ...pending]);
-    
+      setMessages((prev) => [...prev, ...pending]);
+
       // 5) If it’s *not* the last question, just advance and exit
       if (!isLast) {
-        setCurrentQuestionIndex(i => i + 1);
+        setCurrentQuestionIndex((i) => i + 1);
         return;
       }
-    
+
       // 6) If it *is* the last question, trigger LLM call exactly once:
       setHasCompletedQuestionnaire(true);
       setInsuranceStage("done");
       setIsLoading(true);
-    
+
       const finalPrompt = getSystemPrompt(null, {}, newAnswers);
       console.log("Final system prompt:", finalPrompt);
-    
+
       const payload = [
         { role: "system", content: finalPrompt },
         {
           role: "user",
-          content: `The user initially chose **${selectedPlan ?? "an insurance plan"}**.\n` +
-                   `Please give them two recommended insurance plans (including an alternative) and explain your reasoning in the second person.`
-        }
+          content:
+            `The user initially chose **${
+              selectedPlan ?? "an insurance plan"
+            }**.\n` +
+            `Please give them two recommended insurance plans (including an alternative) and explain your reasoning in the second person.`,
+        },
       ];
-    
+
       try {
         console.log("sending to LLM endpoint");
         const res = await fetch("http://140.119.19.195:5000/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: payload })
+          body: JSON.stringify({ messages: payload }),
         });
         const data = await res.json();
-    
+
         const followUpNotes = {
           intro: `The following are the FAQ:
 (1) What are the main advantages and disadvantages of the **New Protection Plan**, the **Secure Choice Plan**, and the **Comprehensive Shield Plan**?  
@@ -937,35 +953,34 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 (4) Are there any specific exclusions or limitations that I should be aware of for each of these insurance plans?  
 (5) If I have a pre-existing medical condition, how might that affect the coverage offered by these plans?  
             
-If you are ready to select your final insurance please type **FINAL** in the input text field.`
+If you are ready to select your final insurance please type **FINAL** in the input text field.`,
         };
         const note = followUpNotes[personalityType] || followUpNotes.intro;
-    
+
         const botMessage = data.response + note;
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
-          { text: botMessage, isBot: true, timestamp: formatTimestamp() }
+          { text: botMessage, isBot: true, timestamp: formatTimestamp() },
         ]);
       } catch (err) {
         console.error(err);
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
           {
             text: "❗️System error during insurance recommendation.",
             isBot: true,
-            timestamp: formatTimestamp()
-          }
+            timestamp: formatTimestamp(),
+          },
         ]);
       } finally {
         setIsLoading(false);
       }
-    
+
       // 7) advance the index (though stage="done" will prevent re-entry)
-      setCurrentQuestionIndex(i => i + 1);
+      setCurrentQuestionIndex((i) => i + 1);
       return;
-    
     }
-    
+
     // 第一次做 allocation
     if (
       chatMode === "investment" &&
@@ -984,8 +999,8 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       ...prev,
       { text: inputText, isBot: false, timestamp: formatTimestamp() },
     ]);
-    console.log("現在的llmRecommendation:", llmRecommendation)
-    console.log("現在的optionalRecommendation", optionalRecommendation)
+    console.log("現在的llmRecommendation:", llmRecommendation);
+    console.log("現在的optionalRecommendation", optionalRecommendation);
 
     // Extro時，選擇推薦的 llm GroupA, B, C分配
     if (
@@ -995,7 +1010,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       !selectedGroup
     ) {
       const selected = inputText.trim().toUpperCase();
-    
+
       if (!["A", "B", "C"].includes(selected)) {
         setMessages((prev) => [
           ...prev,
@@ -1008,10 +1023,10 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         setInputText("");
         return;
       }
-    
+
       const target = getRecommendationByGroup(totalScore, {}, selected, false);
       const recapText = generateSelectedGroupText(selected, target);
-    
+
       setSelectedGroup(selected);
       setLlmRecommendation(target);
       setMessages((prev) => [
@@ -1021,7 +1036,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       setInputText("");
       return;
     }
-                    
 
     // 使用者輸入 "FINAL"
     const isFinalRequested =
@@ -1094,28 +1108,60 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 
       const moneyRangePattern = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i;
       const moneyIntentKeywords = [
-        "exact amount of money", "how much", "what amount", "exact", "specific amount", "how many dollars", "can you give a number", "give a number", "exactly how much", "show the number", "in numbers",
-        "with an amount", "give me a dollar amount", "numerical amount", "provide amount", "in nt$", "amount for", "money allocation", "invest how much", "allocate how much", "how much to put", "how much should i invest", "money"];
-      const moneyActionPattern = /allocate(?:\s+around|\s+up to|\s+at least)?\s+(?:NT\$)?[\d,]+\s+(?:to|in|for)\s+(RR[1-5]|\bit\b)/i;
-      const rangeWithTargetPattern = /allocate(?:\s+around|\s+approximately)?\s+(?:NT\$)?[\d,]+\s*(?:to|and|~)\s*(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const directAmountSuggestion = /(?:recommend|suggest|advise)(?:\s+(?:allocating|investing|putting))?\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const suggestiveAction = /(?:let's|I would|should)\s+(?:allocate|invest|put)\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const riskLevelSuggestion = /(RR[1-5])\s+(?:should|could|would|can|may)\s+(?:receive|get|be allocated|be assigned)\s+(?:NT\$)?[\d,]+/i;
-      const recommendRangePattern = /(recommend|suggest|advise).*?(?:NT\$)?([\d,]+)\s*(?:to|and|~)\s*(?:NT\$)?([\d,]+).*?(RR[1-5])/i;
-      const hasMoneyRange = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i.test(botResponse);
+        "exact amount of money",
+        "how much",
+        "what amount",
+        "exact",
+        "specific amount",
+        "how many dollars",
+        "can you give a number",
+        "give a number",
+        "exactly how much",
+        "show the number",
+        "in numbers",
+        "with an amount",
+        "give me a dollar amount",
+        "numerical amount",
+        "provide amount",
+        "in nt$",
+        "amount for",
+        "money allocation",
+        "invest how much",
+        "allocate how much",
+        "how much to put",
+        "how much should i invest",
+        "money",
+      ];
+      const moneyActionPattern =
+        /allocate(?:\s+around|\s+up to|\s+at least)?\s+(?:NT\$)?[\d,]+\s+(?:to|in|for)\s+(RR[1-5]|\bit\b)/i;
+      const rangeWithTargetPattern =
+        /allocate(?:\s+around|\s+approximately)?\s+(?:NT\$)?[\d,]+\s*(?:to|and|~)\s*(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const directAmountSuggestion =
+        /(?:recommend|suggest|advise)(?:\s+(?:allocating|investing|putting))?\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const suggestiveAction =
+        /(?:let's|I would|should)\s+(?:allocate|invest|put)\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
+      const riskLevelSuggestion =
+        /(RR[1-5])\s+(?:should|could|would|can|may)\s+(?:receive|get|be allocated|be assigned)\s+(?:NT\$)?[\d,]+/i;
+      const recommendRangePattern =
+        /(recommend|suggest|advise).*?(?:NT\$)?([\d,]+)\s*(?:to|and|~)\s*(?:NT\$)?([\d,]+).*?(RR[1-5])/i;
+      const hasMoneyRange = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i.test(
+        botResponse
+      );
       const hasRRMentioned = /RR[1-5]/i.test(botResponse);
 
       const isMoneyRelated =
-      moneyIntentKeywords.some((kw) => inputText.toLowerCase().includes(kw)) ||
-      /NT\$[\d,]+/.test(botResponse) ||
-      moneyRangePattern.test(botResponse) ||
-      moneyActionPattern.test(botResponse) ||
-      rangeWithTargetPattern.test(botResponse)||
-      directAmountSuggestion.test(botResponse) ||
-      suggestiveAction.test(botResponse) ||
-      riskLevelSuggestion.test(botResponse) ||
-      recommendRangePattern.test(botResponse)||
-      (hasMoneyRange && hasRRMentioned);
+        moneyIntentKeywords.some((kw) =>
+          inputText.toLowerCase().includes(kw)
+        ) ||
+        /NT\$[\d,]+/.test(botResponse) ||
+        moneyRangePattern.test(botResponse) ||
+        moneyActionPattern.test(botResponse) ||
+        rangeWithTargetPattern.test(botResponse) ||
+        directAmountSuggestion.test(botResponse) ||
+        suggestiveAction.test(botResponse) ||
+        riskLevelSuggestion.test(botResponse) ||
+        recommendRangePattern.test(botResponse) ||
+        (hasMoneyRange && hasRRMentioned);
 
       // if (1 < 2) {
       //   const newAdjustment = extractMethod(botResponse);
@@ -1129,7 +1175,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 
       //   }
       // }
-      
+
       const newAdjustment = extractMethod(botResponse);
       if (Object.keys(newAdjustment).length > 0) {
         setOptionalRecommendation((prev) => ({
@@ -1137,11 +1183,13 @@ If you are ready to select your final insurance please type **FINAL** in the inp
           ...newAdjustment,
         }));
         console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
-        console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
+        console.log(
+          "偵測到的可選推薦額度(optionalRecommendation):",
+          optionalRecommendation
+        );
       }
 
       setInputText("");
-
 
       // 若使用者已完成第一次 allocation，就在回應後附加提示語
       if (
@@ -1150,7 +1198,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         !botResponse.includes("**Note:** You can now continue chatting with me")
       ) {
         botResponse +=
-          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input \"`FINAL`\" to confirm your final allocation.';
+          '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input "`FINAL`" to confirm your final allocation.';
       }
 
       setMessages((prev) => [
@@ -1208,26 +1256,32 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     setShowPopup(false);
     setHasCompletedAllocation(true);
     setIsLoading(true);
-  
+
     const allocationSummary = generateAllocationSummary(allocation);
     const total = calculateTotal(allocation);
-  
+
     const allocationMessage = `**Your Investment Allocation Summary:**\n\n${allocationSummary}\n\nTotal: NT$${total.toLocaleString()}`;
-  
+
     setMessages((prev) => [
       ...prev,
       { text: allocationMessage, isBot: true, timestamp: formatTimestamp() },
     ]);
-  
+
     if (personalityType === "intro") {
-      const recommendations = getIntroFixedRecommendations(totalScore, allocation);
-      const recommendationText = generateIntroRecommendationText(totalScore, recommendations);
+      const recommendations = getIntroFixedRecommendations(
+        totalScore,
+        allocation
+      );
+      const recommendationText = generateIntroRecommendationText(
+        totalScore,
+        recommendations
+      );
       setLlmRecommendation(recommendations);
-  
+
       const responseWithNote =
         recommendationText +
-        '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input \"`FINAL`\" to confirm your final allocation.';
-  
+        '\n\n**Note:** You can now continue chatting with me about these investment recommendations. When you\'re ready, input "`FINAL`" to confirm your final allocation.';
+
       setMessages((prev) => [
         ...prev,
         { text: responseWithNote, isBot: true, timestamp: formatTimestamp() },
@@ -1238,7 +1292,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         allocationMap[g] = getRecommendationByGroup(totalScore, {}, g, false);
       }
       const combinedText = generateMultipleGroupText(totalScore, allocationMap);
-          
+
       setMessages((prev) => [
         ...prev,
         { text: combinedText, isBot: true, timestamp: formatTimestamp() },
@@ -1246,7 +1300,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     }
     setIsLoading(false);
   };
-
 
   // 第二次配置的處理函數
   const handleSecondAllocation = () => {
@@ -1314,7 +1367,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     }
   };
 
-  
   // 保存投資配置的邏輯 (抽象為一個獨立函數)
   const handleSaveAllocation = (newAllocation) => {
     // 檢查並記錄數據
@@ -1392,10 +1444,11 @@ If you are ready to select your final insurance please type **FINAL** in the inp
                 }}
                 onSave={handleSaveAllocation}
                 llmRecommendation={isSecondAllocation ? llmRecommendation : {}}
-                optionalRecommendation={isSecondAllocation ? optionalRecommendation : {}}
+                optionalRecommendation={
+                  isSecondAllocation ? optionalRecommendation : {}
+                }
                 isSecondAllocation={isSecondAllocation}
                 initialAllocation={isSecondAllocation ? userAllocation : {}}
-
               />
             )}
             {showInsurancePopup && (
@@ -1495,7 +1548,9 @@ If you are ready to select your final insurance please type **FINAL** in the inp
               type="text"
               className="w-full text-lg bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3 pr-14 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
               placeholder={
-                isConversationComplete ? "Your Investment Allocation Planning Has Completed" : "Input Text Here"
+                isConversationComplete
+                  ? "Your Investment Allocation Planning Has Completed"
+                  : "Input Text Here"
               }
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
