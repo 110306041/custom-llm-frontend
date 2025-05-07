@@ -134,19 +134,7 @@ const InvestmentPopup = ({
         {llmVal !== undefined && (
           <div className="text-black">NT${llmVal.toLocaleString()}</div>
         )}
-        {optVal !== undefined && (
-          <div className="text-gray-500">
-            {Array.isArray(optVal) ? (
-              <>
-                (Optional) move NT${optVal.map((v) => v.toLocaleString()).join(" to NT$")} to this item.
-              </>
-            ) : (
-              <>
-                (Optional) {optVal > 0 ? "move" : "withdraw"} NT${Math.abs(optVal).toLocaleString()} {optVal > 0 ? "to" : "from"} this
-              </>
-            )}
-          </div>
-        )}
+        
       </div>
     );
   };
@@ -194,14 +182,14 @@ const InvestmentPopup = ({
       <div className="bg-white p-10 rounded-2xl w-[95%] max-w-7xl overflow-auto max-h-[95%] shadow-2xl">
         <h2 className="text-3xl font-bold mb-6">
           NT$1,000,000 Allocation
-          {isSecondAllocation && <span className="text-blue-500 ml-2 text-xl">(Second Allocation with LLM Recommendations)</span>}
+          {isSecondAllocation && <span className="text-blue-500 ml-2 text-xl">(Second Allocation with AI Recommendations)</span>}
         </h2>
         <p className="text-lg mb-6">
           Please allocate your investment amount (meeting minimum investment and total amount requirements).
           You must enter a value for each category - either 0 or an amount that meets the minimum investment requirement.
           {isSecondAllocation && (
             <span className="text-blue-600 ml-2">
-              For reference, LLM Recommendation and optional suggestions are shown in the rightmost column.
+              For reference, AI Recommendation and optional suggestions are shown in the rightmost column. If you’d like to refer to the chatbot’s latest allocation recommendations, you can go back and review your conversation history with it.
             </span>
           )}
         </p>
@@ -216,7 +204,7 @@ const InvestmentPopup = ({
             <th className="p-4 border">Minimum Investment</th>
             <th className="p-4 border">Amount</th>
             {isSecondAllocation && (
-              <th className="p-4 border">LLM Recommendation</th>
+              <th className="p-4 border">AI Recommendation</th>
             )}
             <th className="p-4 border">Fund Type</th>
             <th className="p-4 border">Description</th>
