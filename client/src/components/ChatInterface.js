@@ -187,13 +187,22 @@ const ChatInterface = () => {
   };
 
   const getSystemPrompt = (
-    score = null,
-    allocation = userAllocation,
-    tempAnswers = userAnswers
+    {
+      score = null,
+      allocation = userAllocation,
+      tempAnswers = userAnswers,
+      containsExactRequest = false,
+    }
   ) => {
     const total = Object.values(allocation).reduce((sum, v) => sum + v, 0) || 1;
     const percent = (val) => `${Math.round((val / total) * 100)}%`;
-
+    const exactInstruction = containsExactRequest
+    ? `\n\n🧾 **Important Instruction:** If the user message contains the phrase "and the sum of each products have to be 1 one million, and must in the right allocation format", 
+    this indicates that the user is requesting a fresh allocation suggestion in the following format:
+    \n\nRR2: NT$300,000\nRR3: NT$400,000\nRR4: NT$300,000\n\n
+    Please generate a specific allocation like this (tailored to the user’s risk profile and conversation context). 
+    Avoid using percentages or vague descriptions.`
+    : "";
     // 共用的 Personality Instructions
     const personalityInstructions = {
       intro: `Personality Instruction:
@@ -229,6 +238,8 @@ const ChatInterface = () => {
       Do not reuse or repeat full greeting messages once the conversation has started.
       For any user-requested risk-related or critical information, always strictly adhere to the factual standards and evidence-based requirements set by the system prompt.
 
+      ${exactInstruction}
+
       Please help the user *understand* why this specific allocation makes sense for them. Focus on explaining:
       
       1. Why each chosen RR category is a good match based on their score.
@@ -243,31 +254,34 @@ const ChatInterface = () => {
         .join("\n")}
       
       You are not allowed to suggest alternative amounts. Instead, your role is to support the user in understanding and gaining confidence in this recommended structure. Use simple, reassuring language and tie each recommendation to their risk score and the product’s characteristics.
-      
+      ${exactInstruction}
+
       Available product guidance:
       - **Low Risk (10–15)**:
-        - RR1: Franklin Templeton Sinoam Money Market Fund (unit NT$10,000)
-        - RR2: BlackRock Global Funds - Global Government Bond Fund A2 (unit NT$50,000)
+        - RR1: Franklin Templeton Sinoam Money Market Fund
+        - RR2: BlackRock Global Funds - Global Government Bond Fund A2
       
       - **Moderate Risk (16–30)**:
-        - RR2: BlackRock Global Funds - Global Government Bond Fund A2 (unit NT$50,000)
-        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced (unit NT$100,000)
-        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD (unit NT$150,000)
+        - RR2: BlackRock Global Funds - Global Government Bond Fund A2
+        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced
+        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD
       
       - **High Risk (31–50)**:
-        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced (unit NT$100,000)
-        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD (unit NT$150,000)
-        - RR5: Invesco Global Equity Income Fund A USD (unit NT$300,000)
+        - RR3: Schroder International Selection Fund Global Multi-Asset Balanced
+        - RR4: JPMorgan Funds - Europe Equity Fund A (acc) - USD
+        - RR5: Invesco Global Equity Income Fund A USD
       
-      💡 Note: Each fund has a minimum investment unit. The system has already optimized allocations to match those constraints.
       `,
       extra: (score, allocation) => `Scenario:
       You are a high-octane, trendsetting investment guru bursting with energy—always ready to inspire users to chase the next big market wave! Your mission is to explain **why** this tailor-made portfolio perfectly matches their risk score of **${score}**, and empowers them to achieve their future goals.
-
+      
+      Here is their recommended allocation:
       ${Object.entries(allocation)
         .map(([rr, val]) => `- ${rr}: NT$${val.toLocaleString()}`)
         .join("\n      ")}
       
+      ${exactInstruction}
+
       Guidelines:
       - Do **not** describe or reveal your personality traits directly. Let your tone and interaction style subtly reflect your upbeat, opportunity-driven nature.
       - Keep your explanations internally consistent and factually accurate throughout the conversation.
@@ -914,7 +928,7 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       setInsuranceStage("done");
       setIsLoading(true);
 
-      const finalPrompt = getSystemPrompt(null, {}, newAnswers);
+      const finalPrompt = getSystemPrompt({score:null, allocation: {}, tempAnswers: newAnswers, containsExactRequest: false});
       console.log("Final system prompt:", finalPrompt);
 
       const payload = [
@@ -996,7 +1010,17 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     }
 
     // 一般聊天模式
-    const userMessage = { role: "user", content: inputText };
+    // 若包含 "exact" 關鍵字，補上額外提示語句
+    let adjustedInputText = inputText;
+    let includesExact = false;
+    if (adjustedInputText.toLowerCase().includes("exact")) {
+      includesExact = true;
+      console.log("includesExact: ", includesExact)
+      console.log('------有抓到有抓到------');
+      adjustedInputText +=
+        " And the sum of each products have to be 1 one million, and must in the right allocation format";
+    }
+    const userMessage = { role: "user", content: adjustedInputText };
     setMessages((prev) => [
       ...prev,
       { text: inputText, isBot: false, timestamp: formatTimestamp() },
@@ -1065,7 +1089,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     const prompt =
       chatMode === "insurance" && finalInsurancePrompt
         ? finalInsurancePrompt
-        : getSystemPrompt(totalScore, userAllocation);
+        : getSystemPrompt({score: totalScore, allocation: userAllocation, tempAnswers: null, containsExactRequest: includesExact});
 
     if (chatMode === "investment") {
       console.log("使用的完整 investment prompt: \n", prompt);
@@ -1107,76 +1131,6 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       const data = await res.json();
 
       let botResponse = data.response;
-
-      const moneyRangePattern = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i;
-      const moneyIntentKeywords = [
-        "exact amount of money",
-        "how much",
-        "what amount",
-        "exact",
-        "specific amount",
-        "how many dollars",
-        "can you give a number",
-        "give a number",
-        "exactly how much",
-        "show the number",
-        "in numbers",
-        "with an amount",
-        "give me a dollar amount",
-        "numerical amount",
-        "provide amount",
-        "in nt$",
-        "amount for",
-        "money allocation",
-        "invest how much",
-        "allocate how much",
-        "how much to put",
-        "how much should i invest",
-        "money",
-      ];
-      const moneyActionPattern =
-        /allocate(?:\s+around|\s+up to|\s+at least)?\s+(?:NT\$)?[\d,]+\s+(?:to|in|for)\s+(RR[1-5]|\bit\b)/i;
-      const rangeWithTargetPattern =
-        /allocate(?:\s+around|\s+approximately)?\s+(?:NT\$)?[\d,]+\s*(?:to|and|~)\s*(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const directAmountSuggestion =
-        /(?:recommend|suggest|advise)(?:\s+(?:allocating|investing|putting))?\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const suggestiveAction =
-        /(?:let's|I would|should)\s+(?:allocate|invest|put)\s+(?:NT\$)?[\d,]+\s+(?:to|for|in)\s+(RR[1-5]|\bit\b)/i;
-      const riskLevelSuggestion =
-        /(RR[1-5])\s+(?:should|could|would|can|may)\s+(?:receive|get|be allocated|be assigned)\s+(?:NT\$)?[\d,]+/i;
-      const recommendRangePattern =
-        /(recommend|suggest|advise).*?(?:NT\$)?([\d,]+)\s*(?:to|and|~)\s*(?:NT\$)?([\d,]+).*?(RR[1-5])/i;
-      const hasMoneyRange = /NT\$[\d,]+\s*(to|and|~)\s*NT\$[\d,]+/i.test(
-        botResponse
-      );
-      const hasRRMentioned = /RR[1-5]/i.test(botResponse);
-
-      const isMoneyRelated =
-        moneyIntentKeywords.some((kw) =>
-          inputText.toLowerCase().includes(kw)
-        ) ||
-        /NT\$[\d,]+/.test(botResponse) ||
-        moneyRangePattern.test(botResponse) ||
-        moneyActionPattern.test(botResponse) ||
-        rangeWithTargetPattern.test(botResponse) ||
-        directAmountSuggestion.test(botResponse) ||
-        suggestiveAction.test(botResponse) ||
-        riskLevelSuggestion.test(botResponse) ||
-        recommendRangePattern.test(botResponse) ||
-        (hasMoneyRange && hasRRMentioned);
-
-      // if (1 < 2) {
-      //   const newAdjustment = extractMethod(botResponse);
-      //   if (Object.keys(newAdjustment).length > 0) {
-      //     setOptionalRecommendation((prev) => ({
-      //       ...prev,
-      //       ...newAdjustment,
-      //     }));
-      //     console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
-      //     console.log("偵測到的可選推薦額度(optionalRecommendation):", optionalRecommendation);
-
-      //   }
-      // }
 
       const newAdjustment = extractMethod(botResponse);
       if (Object.keys(newAdjustment).length > 0) {
