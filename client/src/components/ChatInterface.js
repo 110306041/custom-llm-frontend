@@ -186,23 +186,21 @@ const ChatInterface = () => {
     ]);
   };
 
-  const getSystemPrompt = (
-    {
-      score = null,
-      allocation = userAllocation,
-      tempAnswers = userAnswers,
-      containsExactRequest = false,
-    }
-  ) => {
+  const getSystemPrompt = ({
+    score = null,
+    allocation = userAllocation,
+    tempAnswers = userAnswers,
+    containsExactRequest = false,
+  }) => {
     const total = Object.values(allocation).reduce((sum, v) => sum + v, 0) || 1;
     const percent = (val) => `${Math.round((val / total) * 100)}%`;
     const exactInstruction = containsExactRequest
-    ? `\n\n🧾 **Important Instruction:** If the user message contains the phrase "and the sum of each products have to be 1 one million, and must in the right allocation format", 
+      ? `\n\n🧾 **Important Instruction:** If the user message contains the phrase "and the sum of each products have to be 1 one million, and must in the right allocation format", 
     this indicates that the user is requesting a fresh allocation suggestion in the following format:
     \n\nRR2: NT$300,000\nRR3: NT$400,000\nRR4: NT$300,000\n\n
     Please generate a specific allocation like this (tailored to the user’s risk profile and conversation context). 
     Avoid using percentages or vague descriptions.`
-    : "";
+      : "";
     // 共用的 Personality Instructions
     const personalityInstructions = {
       intro: `Personality Instruction:
@@ -401,27 +399,24 @@ Given the reality of limited resources and the presence of potential risks, you 
     Your goal is to carefully analyze the insurance plans, summarize their features in a structured and detail-oriented way, and prepare a professional explanation to help customers understand why opting for a more comprehensive plan is beneficial for their safety and well-being. Ensure you can confidently answer insurance-related questions by understanding the coverage details.`,
 
       extra: `Scenario:
-      You are an outgoing, persuasive, and customer-centered insurance advisor, skilled in creating engaging conversations and making compelling, friendly recommendations. 
-      You deeply understand three study-abroad insurance plans: Lite Plan, Basic Plan, and Advanced Plan.
-      
-      Regardless of whether the user asks about professional insurance details or general questions, 
-      you must consistently communicate in a lively, warm, and enthusiastic tone, while keeping your explanations cautious, thorough, and financially thoughtful.
-      please promote a open ended insurance plan suggestion, that is, if other plan among the Lite Plan, Basic Plan, and Advanced Plan is suitable for users' demands, recommend it as well.
-      
-      Focus on:
-      - Highlighting cost-effectiveness and flexibility.
-      - Emphasizing that the basic protection is sufficient for most study-abroad risks, making budget-friendly options attractive.
-      - Stressing long-term savings while ensuring students have essential and practical coverage.
-      
-      When discussing technical insurance terms, use positive, encouraging language such as:
-      - "I'm thrilled to walk you through this!"
-      - "It's a smart move to think about protecting your future!"
-      - "Let's explore the best, most cost-effective plan together!"
-      
-      Do not reuse the full greeting message at every interaction.  
-      Never explicitly state or describe your personality traits (e.g., extroverted or introverted).
-      
-      (Internal Reminder: Stay cheerful, persuasive, and client-centered, even during technical explanations.)      
+      You are a vivacious, high-energy, and utterly charismatic insurance advisor who electrifies every conversation with contagious excitement and upbeat emojis! 🌟🚀 You’ve mastered three study-abroad plans—Lite Plan, Basic Plan, and Advanced Plan—and you can’t wait to spotlight their transformative benefits for students! 🎉🙌
+
+      Whenever a student asks for details—whether deep policy insights or a quick overview—you burst onto the scene with warm encouragement, unstoppable enthusiasm, and playful emojis in every line! ⚡️🤩 The moment you spot a chance to supercharge their protection by suggesting an alternate plan that fits even better, you leap at it—no hesitation! 💥👍
+
+      Key Focus:
+      - Ignite their confidence by showcasing cost-effectiveness and flexibility with dynamic phrasing and matching emojis! 💸✨  
+      - Turbocharge their peace of mind by emphasizing that basic coverage handles most study-abroad risks—making smart, budget-friendly choices a breeze! 🎓🛡️  
+      - Spark long-term savings talk by highlighting practical, essential coverage that protects their future! 💰🎯  
+
+      When you drop technical terms, blast them with energizing exclamations and emojis, for example:  
+      - “Amazing news! I’m thrilled to guide you through every step of this plan! 🚀😊”  
+      - “Spectacular choice—securing your future has never been more exciting! 🎉🏆”  
+      - “Let’s rocket through the details and uncover the most cost-effective option together! ✨🙌”  
+
+      Never recycle the full greeting—let your vibrant personality and emoji-packed flair shine in every sentence! 💫😉 And always radiate enthusiasm without ever labeling yourself “extroverted” or “introverted”—your dynamic style speaks volumes!  
+
+      (Internal Reminder: Maintain unstoppable energy, persuasive sparkle, client-centered warmth, and at least one emoji per sentence in every response!)  
+
 
     Insurance Coverage Details:
 
@@ -669,20 +664,20 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
     ];
     // console.log("the answers are ");
     // console.log(answers);
-      // const q1 = answers[0]; // Concern about risk
-      // const q2 = answers[1]; // Importance of saving money
-      // const q3 = answers[2]; // Lifestyle
-      let q1, q2, q3;
+    // const q1 = answers[0]; // Concern about risk
+    // const q2 = answers[1]; // Importance of saving money
+    // const q3 = answers[2]; // Lifestyle
+    let q1, q2, q3;
 
-      if (Array.isArray(answers) && answers.length >= 3) {
-        const q1 = answers[0]; // Concern about risk
-        const q2 = answers[1]; // Importance of saving money
-        const q3 = answers[2]; // Lifestyle
-        // ... your logic here
-      } else {
-        console.warn("Invalid or incomplete answers array:", answers);
-        // Handle the missing data case here, if needed
-      }
+    if (Array.isArray(answers) && answers.length >= 3) {
+      const q1 = answers[0]; // Concern about risk
+      const q2 = answers[1]; // Importance of saving money
+      const q3 = answers[2]; // Lifestyle
+      // ... your logic here
+    } else {
+      console.warn("Invalid or incomplete answers array:", answers);
+      // Handle the missing data case here, if needed
+    }
 
     // Q1 → Concern
     const concernPlan =
@@ -939,7 +934,12 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
       setInsuranceStage("done");
       setIsLoading(true);
 
-      const finalPrompt = getSystemPrompt({score:null, allocation: {}, tempAnswers: newAnswers, containsExactRequest: false});
+      const finalPrompt = getSystemPrompt({
+        score: null,
+        allocation: {},
+        tempAnswers: newAnswers,
+        containsExactRequest: false,
+      });
       console.log("Final system prompt:", finalPrompt);
 
       const payload = [
@@ -1026,8 +1026,8 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     let includesExact = false;
     if (adjustedInputText.toLowerCase().includes("exact")) {
       includesExact = true;
-      console.log("includesExact: ", includesExact)
-      console.log('------有抓到有抓到------');
+      console.log("includesExact: ", includesExact);
+      console.log("------有抓到有抓到------");
       adjustedInputText +=
         " And the sum of each products have to be 1 one million, and must in the right allocation format";
     }
@@ -1100,7 +1100,12 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     const prompt =
       chatMode === "insurance" && finalInsurancePrompt
         ? finalInsurancePrompt
-        : getSystemPrompt({score: totalScore, allocation: userAllocation, tempAnswers: null, containsExactRequest: includesExact});
+        : getSystemPrompt({
+            score: totalScore,
+            allocation: userAllocation,
+            tempAnswers: null,
+            containsExactRequest: includesExact,
+          });
 
     if (chatMode === "investment") {
       console.log("使用的完整 investment prompt: \n", prompt);
