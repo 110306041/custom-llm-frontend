@@ -1177,7 +1177,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
       setMessages((prev) => [
         ...prev,
         {
-          text: "❗️System error: ${e}",
+          text: `❗️System error: ${e}`,
           isBot: true,
           timestamp: formatTimestamp(),
         },
