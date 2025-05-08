@@ -1114,19 +1114,30 @@ If you are ready to select your final insurance please type **FINAL** in the inp
     // 將全部訊息轉成 Chat API 格式
     const chatMessages = messages.map((msg) => ({
       role: msg.isBot ? "assistant" : "user",
-      content: msg.text,
+      content: msg.text ?? "", // 加保險，避免 msg.text 是 undefined
     }));
-    // 找出第一個符合 RISK_SCORE_PREFIXES 起始句的 index
-    const firstAnalysisIndex = chatMessages.findIndex(
-      (msg) =>
-        msg.role === "assistant" &&
-        RISK_SCORE_PREFIXES.some((prefix) => msg.content.startsWith(prefix))
-    );
-    // 如果找不到，就 fallback 用最後 10 則訊息（避免 crash）
-    const slicedMessages =
-      firstAnalysisIndex !== -1
-        ? chatMessages.slice(firstAnalysisIndex)
-        : chatMessages.slice(-10);
+
+    let slicedMessages;
+
+    if (chatMode === "investment") {
+      // 找出第一個符合 RISK_SCORE_PREFIXES 起始句的 index
+      const firstAnalysisIndex = chatMessages.findIndex(
+        (msg) =>
+          msg.role === "assistant" &&
+          typeof msg.content === "string" && // 加防呆
+          RISK_SCORE_PREFIXES.some((prefix) => msg.content.startsWith(prefix))
+      );
+
+      // 如果找不到，就 fallback 用最後 10 則訊息
+      slicedMessages =
+        firstAnalysisIndex !== -1
+          ? chatMessages.slice(firstAnalysisIndex)
+          : chatMessages.slice(-10);
+    } else {
+      // 非 investment 模式就直接取最後 6 則
+      slicedMessages = chatMessages;
+    }
+
     // 建立 requestBody
     const requestBody = {
       messages: ensureAlternatingMessages([
@@ -1136,6 +1147,7 @@ If you are ready to select your final insurance please type **FINAL** in the inp
         userMessage,
       ]),
     };
+
     console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
     try {
@@ -1148,18 +1160,18 @@ If you are ready to select your final insurance please type **FINAL** in the inp
 
       let botResponse = data.response;
 
-      const newAdjustment = extractMethod(botResponse);
-      if (Object.keys(newAdjustment).length > 0) {
-        setOptionalRecommendation((prev) => ({
-          ...prev,
-          ...newAdjustment,
-        }));
-        console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
-        console.log(
-          "偵測到的可選推薦額度(optionalRecommendation):",
-          optionalRecommendation
-        );
-      }
+      // const newAdjustment = extractMethod(botResponse);
+      // if (Object.keys(newAdjustment).length > 0) {
+      //   setOptionalRecommendation((prev) => ({
+      //     ...prev,
+      //     ...newAdjustment,
+      //   }));
+      //   console.log("偵測到的可選推薦額度(newAdjustment):", newAdjustment);
+      //   console.log(
+      //     "偵測到的可選推薦額度(optionalRecommendation):",
+      //     optionalRecommendation
+      //   );
+      // }
 
       setInputText("");
 
