@@ -149,7 +149,8 @@ const InvestmentPopup = ({
     }
 
     const hasInvalid = Object.entries(allocation).some(
-      ([rr, value]) => value < PRODUCT_TABLES[tableType].find((prod) => prod.rr === rr).min && value > 0
+      // ([rr, value]) => value < PRODUCT_TABLES[tableType].find((prod) => prod.rr === rr).min && value > 0
+      ([rr, value]) =>  value > 0
     );
     if (hasInvalid) {
       alert("❗️Please ensure all amounts are either 0 or not less than the minimum investment amount!");
