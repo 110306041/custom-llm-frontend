@@ -669,9 +669,20 @@ Let's make this adventure safe, smart, and unforgettable. I'm here if you need m
     ];
     // console.log("the answers are ");
     // console.log(answers);
-    const q1 = answers[0]; // Concern about risk
-    const q2 = answers[1]; // Importance of saving money
-    const q3 = answers[2]; // Lifestyle
+      // const q1 = answers[0]; // Concern about risk
+      // const q2 = answers[1]; // Importance of saving money
+      // const q3 = answers[2]; // Lifestyle
+      let q1, q2, q3;
+
+      if (Array.isArray(answers) && answers.length >= 3) {
+        const q1 = answers[0]; // Concern about risk
+        const q2 = answers[1]; // Importance of saving money
+        const q3 = answers[2]; // Lifestyle
+        // ... your logic here
+      } else {
+        console.warn("Invalid or incomplete answers array:", answers);
+        // Handle the missing data case here, if needed
+      }
 
     // Q1 → Concern
     const concernPlan =
