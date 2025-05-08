@@ -201,7 +201,7 @@ const InvestmentPopup = ({
             <th className="p-4 border">Risk Rating (RR)</th>
             <th className="p-4 border">Annualized Return (%)</th>
             <th className="p-4 border">Volatility</th>
-            <th className="p-4 border">Minimum Investment</th>
+            {/* <th className="p-4 border">Minimum Investment</th> */}
             <th className="p-4 border">Amount</th>
             {isSecondAllocation && (
               <th className="p-4 border">AI Recommendation</th>
@@ -217,7 +217,7 @@ const InvestmentPopup = ({
               <td className="p-4 border">{prod.rr}</td>
               <td className="p-4 border">{prod.rate}</td>
               <td className="p-4 border">{prod.volatility}</td>
-              <td className="p-4 border">NT${prod.min.toLocaleString()}</td>
+              {/* <td className="p-4 border">NT${prod.min.toLocaleString()}</td> */}
               <td className="p-4 border">
                 <input
                   type="number"
