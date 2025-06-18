@@ -4,11 +4,14 @@
 This project explores how Large Language Models (LLMs) with distinct personality styles—introverted and extroverted—affect human decision-making under varying risk scenarios. Using Prompt Induction post Supervised Fine-Tuning (PISF) on Meta-Llama-3-8B-Instruct, we tested 32 participants in high-risk (investment) and low-risk (insurance) contexts. Results reveal that LLM personality significantly shapes user behaviors such as recommendation adoption and choice closure, with cognitive load and personal traits playing moderating roles. Our findings offer practical insights for designing adaptive, personality-aware AI decision support systems.
 
 ##  Methodology
-- Architecture overview
- 
-- Personality shaping process
+-** Architecture overview**
+![image](https://github.com/110306041/custom-llm-frontend/blob/master/pics/personalityLLM_%E7%B3%BB%E7%B5%B1%E6%9E%B6%E6%A7%8B.png)
 
-## 🎬 Demo Video
+- **Personality shaping process**
+![image](https://github.com/110306041/custom-llm-frontend/blob/master/pics/personalityLLM_PISF_Flow.png)
+
+
+## Demo Video
 [Click here to watch the demo video](#)  
 - Investment scenario (Extroverted):
 https://drive.google.com/file/d/1Sv1qPeFS6XdS36pzxvG6ohXIBu0PrXZV/view?usp=sharing
