@@ -12,12 +12,12 @@ This project explores how Large Language Models (LLMs) with distinct personality
 
 
 ## Demo Video
-- Investment scenario (Extroverted):
-https://drive.google.com/file/d/1Sv1qPeFS6XdS36pzxvG6ohXIBu0PrXZV/view?usp=sharing
+- **Investment scenario (Extroverted):**
+  
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/aDlgq4UcmtQ/0.jpg)](https://www.youtube.com/watch?v=aDlgq4UcmtQ "投資外向demo")
+- **Insurance scenarios (Introverted):**
 
-- Insurance scenarios (Introverted):
-https://drive.google.com/file/d/1_OUwL0IH3QUIevgsrYlST5_pRQGRWH-U/view?usp=sharing
-
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/wykmU9akFQk/0.jpg)](https://www.youtube.com/watch?v=wykmU9akFQk "保險內向demo")
 
 ## Prompt Content
 ### Investment Mode (Extraversion)
