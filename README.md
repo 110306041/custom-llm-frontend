@@ -12,7 +12,6 @@ This project explores how Large Language Models (LLMs) with distinct personality
 
 
 ## Demo Video
-[Click here to watch the demo video](#)  
 - Investment scenario (Extroverted):
 https://drive.google.com/file/d/1Sv1qPeFS6XdS36pzxvG6ohXIBu0PrXZV/view?usp=sharing
 
